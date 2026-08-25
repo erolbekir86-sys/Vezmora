@@ -1,0 +1,67 @@
+services:
+  - type: web
+    name: vezmora-private-beta
+    runtime: python
+    plan: starter
+    buildCommand: pip install .
+    startCommand: python main.py
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: VEZMORA_DATA_DIR
+        value: /var/data
+      - key: VEZMORA_COOKIE_SECURE
+        value: "true"
+      - key: VEZMORA_APP_URL
+        sync: false
+      - key: VEZMORA_ENABLE_WORKER
+        value: "true"
+      - key: VEZMORA_ENABLE_SCHEDULER
+        value: "true"
+      - key: VEZMORA_EXECUTION_ENABLED
+        value: "false"
+      - key: VEZMORA_AUTOPILOT_EXECUTION_ENABLED
+        value: "false"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: VEZMORA_SECRET_KEY
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_STARTER
+        sync: false
+      - key: STRIPE_PRICE_GROWTH
+        sync: false
+      - key: STRIPE_PRICE_SCALE
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+      - key: GOOGLE_ADS_DEVELOPER_TOKEN
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: META_REDIRECT_URI
+        sync: false
+      - key: VEZMORA_ENABLE_META_EXECUTION_SCOPE
+        value: "false"
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+    disk:
+      name: vezmora-beta-data
+      mountPath: /var/data
+      sizeGB: 1
