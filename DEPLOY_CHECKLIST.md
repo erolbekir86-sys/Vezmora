@@ -1,23 +1,24 @@
 # Vezmora 0.6.1 — launch checklist
 
 - [x] Private Beta application built
-- [x] 14 automated tests passing
+- [x] 15 automated tests passing
 - [x] Stripe sandbox products and recurring prices created
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
 - [x] Serverless worker fallback implemented
 - [x] CRON_SECRET-protected maintenance endpoint implemented
-- [x] Turso remote database adapter implemented
+- [x] Persistent Neon/Postgres database provisioned
+- [x] PostgreSQL compatibility layer implemented
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
-- [x] Create empty GitHub repository named `Vezmora`
+- [x] Create GitHub repository named `Vezmora`
 - [x] Push core 0.6.1 release to that repository
-- [ ] Provision a Turso cloud database and token
-- [ ] Import/connect the GitHub repository in the Vercel `Vezmora` team
-- [ ] Add Vercel Sensitive Environment Variables
-- [ ] Deploy preview and verify `/health`
-- [ ] Create Stripe webhook endpoint against the production/preview URL
+- [x] Import/connect the GitHub repository in the Vercel `Vezmora` team
+- [x] Add `DATABASE_URL` as a Vercel environment variable
+- [ ] Verify production `/health` reports persistent database backend
+- [ ] Add remaining Vercel Sensitive Environment Variables
+- [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
 - [ ] Configure Google/Meta OAuth redirect URLs
 - [ ] Purchase/attach `vezmora.com` and optionally `vezmora.se`
