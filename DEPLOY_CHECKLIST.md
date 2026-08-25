@@ -16,8 +16,10 @@
 - [x] Push core 0.6.1 release to that repository
 - [x] Import/connect the GitHub repository in the Vercel `Vezmora` team
 - [x] Add `DATABASE_URL` as a Vercel environment variable
+- [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
 - [x] Production app boots successfully with persistent database connection configured
 - [ ] Verify production `/health` endpoint directly
+- [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
