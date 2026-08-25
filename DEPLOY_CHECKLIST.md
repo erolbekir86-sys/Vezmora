@@ -16,7 +16,8 @@
 - [x] Push core 0.6.1 release to that repository
 - [x] Import/connect the GitHub repository in the Vercel `Vezmora` team
 - [x] Add `DATABASE_URL` as a Vercel environment variable
-- [ ] Verify production `/health` reports persistent database backend
+- [x] Production app boots successfully with persistent database connection configured
+- [ ] Verify production `/health` endpoint directly
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
