@@ -1,0 +1,6 @@
+pilot_company,segment,contact_status,onboarding_complete,google_connected,meta_connected,weekly_active,core_actions_reviewed,actions_approved,estimated_value_sek,monthly_price_willingness_sek,notes
+Pilot 1,local service,not_contacted,false,false,false,false,0,0,0,0,
+Pilot 2,restaurant,not_contacted,false,false,false,false,0,0,0,0,
+Pilot 3,gym/fitness,not_contacted,false,false,false,false,0,0,0,0,
+Pilot 4,ecommerce,not_contacted,false,false,false,false,0,0,0,0,
+Pilot 5,trades/home services,not_contacted,false,false,false,false,0,0,0,0,
