@@ -19,6 +19,7 @@
 - [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
 - [x] Route Vercel through root serverless/Postgres bootstrap
 - [x] Refresh production secrets and trigger clean redeploy
+- [x] Re-enter Neon `DATABASE_URL` from verified project connection string
 - [ ] Verify production app boots with persistent database connection configured
 - [ ] Verify production `/health` endpoint directly
 - [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
