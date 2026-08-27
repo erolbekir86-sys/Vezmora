@@ -77,6 +77,23 @@ def _openai_connection_ok() -> bool:
         return False
 
 
+def _https_runtime() -> bool:
+    return bool(os.getenv("VERCEL")) or (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
+
+
+@app.middleware("http")
+async def production_security_headers(request, call_next):
+    """Apply low-risk browser security defaults to every Vexmera response."""
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if _https_runtime():
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
+
+
 @app.get("/health/runtime")
 def runtime_diagnostics() -> dict[str, object]:
     """Expose only non-secret deployment diagnostics for production debugging."""
