@@ -47,6 +47,19 @@ if postgres_url:
 from app.main import app, main
 
 
+def _database_connection_ok() -> bool:
+    if not postgres_url:
+        return False
+    try:
+        import app.store as _store
+
+        with _store._connect() as con:
+            row = con.execute("SELECT 1").fetchone()
+        return bool(row and int(row[0]) == 1)
+    except Exception:
+        return False
+
+
 @app.get("/health/runtime")
 def runtime_diagnostics() -> dict[str, object]:
     """Expose only non-secret deployment diagnostics for production debugging."""
@@ -59,6 +72,7 @@ def runtime_diagnostics() -> dict[str, object]:
         "database_url_configured": bool((os.getenv("DATABASE_URL") or "").strip()),
         "postgres_url_configured": bool((os.getenv("POSTGRES_URL") or "").strip()),
         "remote_store_configured": bool((os.getenv("TURSO_DATABASE_URL") or "").strip()),
+        "database_connection_ok": _database_connection_ok(),
         "openai_api_key_configured": bool((os.getenv("OPENAI_API_KEY") or "").strip()),
         "openai_model_configured": bool((os.getenv("OPENAI_MODEL") or "").strip()),
         "serverless_configured": (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"},
