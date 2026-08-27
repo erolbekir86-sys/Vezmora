@@ -12,20 +12,22 @@
 - [x] PostgreSQL compatibility layer implemented
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
-- [x] Create GitHub repository named `Vexmera`
-- [x] Push core 0.6.1 release to that repository
-- [x] Import/connect the GitHub repository in the Vercel `Vexmera` team
+- [x] Fix Python packaging and restore green GitHub Actions CI
+- [x] Add safe `/health/runtime` deployment diagnostics
+- [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
+- [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
 - [x] Add `DATABASE_URL` as a Vercel environment variable
 - [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
 - [x] Route Vercel through root serverless/Postgres bootstrap
 - [x] Refresh production secrets and trigger clean redeploy
 - [x] Re-enter Neon `DATABASE_URL` from verified project connection string
+- [x] Verify production `/health` endpoint responds
 - [ ] Verify production app boots with persistent database connection configured
-- [ ] Verify production `/health` endpoint directly
+- [ ] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
 - [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
 - [ ] Configure Google/Meta OAuth redirect URLs
-- [ ] Purchase/attach `vezmora.com` and optionally `vezmora.se`
+- [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
