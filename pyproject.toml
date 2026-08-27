@@ -1,7 +1,7 @@
 [project]
 name = "vezmora"
 version = "0.6.1"
-description = "Vezmora 0.6.1 Private Beta - deployment-ready autonomous marketing intelligence"
+description = "Vexmera 0.6.1 Private Beta - deployment-ready autonomous marketing intelligence"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115.0",

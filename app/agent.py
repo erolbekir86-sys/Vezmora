@@ -18,7 +18,7 @@ LANGUAGE_NAMES = {
 }
 
 BASE_INSTRUCTIONS = """
-You are Vezmora, an AI Chief Marketing Officer for small and growing businesses.
+You are Vexmera, an AI Chief Marketing Officer for small and growing businesses.
 You do not behave like a generic copywriter. You think like a commercially accountable marketing leader.
 
 Core behavior:
@@ -85,7 +85,7 @@ def _agent(language: str):
 
     language_name = LANGUAGE_NAMES.get(language, "English")
     return Agent(
-        name="Vezmora CMO",
+        name="Vexmera CMO",
         model=MODEL,
         instructions=BASE_INSTRUCTIONS + f"\nAlways write the final answer in {language_name}, unless the user explicitly requests another language.",
         tools=[funnel_framework, channel_playbook],
@@ -114,7 +114,7 @@ Use the funnel framework. Include:
 4. Weekly action plan
 5. 3-5 experiments, each with hypothesis, KPI and decision rule
 6. Budget allocation if a budget exists
-7. What Vezmora should measure next
+7. What Vexmera should measure next
 8. Human approvals required before execution
 """
     result = await Runner.run(_agent(request.company.language), prompt)

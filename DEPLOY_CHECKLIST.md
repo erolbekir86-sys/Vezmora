@@ -1,4 +1,4 @@
-# Vezmora 0.6.1 — launch checklist
+# Vexmera 0.6.1 — launch checklist
 
 - [x] Private Beta application built
 - [x] 15 automated tests passing
@@ -12,9 +12,9 @@
 - [x] PostgreSQL compatibility layer implemented
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
-- [x] Create GitHub repository named `Vezmora`
+- [x] Create GitHub repository named `Vexmera`
 - [x] Push core 0.6.1 release to that repository
-- [x] Import/connect the GitHub repository in the Vercel `Vezmora` team
+- [x] Import/connect the GitHub repository in the Vercel `Vexmera` team
 - [x] Add `DATABASE_URL` as a Vercel environment variable
 - [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
 - [x] Route Vercel through root serverless/Postgres bootstrap

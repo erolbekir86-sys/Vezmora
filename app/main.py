@@ -162,7 +162,7 @@ async def lifespan(_: FastAPI):
             await task
 
 
-app = FastAPI(title="Vezmora API", version="0.6.1", lifespan=lifespan)
+app = FastAPI(title="Vexmera API", version="0.6.1", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
@@ -215,7 +215,7 @@ def _company_for(workspace_id: int, supplied: CompanyProfile | None) -> CompanyP
         return supplied
     saved = get_company_profile(workspace_id)
     if not saved:
-        raise HTTPException(status_code=400, detail="Save a company profile before running Vezmora")
+        raise HTTPException(status_code=400, detail="Save a company profile before running Vexmera")
     return CompanyProfile.model_validate(saved)
 
 
@@ -306,7 +306,7 @@ async def strategy(workspace_id: int, request: StrategyRequest, user: User) -> A
         record_usage(workspace_id, "ai_runs", 1, {"kind":"strategy"})
         return AgentResponse(output=output, model=MODEL)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Vezmora strategy run failed: {type(exc).__name__}") from exc
+        raise HTTPException(status_code=500, detail=f"Vexmera strategy run failed: {type(exc).__name__}") from exc
 
 
 @app.post("/api/campaign", response_model=AgentResponse)
@@ -319,7 +319,7 @@ async def campaign(workspace_id: int, request: CampaignRequest, user: User) -> A
         record_usage(workspace_id, "ai_runs", 1, {"kind":"campaign"})
         return AgentResponse(output=output, model=MODEL)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Vezmora campaign run failed: {type(exc).__name__}") from exc
+        raise HTTPException(status_code=500, detail=f"Vexmera campaign run failed: {type(exc).__name__}") from exc
 
 
 @app.post("/api/agent", response_model=AgentResponse)
@@ -332,7 +332,7 @@ async def agent(workspace_id: int, request: AgentRequest, user: User) -> AgentRe
         record_usage(workspace_id, "ai_runs", 1, {"kind":"agent"})
         return AgentResponse(output=output, model=MODEL)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Vezmora agent run failed: {type(exc).__name__}") from exc
+        raise HTTPException(status_code=500, detail=f"Vexmera agent run failed: {type(exc).__name__}") from exc
 
 
 @app.get("/api/runs")
@@ -517,7 +517,7 @@ async def daily_brief(workspace_id: int, user: User) -> AgentResponse:
         add_notification(workspace_id, "brief", "Executive brief ready", f"Brief created. {len(proposal_ids)} approval proposal(s) added.")
         return AgentResponse(output=output, model=MODEL)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Vezmora brief failed: {type(exc).__name__}") from exc
+        raise HTTPException(status_code=500, detail=f"Vexmera brief failed: {type(exc).__name__}") from exc
 
 
 @app.get("/api/workspace/settings")
@@ -608,8 +608,8 @@ def team_invite(workspace_id: int, request: TeamInviteRequest, user: User) -> di
     queue_email(
         workspace_id,
         str(request.email),
-        "You're invited to Vezmora",
-        f"You were invited to a Vezmora workspace as {request.role}.\n\nOpen this link after creating or logging into your account:\n{invite_url}\n\nThis invite expires in 7 days.",
+        "You're invited to Vexmera",
+        f"You were invited to a Vexmera workspace as {request.role}.\n\nOpen this link after creating or logging into your account:\n{invite_url}\n\nThis invite expires in 7 days.",
     )
     if serverless_mode() and smtp_configured():
         run_email_once()
@@ -669,7 +669,7 @@ async def approval_execute(approval_id: int, workspace_id: int, request: Approva
         raise
 
 
-# --- Vezmora 0.6 Private Beta ---
+# --- Vexmera 0.6 Private Beta ---
 
 @app.get("/api/onboarding")
 def onboarding_get(workspace_id: int, user: User) -> dict[str, Any]:
@@ -711,7 +711,7 @@ async def onboarding_complete(workspace_id: int, profile: OnboardingProfile, use
         initial_strategy_queued = True
         if serverless_mode():
             await run_worker_once()
-    add_notification(workspace_id, "onboarding", "Vezmora is ready", "Core now has your commercial brief and can prioritize against it. Your first 30-day plan is queued when AI runtime is configured.")
+    add_notification(workspace_id, "onboarding", "Vexmera is ready", "Core now has your commercial brief and can prioritize against it. Your first 30-day plan is queued when AI runtime is configured.")
     return {"ok": True, "completed": True, "next": "core", "initial_strategy_queued": initial_strategy_queued}
 
 
@@ -769,7 +769,7 @@ def password_reset_request(request: PasswordResetRequest) -> dict[str, Any]:
         expires_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
         create_password_reset(int(user["id"]), token_hash, expires_at)
         reset_url = f"{email_app_url()}/?reset={raw}"
-        queue_email(None, str(request.email), "Reset your Vezmora password", f"Use this link within 60 minutes to reset your Vezmora password:\n\n{reset_url}")
+        queue_email(None, str(request.email), "Reset your Vexmera password", f"Use this link within 60 minutes to reset your Vexmera password:\n\n{reset_url}")
         if serverless_mode() and smtp_configured():
             run_email_once()
         if os.getenv("VEZMORA_DEV_SHOW_TOKENS", "0").lower() in {"1","true","yes","on"}:

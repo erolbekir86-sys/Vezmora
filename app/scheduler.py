@@ -49,7 +49,7 @@ async def run_due_automation_once() -> dict[str, int]:
                 output = await generate_daily_brief(company, brief_memory(workspace_id))
                 save_run("brief", company.name, company.language, {"scheduled": True}, output, workspace_id, None)
                 created = create_metric_proposals(workspace_id, None)
-                add_notification(workspace_id, "brief", "Morning brief ready", f"Vezmora created today's brief. {len(created)} approval proposal(s) added.")
+                add_notification(workspace_id, "brief", "Morning brief ready", f"Vexmera created today's brief. {len(created)} approval proposal(s) added.")
                 mark_daily_brief_run(workspace_id, today)
                 counts["briefs"] += 1
             except Exception as exc:

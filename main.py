@@ -9,7 +9,7 @@ import sys
 # production bootstrap.
 postgres_url = (os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL") or "").strip()
 if postgres_url:
-    # Reuse the existing remote-store interface while translating Vezmora's
+    # Reuse the existing remote-store interface while translating Vexmera's
     # SQLite-style DB-API calls to PostgreSQL through postgres_compat.
     from app import postgres_compat as _postgres_compat
 

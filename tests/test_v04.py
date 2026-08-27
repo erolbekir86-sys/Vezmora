@@ -9,7 +9,7 @@ def register(client: TestClient):
     result = client.post('/api/auth/register', json={
         'email': 'v04@example.com',
         'password': 'verysecure123',
-        'workspace_name': 'Vezmora 04',
+        'workspace_name': 'Vexmera 04',
     })
     assert result.status_code == 200
     return result.json()['workspace_id']

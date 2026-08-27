@@ -30,7 +30,7 @@ def validate_action(approval: dict[str, Any]) -> dict[str, Any]:
     action_type = str(approval.get("action_type") or "")
     payload = approval.get("payload") or {}
     if action_type not in SUPPORTED_ACTIONS:
-        raise HTTPException(status_code=422, detail=f"Action type is not executable in Vezmora 0.5: {action_type}")
+        raise HTTPException(status_code=422, detail=f"Action type is not executable in Vexmera 0.5: {action_type}")
     campaign_id = str(payload.get("campaign_id") or "").strip()
     if not campaign_id:
         raise HTTPException(status_code=422, detail="Executable actions require payload.campaign_id")

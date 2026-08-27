@@ -1,7 +1,7 @@
-"""Vezmora PostgreSQL DB-API compatibility shim.
+"""Vexmera PostgreSQL DB-API compatibility shim.
 
 When TURSO_DATABASE_URL contains a PostgreSQL URL, this module exposes the
-small DB-API surface expected by app.store while translating Vezmora's legacy
+small DB-API surface expected by app.store while translating Vexmera's legacy
 SQLite SQL dialect to PostgreSQL.
 """
 from __future__ import annotations
@@ -100,7 +100,7 @@ class Connection:
 
 def connect(url: str, auth_token: str | None = None):
     if not url.startswith(("postgresql://", "postgres://")):
-        raise RuntimeError("This Vezmora deployment expects a PostgreSQL DATABASE_URL")
+        raise RuntimeError("This Vexmera deployment expects a PostgreSQL DATABASE_URL")
     try:
         import psycopg
     except ImportError as exc:

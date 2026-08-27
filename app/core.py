@@ -58,7 +58,7 @@ def core_today(workspace_id: int) -> dict[str, Any]:
             "priority": "medium",
             "source": "data",
             "title": "Connect live marketing data",
-            "body": "Missing: " + ", ".join(p.title() for p in disconnected) + ". Vezmora will not invent live performance data.",
+            "body": "Missing: " + ", ".join(p.title() for p in disconnected) + ". Vexmera will not invent live performance data.",
             "cta": "Connect data",
             "view": "connect",
         })

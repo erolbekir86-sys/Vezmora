@@ -64,7 +64,7 @@ class _CursorAdapter:
 
 
 class _RemoteConnectionAdapter:
-    """Makes a standard DB-API connection behave like the sqlite3 surface used by Vezmora."""
+    """Makes a standard DB-API connection behave like the sqlite3 surface used by Vexmera."""
 
     def __init__(self, connection: Any):
         self._connection = connection

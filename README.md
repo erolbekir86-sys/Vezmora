@@ -1,3 +1,3 @@
-# Vezmora
+# Vexmera
 
-Vezmora 0.6.1 Private Beta
+Vexmera 0.6.1 Private Beta

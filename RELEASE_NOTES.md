@@ -1,6 +1,6 @@
-# Vezmora 0.6.1 Private Beta — Deployment Release
+# Vexmera 0.6.1 Private Beta — Deployment Release
 
-Built on Vezmora 0.6 with the beta product features intact, plus:
+Built on Vexmera 0.6 with the beta product features intact, plus:
 
 - Vercel FastAPI entrypoint and `vercel.json`
 - serverless-safe execution mode

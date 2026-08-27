@@ -77,7 +77,7 @@ def enforce_limit(workspace_id: int, kind: str) -> None:
     status = billing_status(workspace_id)
     billing_state = str(status.get("billing_status") or "trialing")
     if billing_state in {"canceled", "unpaid", "incomplete_expired"} and not status.get("trial_active"):
-        raise HTTPException(status_code=402, detail="An active Vezmora subscription is required")
+        raise HTTPException(status_code=402, detail="An active Vexmera subscription is required")
     limit = status["limits"].get(kind)
     used = status["usage"].get(kind, 0)
     if limit is not None and used >= limit:

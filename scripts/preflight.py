@@ -28,7 +28,7 @@ def configured(name: str) -> bool:
 def main() -> int:
     missing = [name for name in REQUIRED if not configured(name)]
     billing_missing = [name for name in BILLING if not configured(name)]
-    print("Vezmora deployment preflight")
+    print("Vexmera deployment preflight")
     print(f"core: {'READY' if not missing else 'MISSING CONFIG'}")
     print(f"billing: {'READY' if not billing_missing else 'MISSING CONFIG'}")
     print(f"serverless mode: {os.getenv('VEZMORA_SERVERLESS', 'false')}")

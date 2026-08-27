@@ -11,14 +11,14 @@ def test_auth_workspace_profile_kpi_and_competitor(tmp_path, monkeypatch):
         reg = client.post("/api/auth/register", json={
             "email": "founder@example.com",
             "password": "verysecure123",
-            "workspace_name": "Vezmora Lab",
+            "workspace_name": "Vexmera Lab",
         })
         assert reg.status_code == 200
         workspace_id = reg.json()["workspace_id"]
 
         me = client.get("/api/auth/me")
         assert me.status_code == 200
-        assert me.json()["workspaces"][0]["name"] == "Vezmora Lab"
+        assert me.json()["workspaces"][0]["name"] == "Vexmera Lab"
 
         profile = {
             "name": "Nordic Peak",

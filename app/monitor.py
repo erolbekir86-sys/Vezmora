@@ -83,7 +83,7 @@ async def scan_competitor(workspace_id: int, competitor_id: int) -> dict[str, ob
     if changed:
         add_notification(
             workspace_id, "rival_change", f"{competitor['name']} changed",
-            "Vezmora detected a meaningful page-content hash change. Review the site before reacting.",
+            "Vexmera detected a meaningful page-content hash change. Review the site before reacting.",
             {"competitor_id": competitor_id, "snapshot_id": snapshot_id, "url": url},
         )
     return {"competitor_id": competitor_id, "name": competitor["name"], "changed": changed, "title": title, "http_status": response.status_code, "snapshot_id": snapshot_id}
