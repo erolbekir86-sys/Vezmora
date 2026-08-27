@@ -38,6 +38,7 @@
 - [x] Prevent caching of API and health responses
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
+- [x] Retry production deployment after environment propagation
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
