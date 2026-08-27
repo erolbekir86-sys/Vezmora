@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 
@@ -46,7 +47,9 @@ if postgres_url:
 
     _store.init_db = _verify_database
 
+from app.agent import generate_campaign, generate_strategy, run_agent
 from app.main import app, main
+from app.models import AgentRequest, CampaignRequest, CompanyProfile, StrategyRequest
 
 
 def _database_connection_ok() -> bool:
@@ -77,10 +80,73 @@ def _openai_connection_ok() -> bool:
         return False
 
 
+_PRODUCT_SMOKE_CACHE: dict[str, bool] | None = None
+
+
+async def _product_smoke() -> dict[str, bool]:
+    """Run fixed, non-user-controlled calls through the three core AI pipelines."""
+    global _PRODUCT_SMOKE_CACHE
+    if _PRODUCT_SMOKE_CACHE is not None:
+        return _PRODUCT_SMOKE_CACHE
+
+    company = CompanyProfile(
+        name="Vexmera Smoke Test",
+        industry="Local services",
+        market="Sweden",
+        audience="Local customers looking for a reliable home service",
+        offer="Reliable service with clear pricing and fast booking",
+        brand_voice="clear, trustworthy, useful",
+        language="en",
+    )
+    memory: dict[str, object] = {}
+    requests = (
+        run_agent(
+            AgentRequest(
+                company=company,
+                message="Production health smoke test. Give one concise strategic marketing recommendation and do not propose any external execution.",
+            ),
+            memory,
+        ),
+        generate_strategy(
+            StrategyRequest(
+                company=company,
+                objective="leads",
+                budget_sek=1000,
+                horizon_days=7,
+                notes="Production smoke test. Keep the answer concise and do not execute anything.",
+            ),
+            memory,
+        ),
+        generate_campaign(
+            CampaignRequest(
+                company=company,
+                objective="leads",
+                channel="organic",
+                campaign_name="Production Smoke Test",
+                budget_sek=0,
+                notes="Production smoke test. Keep the answer concise and do not execute anything.",
+            ),
+            memory,
+        ),
+    )
+    results = await asyncio.gather(*requests, return_exceptions=True)
+
+    def ok(value: object) -> bool:
+        return isinstance(value, str) and len(value.strip()) >= 20
+
+    _PRODUCT_SMOKE_CACHE = {
+        "core_smoke_ok": ok(results[0]),
+        "pulse_smoke_ok": ok(results[1]),
+        "launch_smoke_ok": ok(results[2]),
+    }
+    _PRODUCT_SMOKE_CACHE["product_smoke_ok"] = all(_PRODUCT_SMOKE_CACHE.values())
+    return _PRODUCT_SMOKE_CACHE
+
+
 @app.get("/health/runtime")
-def runtime_diagnostics() -> dict[str, object]:
+async def runtime_diagnostics(deep: bool = False) -> dict[str, object]:
     """Expose only non-secret deployment diagnostics for production debugging."""
-    return {
+    result: dict[str, object] = {
         "ok": True,
         "brand": "Vexmera",
         "vercel": bool(os.getenv("VERCEL")),
@@ -95,6 +161,10 @@ def runtime_diagnostics() -> dict[str, object]:
         "openai_model_configured": bool((os.getenv("OPENAI_MODEL") or "").strip()),
         "serverless_configured": (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"},
     }
+    if deep:
+        result["deep_smoke_test_ran"] = True
+        result.update(await _product_smoke())
+    return result
 
 
 __all__ = ["app", "main"]
