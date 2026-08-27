@@ -39,6 +39,7 @@
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
+- [x] Correct production environment whitespace issue and trigger clean redeploy
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
