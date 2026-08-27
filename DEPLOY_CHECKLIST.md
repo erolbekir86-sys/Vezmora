@@ -28,6 +28,8 @@
 - [x] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
 - [x] Confirm explicit `database_connection_ok` health ping on the latest deployment
 - [x] Confirm explicit `openai_connection_ok` production API connectivity
+- [x] Diagnose Core/Pulse/Launch production blocker as OpenAI `insufficient_quota` (HTTP 429)
+- [ ] Activate sufficient OpenAI API billing/quota for the production project
 - [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
 - [ ] Remove temporary deep smoke-test code after verification
 - [ ] Add remaining Vercel Sensitive Environment Variables
