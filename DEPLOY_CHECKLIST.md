@@ -14,6 +14,7 @@
 - [x] GitHub Actions CI included
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
+- [x] Add safe production readiness flags for remaining integrations
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
 - [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
 - [x] Add `DATABASE_URL` as a Vercel environment variable
@@ -32,6 +33,10 @@
 - [x] Activate sufficient OpenAI API billing/quota for the production project
 - [x] Run a live OpenAI smoke test through Core/Pulse/Launch
 - [x] Remove temporary deep smoke-test code after verification
+- [x] Default production session cookies to Secure on Vercel/HTTPS
+- [x] Add browser security headers to production responses
+- [x] Prevent caching of API and health responses
+- [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
