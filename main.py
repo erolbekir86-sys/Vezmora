@@ -46,6 +46,25 @@ if postgres_url:
 
 from app.main import app, main
 
+
+@app.get("/health/runtime")
+def runtime_diagnostics() -> dict[str, object]:
+    """Expose only non-secret deployment diagnostics for production debugging."""
+    return {
+        "ok": True,
+        "brand": "Vexmera",
+        "vercel": bool(os.getenv("VERCEL")),
+        "vercel_env": os.getenv("VERCEL_ENV") or None,
+        "git_commit_sha": os.getenv("VERCEL_GIT_COMMIT_SHA") or None,
+        "database_url_configured": bool((os.getenv("DATABASE_URL") or "").strip()),
+        "postgres_url_configured": bool((os.getenv("POSTGRES_URL") or "").strip()),
+        "remote_store_configured": bool((os.getenv("TURSO_DATABASE_URL") or "").strip()),
+        "openai_api_key_configured": bool((os.getenv("OPENAI_API_KEY") or "").strip()),
+        "openai_model_configured": bool((os.getenv("OPENAI_MODEL") or "").strip()),
+        "serverless_configured": (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"},
+    }
+
+
 __all__ = ["app", "main"]
 
 if __name__ == "__main__":
