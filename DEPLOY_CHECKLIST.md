@@ -29,9 +29,9 @@
 - [x] Confirm explicit `database_connection_ok` health ping on the latest deployment
 - [x] Confirm explicit `openai_connection_ok` production API connectivity
 - [x] Diagnose Core/Pulse/Launch production blocker as OpenAI `insufficient_quota` (HTTP 429)
-- [ ] Activate sufficient OpenAI API billing/quota for the production project
-- [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
-- [ ] Remove temporary deep smoke-test code after verification
+- [x] Activate sufficient OpenAI API billing/quota for the production project
+- [x] Run a live OpenAI smoke test through Core/Pulse/Launch
+- [x] Remove temporary deep smoke-test code after verification
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
