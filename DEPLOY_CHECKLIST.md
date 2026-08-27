@@ -21,6 +21,7 @@
 - [x] Route Vercel through root serverless/Postgres bootstrap
 - [x] Refresh production secrets and trigger clean redeploy
 - [x] Re-enter Neon `DATABASE_URL` from verified project connection string
+- [x] Re-enter `OPENAI_API_KEY` through the secure OpenAI Platform flow
 - [x] Verify production `/health` endpoint responds
 - [ ] Verify production app boots with persistent database connection configured
 - [ ] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
