@@ -40,6 +40,7 @@
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
+- [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
