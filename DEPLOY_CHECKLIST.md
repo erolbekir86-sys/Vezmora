@@ -17,6 +17,7 @@
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
 - [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
 - [x] Add `DATABASE_URL` as a Vercel environment variable
+- [x] Correct the production `DATABASE_URL` key spelling and refresh the Neon pooled connection string
 - [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
 - [x] Route Vercel through root serverless/Postgres bootstrap
 - [x] Refresh production secrets and trigger clean redeploy
