@@ -1,0 +1,75 @@
+name: Rebrand product to Vexmera
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rebrand-vexmera.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace customer-facing brand name
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          excluded_dirs = {'.git', '.venv', 'venv', '__pycache__', 'node_modules'}
+          binary_suffixes = {
+              '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.pdf', '.zip',
+              '.woff', '.woff2', '.ttf', '.otf', '.pyc', '.db', '.sqlite', '.sqlite3'
+          }
+
+          changed = []
+          for path in root.rglob('*'):
+              if not path.is_file():
+                  continue
+              if any(part in excluded_dirs for part in path.parts):
+                  continue
+              if path.suffix.lower() in binary_suffixes:
+                  continue
+              try:
+                  original = path.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, OSError):
+                  continue
+
+              updated = re.sub(r'\bVezmora\b', 'Vexmera', original)
+              # Word boundary deliberately does not match VEZMORA_* technical env vars.
+              updated = re.sub(r'\bVEZMORA\b', 'VEXMERA', updated)
+
+              if updated != original:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(str(path))
+
+          print(f'Rebranded {len(changed)} files:')
+          for path in changed:
+              print(f' - {path}')
+          PY
+
+      - name: Validate Python syntax
+        run: python -m compileall -q app main.py scripts tests
+
+      - name: Commit Vexmera rebrand
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No rebrand changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Rebrand product from Vezmora to Vexmera"
+          git push origin HEAD:main
