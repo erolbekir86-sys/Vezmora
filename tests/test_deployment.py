@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app import store
 from app.main import app
 from app import stripe_billing
+import main as deployment_main
 
 
 def test_cron_requires_secret(tmp_path, monkeypatch):
@@ -71,3 +72,15 @@ def test_storage_backend_defaults_to_sqlite(monkeypatch):
     assert store.storage_backend() == "sqlite"
     monkeypatch.setenv("TURSO_DATABASE_URL", "https://example.turso.invalid")
     assert store.storage_backend() == "turso"
+
+
+def test_deployment_security_headers(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    with TestClient(deployment_main.app) as client:
+        response = client.get("/health")
+    assert response.status_code == 200
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
