@@ -122,6 +122,8 @@ async def production_security_headers(request, call_next):
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/health"):
+        response.headers.setdefault("Cache-Control", "no-store")
     if _https_runtime():
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     return response
