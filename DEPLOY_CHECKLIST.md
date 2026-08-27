@@ -24,8 +24,9 @@
 - [x] Re-enter Neon `DATABASE_URL` from verified project connection string
 - [x] Re-enter `OPENAI_API_KEY` through the secure OpenAI Platform flow
 - [x] Verify production `/health` endpoint responds
-- [ ] Verify production app boots with persistent database connection configured
-- [ ] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
+- [x] Verify production app boots with persistent database connection configured
+- [x] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
+- [ ] Confirm explicit `database_connection_ok` health ping on the latest deployment
 - [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
