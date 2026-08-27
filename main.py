@@ -49,6 +49,10 @@ if postgres_url:
 from app.main import app, main
 
 
+def _configured(name: str) -> bool:
+    return bool((os.getenv(name) or "").strip())
+
+
 def _database_connection_ok() -> bool:
     if not postgres_url:
         return False
@@ -81,6 +85,35 @@ def _https_runtime() -> bool:
     return bool(os.getenv("VERCEL")) or (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
 
 
+def _internal_secrets_configured() -> bool:
+    return all(_configured(name) for name in ("VEZMORA_APP_URL", "VEZMORA_SECRET_KEY", "CRON_SECRET"))
+
+
+def _stripe_configured() -> bool:
+    return all(
+        _configured(name)
+        for name in (
+            "STRIPE_SECRET_KEY",
+            "STRIPE_WEBHOOK_SECRET",
+            "STRIPE_PRICE_STARTER",
+            "STRIPE_PRICE_GROWTH",
+            "STRIPE_PRICE_SCALE",
+        )
+    )
+
+
+def _smtp_configured() -> bool:
+    return _configured("SMTP_HOST") and _configured("SMTP_FROM")
+
+
+def _google_oauth_configured() -> bool:
+    return all(_configured(name) for name in ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"))
+
+
+def _meta_oauth_configured() -> bool:
+    return all(_configured(name) for name in ("META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"))
+
+
 @app.middleware("http")
 async def production_security_headers(request, call_next):
     """Apply low-risk browser security defaults to every Vexmera response."""
@@ -103,14 +136,22 @@ def runtime_diagnostics() -> dict[str, object]:
         "vercel": bool(os.getenv("VERCEL")),
         "vercel_env": os.getenv("VERCEL_ENV") or None,
         "git_commit_sha": os.getenv("VERCEL_GIT_COMMIT_SHA") or None,
-        "database_url_configured": bool((os.getenv("DATABASE_URL") or "").strip()),
-        "postgres_url_configured": bool((os.getenv("POSTGRES_URL") or "").strip()),
-        "remote_store_configured": bool((os.getenv("TURSO_DATABASE_URL") or "").strip()),
+        "database_url_configured": _configured("DATABASE_URL"),
+        "postgres_url_configured": _configured("POSTGRES_URL"),
+        "remote_store_configured": _configured("TURSO_DATABASE_URL"),
         "database_connection_ok": _database_connection_ok(),
-        "openai_api_key_configured": bool((os.getenv("OPENAI_API_KEY") or "").strip()),
+        "openai_api_key_configured": _configured("OPENAI_API_KEY"),
         "openai_connection_ok": _openai_connection_ok(),
-        "openai_model_configured": bool((os.getenv("OPENAI_MODEL") or "").strip()),
+        "openai_model_configured": _configured("OPENAI_MODEL"),
         "serverless_configured": (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"},
+        "app_url_configured": _configured("VEZMORA_APP_URL"),
+        "app_secret_configured": _configured("VEZMORA_SECRET_KEY"),
+        "cron_secret_configured": _configured("CRON_SECRET"),
+        "internal_secrets_configured": _internal_secrets_configured(),
+        "stripe_configured": _stripe_configured(),
+        "smtp_configured": _smtp_configured(),
+        "google_oauth_configured": _google_oauth_configured(),
+        "meta_oauth_configured": _meta_oauth_configured(),
     }
 
 
