@@ -26,8 +26,10 @@
 - [x] Verify production `/health` endpoint responds
 - [x] Verify production app boots with persistent database connection configured
 - [x] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
-- [ ] Confirm explicit `database_connection_ok` health ping on the latest deployment
+- [x] Confirm explicit `database_connection_ok` health ping on the latest deployment
+- [x] Confirm explicit `openai_connection_ok` production API connectivity
 - [ ] Run a live OpenAI smoke test through Core/Pulse/Launch
+- [ ] Remove temporary deep smoke-test code after verification
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Create Stripe webhook endpoint against the production URL
 - [ ] Configure SMTP/transactional email sender
