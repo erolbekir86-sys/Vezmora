@@ -80,10 +80,10 @@ def _openai_connection_ok() -> bool:
         return False
 
 
-_PRODUCT_SMOKE_CACHE: dict[str, bool] | None = None
+_PRODUCT_SMOKE_CACHE: dict[str, object] | None = None
 
 
-async def _product_smoke() -> dict[str, bool]:
+async def _product_smoke() -> dict[str, object]:
     """Run fixed, non-user-controlled calls through the three core AI pipelines."""
     global _PRODUCT_SMOKE_CACHE
     if _PRODUCT_SMOKE_CACHE is not None:
@@ -134,12 +134,21 @@ async def _product_smoke() -> dict[str, bool]:
     def ok(value: object) -> bool:
         return isinstance(value, str) and len(value.strip()) >= 20
 
+    def error_class(value: object) -> str | None:
+        return type(value).__name__ if isinstance(value, BaseException) else None
+
+    core_ok = ok(results[0])
+    pulse_ok = ok(results[1])
+    launch_ok = ok(results[2])
     _PRODUCT_SMOKE_CACHE = {
-        "core_smoke_ok": ok(results[0]),
-        "pulse_smoke_ok": ok(results[1]),
-        "launch_smoke_ok": ok(results[2]),
+        "core_smoke_ok": core_ok,
+        "core_smoke_error": error_class(results[0]),
+        "pulse_smoke_ok": pulse_ok,
+        "pulse_smoke_error": error_class(results[1]),
+        "launch_smoke_ok": launch_ok,
+        "launch_smoke_error": error_class(results[2]),
+        "product_smoke_ok": core_ok and pulse_ok and launch_ok,
     }
-    _PRODUCT_SMOKE_CACHE["product_smoke_ok"] = all(_PRODUCT_SMOKE_CACHE.values())
     return _PRODUCT_SMOKE_CACHE
 
 
