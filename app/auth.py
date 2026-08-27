@@ -27,6 +27,15 @@ def verify_password(password: str, salt_hex: str, expected_hex: str) -> bool:
     return hmac.compare_digest(digest_hex, expected_hex)
 
 
+def _secure_cookie() -> bool:
+    configured = os.getenv("VEZMORA_COOKIE_SECURE")
+    if configured is not None:
+        return configured.lower() in {"1", "true", "yes", "on"}
+    # Vercel production/preview deployments are HTTPS. Defaulting to secure
+    # there avoids accidentally shipping an authentication cookie over HTTP.
+    return bool(os.getenv("VERCEL")) or (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
+
+
 def start_session(response: Response, user_id: int) -> None:
     raw = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -37,7 +46,7 @@ def start_session(response: Response, user_id: int) -> None:
         raw,
         max_age=SESSION_DAYS * 24 * 3600,
         httponly=True,
-        secure=os.getenv("VEZMORA_COOKIE_SECURE", "false").lower() == "true",
+        secure=_secure_cookie(),
         samesite="lax",
         path="/",
     )
