@@ -83,6 +83,29 @@ def _openai_connection_ok() -> bool:
 _PRODUCT_SMOKE_CACHE: dict[str, object] | None = None
 
 
+def _error_metadata(value: object) -> dict[str, object]:
+    """Return only non-secret OpenAI error metadata, never messages or request bodies."""
+    if not isinstance(value, BaseException):
+        return {"error": None, "error_code": None, "error_type": None, "status_code": None}
+
+    code = getattr(value, "code", None)
+    error_type = getattr(value, "type", None)
+    status_code = getattr(value, "status_code", None)
+    body = getattr(value, "body", None)
+    if isinstance(body, dict):
+        nested = body.get("error") if isinstance(body.get("error"), dict) else body
+        if isinstance(nested, dict):
+            code = code or nested.get("code")
+            error_type = error_type or nested.get("type")
+
+    return {
+        "error": type(value).__name__,
+        "error_code": str(code) if code else None,
+        "error_type": str(error_type) if error_type else None,
+        "status_code": int(status_code) if isinstance(status_code, int) else None,
+    }
+
+
 async def _product_smoke() -> dict[str, object]:
     """Run fixed, non-user-controlled calls through the three core AI pipelines."""
     global _PRODUCT_SMOKE_CACHE
@@ -99,56 +122,74 @@ async def _product_smoke() -> dict[str, object]:
         language="en",
     )
     memory: dict[str, object] = {}
-    requests = (
-        run_agent(
-            AgentRequest(
-                company=company,
-                message="Production health smoke test. Give one concise strategic marketing recommendation and do not propose any external execution.",
+    calls = [
+        (
+            "core",
+            lambda: run_agent(
+                AgentRequest(
+                    company=company,
+                    message="Production health smoke test. Give one concise strategic marketing recommendation and do not propose any external execution.",
+                ),
+                memory,
             ),
-            memory,
         ),
-        generate_strategy(
-            StrategyRequest(
-                company=company,
-                objective="leads",
-                budget_sek=1000,
-                horizon_days=7,
-                notes="Production smoke test. Keep the answer concise and do not execute anything.",
+        (
+            "pulse",
+            lambda: generate_strategy(
+                StrategyRequest(
+                    company=company,
+                    objective="leads",
+                    budget_sek=1000,
+                    horizon_days=7,
+                    notes="Production smoke test. Keep the answer concise and do not execute anything.",
+                ),
+                memory,
             ),
-            memory,
         ),
-        generate_campaign(
-            CampaignRequest(
-                company=company,
-                objective="leads",
-                channel="organic",
-                campaign_name="Production Smoke Test",
-                budget_sek=0,
-                notes="Production smoke test. Keep the answer concise and do not execute anything.",
+        (
+            "launch",
+            lambda: generate_campaign(
+                CampaignRequest(
+                    company=company,
+                    objective="leads",
+                    channel="organic",
+                    campaign_name="Production Smoke Test",
+                    budget_sek=0,
+                    notes="Production smoke test. Keep the answer concise and do not execute anything.",
+                ),
+                memory,
             ),
-            memory,
         ),
-    )
-    results = await asyncio.gather(*requests, return_exceptions=True)
+    ]
+
+    results: dict[str, object] = {}
+    for index, (name, factory) in enumerate(calls):
+        try:
+            results[name] = await factory()
+        except Exception as exc:
+            results[name] = exc
+        if index < len(calls) - 1:
+            # Avoid an artificial request burst while diagnosing low-tier rate limits.
+            await asyncio.sleep(2.0)
 
     def ok(value: object) -> bool:
         return isinstance(value, str) and len(value.strip()) >= 20
 
-    def error_class(value: object) -> str | None:
-        return type(value).__name__ if isinstance(value, BaseException) else None
+    payload: dict[str, object] = {}
+    all_ok = True
+    for name in ("core", "pulse", "launch"):
+        value = results[name]
+        passed = ok(value)
+        all_ok = all_ok and passed
+        meta = _error_metadata(value)
+        payload[f"{name}_smoke_ok"] = passed
+        payload[f"{name}_smoke_error"] = meta["error"]
+        payload[f"{name}_smoke_error_code"] = meta["error_code"]
+        payload[f"{name}_smoke_error_type"] = meta["error_type"]
+        payload[f"{name}_smoke_status_code"] = meta["status_code"]
 
-    core_ok = ok(results[0])
-    pulse_ok = ok(results[1])
-    launch_ok = ok(results[2])
-    _PRODUCT_SMOKE_CACHE = {
-        "core_smoke_ok": core_ok,
-        "core_smoke_error": error_class(results[0]),
-        "pulse_smoke_ok": pulse_ok,
-        "pulse_smoke_error": error_class(results[1]),
-        "launch_smoke_ok": launch_ok,
-        "launch_smoke_error": error_class(results[2]),
-        "product_smoke_ok": core_ok and pulse_ok and launch_ok,
-    }
+    payload["product_smoke_ok"] = all_ok
+    _PRODUCT_SMOKE_CACHE = payload
     return _PRODUCT_SMOKE_CACHE
 
 
