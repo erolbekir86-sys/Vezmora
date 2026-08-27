@@ -38,6 +38,10 @@ jobs:
                   continue
               if any(part in excluded_dirs for part in path.parts):
                   continue
+              # Keep GitHub workflow files unchanged. GitHub App tokens can write
+              # source files but cannot update workflows without extra permission.
+              if len(path.parts) >= 2 and path.parts[0] == '.github' and path.parts[1] == 'workflows':
+                  continue
               if path.suffix.lower() in binary_suffixes:
                   continue
               try:
