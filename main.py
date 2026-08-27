@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import sys
 
+import httpx
+
 # Vercel's deployed source bundle is read-only. Prefer persistent Postgres
 # whenever DATABASE_URL/POSTGRES_URL is configured. Some early beta Vercel
 # setups created empty legacy variables, so do not let empty values block the
@@ -60,6 +62,21 @@ def _database_connection_ok() -> bool:
         return False
 
 
+def _openai_connection_ok() -> bool:
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+    if not api_key:
+        return False
+    try:
+        response = httpx.get(
+            "https://api.openai.com/v1/models",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=8.0,
+        )
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
 @app.get("/health/runtime")
 def runtime_diagnostics() -> dict[str, object]:
     """Expose only non-secret deployment diagnostics for production debugging."""
@@ -74,6 +91,7 @@ def runtime_diagnostics() -> dict[str, object]:
         "remote_store_configured": bool((os.getenv("TURSO_DATABASE_URL") or "").strip()),
         "database_connection_ok": _database_connection_ok(),
         "openai_api_key_configured": bool((os.getenv("OPENAI_API_KEY") or "").strip()),
+        "openai_connection_ok": _openai_connection_ok(),
         "openai_model_configured": bool((os.getenv("OPENAI_MODEL") or "").strip()),
         "serverless_configured": (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"},
     }
