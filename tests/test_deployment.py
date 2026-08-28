@@ -85,3 +85,27 @@ def test_deployment_security_headers(monkeypatch):
     assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
+
+
+def test_runtime_exposes_safe_smtp_readiness(monkeypatch):
+    values = {
+        "SMTP_HOST": "smtp.example.test",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "user",
+        "SMTP_PASSWORD": "test-only-placeholder",
+        "SMTP_FROM": "sender@example.test",
+        "SMTP_STARTTLS": "true",
+    }
+    for name, value in values.items():
+        monkeypatch.setenv(name, value)
+
+    with TestClient(deployment_main.app) as client:
+        payload = client.get("/health/runtime").json()
+
+    assert payload["smtp_host_configured"] is True
+    assert payload["smtp_port_configured"] is True
+    assert payload["smtp_username_configured"] is True
+    assert payload["smtp_password_configured"] is True
+    assert payload["smtp_from_configured"] is True
+    assert payload["smtp_starttls_configured"] is True
+    assert payload["smtp_configured"] is True
