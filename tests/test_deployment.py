@@ -99,33 +99,6 @@ def test_runtime_exposes_safe_smtp_readiness(monkeypatch):
     for name, value in values.items():
         monkeypatch.setenv(name, value)
 
-    calls = []
-
-    class FakeSMTP:
-        def __init__(self, host, port, timeout):
-            calls.append(("connect", host, port, timeout))
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
-            return False
-
-        def ehlo(self):
-            calls.append(("ehlo",))
-
-        def starttls(self):
-            calls.append(("starttls",))
-
-        def login(self, username, password):
-            calls.append(("login", username, password))
-
-        def noop(self):
-            calls.append(("noop",))
-            return 250, b"OK"
-
-    monkeypatch.setattr(deployment_main.smtplib, "SMTP", FakeSMTP)
-
     with TestClient(deployment_main.app) as client:
         payload = client.get("/health/runtime").json()
 
@@ -136,8 +109,4 @@ def test_runtime_exposes_safe_smtp_readiness(monkeypatch):
     assert payload["smtp_from_configured"] is True
     assert payload["smtp_starttls_configured"] is True
     assert payload["smtp_configured"] is True
-    assert payload["smtp_connection_ok"] is True
-    assert ("connect", "smtp.example.test", 587, 8) in calls
-    assert ("starttls",) in calls
-    assert ("login", "user", "test-only-placeholder") in calls
-    assert ("noop",) in calls
+    assert "smtp_connection_ok" not in payload
