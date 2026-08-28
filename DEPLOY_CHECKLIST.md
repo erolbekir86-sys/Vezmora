@@ -43,8 +43,8 @@
 - [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
 - [x] Create Stripe sandbox webhook endpoint against the production URL
 - [x] Trigger production redeploy after adding Stripe sandbox environment variables
+- [x] Configure and verify Stripe sandbox environment variables in production
 - [ ] Add remaining Vercel Sensitive Environment Variables
-- [ ] Configure Stripe sandbox environment variables in production
 - [ ] Configure SMTP/transactional email sender
 - [ ] Configure Google/Meta OAuth redirect URLs
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
