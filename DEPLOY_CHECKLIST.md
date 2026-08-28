@@ -1,7 +1,7 @@
 # Vexmera 0.6.1 — launch checklist
 
 - [x] Private Beta application built
-- [x] 15 automated tests passing
+- [x] 20 automated tests passing
 - [x] Stripe sandbox products and recurring prices created
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
@@ -49,6 +49,7 @@
 - [x] Configure and verify Resend SMTP/transactional email sender
 - [x] Trigger production redeploy after adding Google OAuth environment variables
 - [x] Configure Google OAuth redirect URL and production environment variables
+- [x] Add Meta OAuth production runbook and read-only safety tests
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Configure Meta OAuth redirect URL and production environment variables
 - [ ] End-to-end test Google OAuth with a beta test account
