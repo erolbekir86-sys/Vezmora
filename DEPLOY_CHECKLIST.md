@@ -48,7 +48,10 @@
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
 - [x] Trigger production redeploy after adding Google OAuth environment variables
+- [x] Configure Google OAuth redirect URL and production environment variables
 - [ ] Add remaining Vercel Sensitive Environment Variables
-- [ ] Configure Google/Meta OAuth redirect URLs
+- [ ] Configure Meta OAuth redirect URL and production environment variables
+- [ ] End-to-end test Google OAuth with a beta test account
+- [ ] End-to-end test Meta OAuth with a beta test account
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
