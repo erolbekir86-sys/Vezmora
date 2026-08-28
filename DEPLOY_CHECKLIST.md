@@ -42,6 +42,7 @@
 - [x] Correct production environment whitespace issue and trigger clean redeploy
 - [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
 - [x] Create Stripe sandbox webhook endpoint against the production URL
+- [x] Trigger production redeploy after adding Stripe sandbox environment variables
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Configure Stripe sandbox environment variables in production
 - [ ] Configure SMTP/transactional email sender
