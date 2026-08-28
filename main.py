@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import smtplib
 import sys
 
 import httpx
@@ -107,34 +106,6 @@ def _smtp_configured() -> bool:
     return _configured("SMTP_HOST") and _configured("SMTP_FROM")
 
 
-def _smtp_connection_ok() -> bool:
-    """Verify SMTP TLS/authentication without sending an email."""
-    if not _smtp_configured():
-        return False
-    host = (os.getenv("SMTP_HOST") or "").strip()
-    try:
-        port = int((os.getenv("SMTP_PORT") or "587").strip())
-    except ValueError:
-        return False
-    username = (os.getenv("SMTP_USERNAME") or "").strip()
-    password = (os.getenv("SMTP_PASSWORD") or "").strip()
-    use_tls = (os.getenv("SMTP_STARTTLS") or "true").lower() in {"1", "true", "yes", "on"}
-    if bool(username) != bool(password):
-        return False
-    try:
-        with smtplib.SMTP(host, port, timeout=8) as smtp:
-            smtp.ehlo()
-            if use_tls:
-                smtp.starttls()
-                smtp.ehlo()
-            if username and password:
-                smtp.login(username, password)
-            smtp.noop()
-        return True
-    except Exception:
-        return False
-
-
 def _google_oauth_configured() -> bool:
     return all(_configured(name) for name in ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"))
 
@@ -187,7 +158,6 @@ def runtime_diagnostics() -> dict[str, object]:
         "smtp_from_configured": _configured("SMTP_FROM"),
         "smtp_starttls_configured": _configured("SMTP_STARTTLS"),
         "smtp_configured": _smtp_configured(),
-        "smtp_connection_ok": _smtp_connection_ok(),
         "google_oauth_configured": _google_oauth_configured(),
         "meta_oauth_configured": _meta_oauth_configured(),
     }
