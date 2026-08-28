@@ -44,6 +44,7 @@
 - [x] Create Stripe sandbox webhook endpoint against the production URL
 - [x] Trigger production redeploy after adding Stripe sandbox environment variables
 - [x] Configure and verify Stripe sandbox environment variables in production
+- [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Configure SMTP/transactional email sender
 - [ ] Configure Google/Meta OAuth redirect URLs
