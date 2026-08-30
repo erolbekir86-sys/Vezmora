@@ -50,6 +50,7 @@
 - [x] Trigger production redeploy after adding Google OAuth environment variables
 - [x] Configure Google OAuth redirect URL and production environment variables
 - [x] Add Meta OAuth production runbook and read-only safety tests
+- [x] Trigger production redeploy after adding Meta OAuth environment variables
 - [ ] Add remaining Vercel Sensitive Environment Variables
 - [ ] Configure Meta OAuth redirect URL and production environment variables
 - [ ] End-to-end test Google OAuth with a beta test account
