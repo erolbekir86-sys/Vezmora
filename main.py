@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import os
 import sys
+from datetime import datetime, timezone
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
+from fastapi import HTTPException
 
 # Vercel's deployed source bundle is read-only. Prefer persistent Postgres
 # whenever DATABASE_URL/POSTGRES_URL is configured. Some early beta Vercel
@@ -48,10 +51,10 @@ if postgres_url:
 
 from app.main import app, main
 import app.main as _app_main
+import app.connectors as _connectors
 
-# Facebook Login for Business requires the generated Configuration ID to be
-# included in the authorization request. Keep an env override for future
-# rotations while using the current Vexmera configuration as the safe default.
+# Facebook Login for Business uses permissions from the saved Login
+# Configuration. Remove the legacy scope parameter and force code response.
 _original_meta_authorization_url = _app_main.meta_authorization_url
 
 
@@ -60,11 +63,62 @@ def _meta_business_authorization_url(workspace_id: int, user_id: int) -> str:
     config_id = (os.getenv("META_LOGIN_CONFIG_ID") or "903910732442057").strip()
     if not config_id:
         return url
-    separator = "&" if "?" in url else "?"
-    return f"{url}{separator}config_id={config_id}&override_default_response_type=true"
+    parts = urlsplit(url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.pop("scope", None)
+    query["config_id"] = config_id
+    query["response_type"] = "code"
+    query["override_default_response_type"] = "true"
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+async def _meta_business_callback(code: str, state: str) -> dict[str, object]:
+    state_row = _connectors.consume_oauth_state(state, "meta")
+    if not state_row:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
+    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    params = {
+        "client_id": os.getenv("META_APP_ID"),
+        "client_secret": os.getenv("META_APP_SECRET"),
+        "redirect_uri": os.getenv("META_REDIRECT_URI"),
+        "code": code,
+    }
+    async with httpx.AsyncClient(timeout=20) as client:
+        response = await client.get(f"https://graph.facebook.com/{graph_version}/oauth/access_token", params=params)
+    if response.status_code >= 400:
+        try:
+            error = (response.json() or {}).get("error") or {}
+        except Exception:
+            error = {}
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "message": "Meta token exchange failed",
+                "meta_status": response.status_code,
+                "meta_error": error.get("message") or "Unknown Meta OAuth error",
+                "meta_type": error.get("type"),
+                "meta_code": error.get("code"),
+                "meta_subcode": error.get("error_subcode"),
+            },
+        )
+    token_data = response.json()
+    _connectors.save_connector(
+        workspace_id=state_row["workspace_id"],
+        provider="meta",
+        status="connected",
+        external_id=None,
+        account_label="Meta account",
+        secret_blob=_connectors.encrypt_json(token_data),
+        metadata={
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "scope": ",".join(_connectors.META_SCOPES),
+        },
+    )
+    return {"ok": True, "provider": "meta", "workspace_id": state_row["workspace_id"]}
 
 
 _app_main.meta_authorization_url = _meta_business_authorization_url
+_app_main.meta_callback = _meta_business_callback
 
 
 def _configured(name: str) -> bool:
