@@ -201,6 +201,36 @@ async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) ->
             },
         )
 
+    # Preflight the exact ad-account lookup and expose only Meta's safe error
+    # metadata. Never expose the access token or any application secret.
+    connector = _connectors.get_connector(workspace_id, "meta", include_secret=True)
+    metadata = connector.get("metadata") or {}
+    ad_account = str(metadata.get("ad_account_id") or "").strip()
+    if not ad_account.startswith("act_"):
+        ad_account = f"act_{ad_account}"
+    token = _connectors.decrypt_json(connector["secret_blob"])
+    access_token = token.get("access_token")
+    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    async with httpx.AsyncClient(timeout=20) as client:
+        probe = await client.get(
+            f"https://graph.facebook.com/{graph_version}/{ad_account}",
+            params={"access_token": access_token, "fields": "id,account_id,name,currency"},
+        )
+    if probe.status_code >= 400:
+        try:
+            error = (probe.json() or {}).get("error") or {}
+        except Exception:
+            error = {}
+        message = error.get("message") or f"HTTP {probe.status_code}"
+        code = error.get("code")
+        subcode = error.get("error_subcode")
+        parts = [f"Meta ad account lookup failed: {message}"]
+        if code is not None:
+            parts.append(f"code {code}")
+        if subcode is not None:
+            parts.append(f"subcode {subcode}")
+        raise HTTPException(status_code=502, detail=" | ".join(parts))
+
     return await _original_sync_meta(workspace_id, days)
 
 
