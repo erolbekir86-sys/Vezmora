@@ -120,6 +120,93 @@ async def _meta_business_callback(code: str, state: str) -> dict[str, object]:
 _app_main.meta_authorization_url = _meta_business_authorization_url
 _app_main.meta_callback = _meta_business_callback
 
+# If the saved Meta Ad Account ID is missing or invalid (for example an email
+# address was entered), discover ad accounts from the already-authorized Meta
+# user token. Automatically select the account when there is exactly one.
+_original_sync_meta = _connectors.sync_meta
+
+
+def _valid_meta_ad_account_id(value: str) -> bool:
+    raw = value.strip()
+    if raw.startswith("act_"):
+        raw = raw[4:]
+    return bool(raw) and raw.isdigit()
+
+
+async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) -> dict[str, object]:
+    connector = _connectors.get_connector(workspace_id, "meta", include_secret=True)
+    if not connector or connector.get("status") != "connected" or not connector.get("secret_blob"):
+        raise HTTPException(status_code=409, detail="Connect Meta before syncing")
+
+    metadata = connector.get("metadata") or {}
+    current_id = str(metadata.get("ad_account_id") or "").strip()
+    if not _valid_meta_ad_account_id(current_id):
+        token = _connectors.decrypt_json(connector["secret_blob"])
+        access_token = token.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=409, detail="Meta connector has no access token")
+
+        graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(
+                f"https://graph.facebook.com/{graph_version}/me/adaccounts",
+                params={
+                    "access_token": access_token,
+                    "fields": "id,account_id,name,account_status,currency",
+                    "limit": 100,
+                },
+            )
+        if response.status_code >= 400:
+            try:
+                error = (response.json() or {}).get("error") or {}
+            except Exception:
+                error = {}
+            message = error.get("message") or f"HTTP {response.status_code}"
+            code = error.get("code")
+            suffix = f" (Meta code {code})" if code is not None else ""
+            raise HTTPException(status_code=502, detail=f"Could not list Meta ad accounts: {message}{suffix}")
+
+        accounts = response.json().get("data", [])
+        if not accounts:
+            raise HTTPException(status_code=409, detail="No Meta ad accounts were found for this Facebook login")
+
+        if len(accounts) > 1:
+            safe_accounts = [
+                {
+                    "id": str(account.get("id") or ""),
+                    "name": str(account.get("name") or "Unnamed account"),
+                    "currency": account.get("currency"),
+                }
+                for account in accounts[:25]
+            ]
+            _connectors.update_connector_metadata(workspace_id, "meta", {"available_ad_accounts": safe_accounts})
+            options = "; ".join(f"{a['name']} ({a['id']})" for a in safe_accounts)
+            raise HTTPException(status_code=409, detail=f"Multiple Meta ad accounts found: {options}")
+
+        account = accounts[0]
+        selected_id = str(account.get("id") or "").strip()
+        if not selected_id:
+            account_id = str(account.get("account_id") or "").strip()
+            selected_id = f"act_{account_id}" if account_id else ""
+        if not _valid_meta_ad_account_id(selected_id):
+            raise HTTPException(status_code=502, detail="Meta returned an invalid ad account ID")
+
+        _connectors.update_connector_metadata(
+            workspace_id,
+            "meta",
+            {
+                "ad_account_id": selected_id,
+                "ad_account_name": account.get("name"),
+                "ad_account_currency": account.get("currency"),
+            },
+        )
+
+    return await _original_sync_meta(workspace_id, days)
+
+
+_connectors.sync_meta = _sync_meta_with_account_discovery
+_app_main.sync_meta = _sync_meta_with_account_discovery
+
 
 def _configured(name: str) -> bool:
     return bool((os.getenv(name) or "").strip())
