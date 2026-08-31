@@ -233,7 +233,54 @@ async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) ->
             parts.append(f"subcode {subcode}")
         raise HTTPException(status_code=502, detail=" | ".join(parts))
 
-    return await _original_sync_meta(workspace_id, days)
+    campaign_count: int | None = None
+    campaign_examples: list[dict[str, object]] = []
+    campaign_warning: str | None = None
+    async with httpx.AsyncClient(timeout=20) as client:
+        campaigns_response = await client.get(
+            f"https://graph.facebook.com/{graph_version}/{ad_account}/campaigns",
+            params={
+                "access_token": access_token,
+                "fields": "id,name,status,effective_status",
+                "limit": 100,
+            },
+        )
+    if campaigns_response.status_code < 400:
+        campaigns = campaigns_response.json().get("data", [])
+        campaign_count = len(campaigns)
+        campaign_examples = [
+            {
+                "id": str(campaign.get("id") or ""),
+                "name": str(campaign.get("name") or "Unnamed campaign"),
+                "status": campaign.get("effective_status") or campaign.get("status"),
+            }
+            for campaign in campaigns[:10]
+        ]
+    else:
+        try:
+            error = (campaigns_response.json() or {}).get("error") or {}
+        except Exception:
+            error = {}
+        message = error.get("message") or f"HTTP {campaigns_response.status_code}"
+        code = error.get("code")
+        campaign_warning = f"Meta campaign-list lookup failed: {message}"
+        if code is not None:
+            campaign_warning += f" (code {code})"
+
+    result = await _original_sync_meta(workspace_id, days)
+    result["campaigns_found"] = campaign_count
+    result["campaign_examples"] = campaign_examples
+    warnings = result.setdefault("warnings", [])
+    if campaign_warning:
+        warnings.append(campaign_warning)
+    elif not result.get("campaign_rows"):
+        if campaign_count == 0:
+            warnings.append("Meta account has no campaigns visible to this login.")
+        elif campaign_count:
+            warnings.append(
+                f"Meta sees {campaign_count} campaign(s), but no insight rows were returned for the selected {days}-day period."
+            )
+    return result
 
 
 _connectors.sync_meta = _sync_meta_with_account_discovery
