@@ -34,9 +34,11 @@ if os.getenv("VERCEL"):
         os.environ["VEZMORA_DB_PATH"] = "/tmp/.vezmora.db"
         os.environ["VEZMORA_DATA_DIR"] = "/tmp"
 
-# An empty OPENAI_MODEL environment variable should not erase the safe default.
+# Empty environment variables should not erase safe production defaults.
 if not (os.getenv("OPENAI_MODEL") or "").strip():
     os.environ["OPENAI_MODEL"] = "gpt-5.6-terra"
+if not (os.getenv("META_GRAPH_VERSION") or "").strip():
+    os.environ["META_GRAPH_VERSION"] = "v24.0"
 
 # The Postgres schema is provisioned separately in Neon. Avoid running the
 # SQLite bootstrap DDL against Postgres and verify connectivity instead.
