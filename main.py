@@ -47,6 +47,24 @@ if postgres_url:
     _store.init_db = _verify_database
 
 from app.main import app, main
+import app.main as _app_main
+
+# Facebook Login for Business requires the generated Configuration ID to be
+# included in the authorization request. Keep an env override for future
+# rotations while using the current Vexmera configuration as the safe default.
+_original_meta_authorization_url = _app_main.meta_authorization_url
+
+
+def _meta_business_authorization_url(workspace_id: int, user_id: int) -> str:
+    url = _original_meta_authorization_url(workspace_id, user_id)
+    config_id = (os.getenv("META_LOGIN_CONFIG_ID") or "903910732442057").strip()
+    if not config_id:
+        return url
+    separator = "&" if "?" in url else "?"
+    return f"{url}{separator}config_id={config_id}&override_default_response_type=true"
+
+
+_app_main.meta_authorization_url = _meta_business_authorization_url
 
 
 def _configured(name: str) -> bool:
