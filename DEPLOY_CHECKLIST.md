@@ -1,5 +1,6 @@
 # Vexmera 0.6.1 — launch checklist
 
+## Core platform
 - [x] Private Beta application built
 - [x] 20 automated tests passing
 - [x] Stripe sandbox products and recurring prices created
@@ -17,6 +18,8 @@
 - [x] Add safe production readiness flags for remaining integrations
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
 - [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
+
+## Production infrastructure
 - [x] Add `DATABASE_URL` as a Vercel environment variable
 - [x] Correct the production `DATABASE_URL` key spelling and refresh the Neon pooled connection string
 - [x] Add `OPENAI_API_KEY` as a Vercel sensitive environment variable
@@ -41,19 +44,45 @@
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
 - [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
+- [ ] Add remaining Vercel Sensitive Environment Variables as required by final launch configuration
+
+## Billing and email
 - [x] Create Stripe sandbox webhook endpoint against the production URL
 - [x] Trigger production redeploy after adding Stripe sandbox environment variables
 - [x] Configure and verify Stripe sandbox environment variables in production
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
+
+## Google
 - [x] Trigger production redeploy after adding Google OAuth environment variables
 - [x] Configure Google OAuth redirect URL and production environment variables
+- [x] End-to-end test Google OAuth with a beta test account
+- [x] Enable Google Analytics Data API
+- [x] Configure GA4 property and web stream
+- [x] Install GA4 tag in production
+- [x] Confirm Google Analytics sync returns real rows
+- [x] Save Google Ads customer ID `638-343-6270` in Vexmera
+- [x] Create Google Ads Manager account for Vexmera (`944-502-2492`)
+- [x] Create Google Ads API developer token
+- [x] Add `GOOGLE_ADS_DEVELOPER_TOKEN` to Vercel Production and redeploy successfully
+- [x] Submit Google Ads API Basic Access application with Vexmera tool documentation
+- [x] Send manager-account link request from Vexmera MCC to Google Ads account `638-343-6270`
+- [ ] Accept the pending manager-account link request from Google Ads account `638-343-6270`
+- [ ] Receive Google approval for Basic Access
+- [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required after manager linking is active
+- [ ] Complete Google Ads sync against a real linked account and confirm campaign-level rows
+
+## Meta
 - [x] Add Meta OAuth production runbook and read-only safety tests
 - [x] Trigger production redeploy after adding Meta OAuth environment variables
-- [ ] Add remaining Vercel Sensitive Environment Variables
-- [ ] Configure Meta OAuth redirect URL and production environment variables
-- [ ] End-to-end test Google OAuth with a beta test account
-- [ ] End-to-end test Meta OAuth with a beta test account
+- [x] Configure Meta OAuth redirect URL and production environment variables
+- [x] End-to-end test Meta OAuth with a beta test account
+- [x] Connect Meta ad account and verify account-level read access
+- [x] Confirm read-only Meta sync handles an account with no campaigns correctly
+
+## Launch
+- [ ] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
+- [ ] Finish AI Command Center customer-facing polish
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
