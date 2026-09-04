@@ -33,9 +33,11 @@ def test_marketing_landing_does_not_expose_internal_execution_controls():
         assert marker not in html
 
 
-def test_existing_app_root_is_not_replaced_by_marketing_page():
+def test_existing_app_root_still_serves_authenticated_app_shell():
     with TestClient(app) as client:
         response = client.get('/')
 
     assert response.status_code == 200
-    assert 'Vexmera — AI Marketing Officer' not in response.text
+    assert 'id="authScreen"' in response.text
+    assert '/static/app.js' in response.text
+    assert 'AI-DRIVEN MARKETING INTELLIGENCE' not in response.text
