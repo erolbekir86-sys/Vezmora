@@ -1,4 +1,9 @@
 (() => {
+  const polishStylesheet = document.createElement('link');
+  polishStylesheet.rel = 'stylesheet';
+  polishStylesheet.href = '/static/landing-polish.css?v=1';
+  document.head.appendChild(polishStylesheet);
+
   const root = document.documentElement;
   const body = document.body;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
