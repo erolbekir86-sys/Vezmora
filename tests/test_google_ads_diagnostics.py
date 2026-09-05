@@ -59,3 +59,39 @@ def test_google_ads_error_summary_caps_output_length():
 
     assert summary is not None
     assert len(summary) <= 900
+
+
+def test_google_ads_error_summary_redacts_known_secret_values(monkeypatch):
+    monkeypatch.setenv("GOOGLE_ADS_DEVELOPER_TOKEN", "dev-secret-123")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "client-secret-456")
+    response = httpx.Response(
+        403,
+        json={
+            "error": {
+                "status": "PERMISSION_DENIED",
+                "message": "developer-token=dev-secret-123 client-secret-456",
+                "details": [
+                    {
+                        "requestId": "request-789",
+                        "errors": [
+                            {
+                                "errorCode": {"authorizationError": "USER_PERMISSION_DENIED"},
+                                "message": "Bearer oauth-token-abc access_token=access-123",
+                            }
+                        ],
+                    }
+                ],
+            }
+        },
+    )
+
+    summary = _google_ads_error_summary(response)
+
+    assert summary is not None
+    assert "dev-secret-123" not in summary
+    assert "client-secret-456" not in summary
+    assert "oauth-token-abc" not in summary
+    assert "access-123" not in summary
+    assert summary.count("[REDACTED]") >= 3
+    assert "PERMISSION_DENIED" in summary
+    assert "request_id=request-789" in summary
