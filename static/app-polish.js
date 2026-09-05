@@ -30,7 +30,7 @@
   });
   applyPageMeta(document.querySelector('.nav.active')?.dataset.view || 'dashboard');
 
-  /* Keep the product's AI-response language selector clearly separate from UI language. */
+  /* Keep the AI-response language selector clearly separate from UI language. */
   const language = $('language');
   if (language && !language.closest('.header-language-control')) {
     const wrap = document.createElement('label');
@@ -43,7 +43,7 @@
     language.setAttribute('aria-label', 'Språk för AI-svar');
   }
 
-  /* Add a quiet, truthful beta badge to product branding. */
+  /* Add a quiet, truthful beta badge when older markup does not already have one. */
   document.querySelectorAll('.brand').forEach((brand) => {
     const copy = brand.querySelector('div:last-child');
     if (!copy || copy.querySelector('.beta-brand-badge')) return;
@@ -52,29 +52,6 @@
     badge.textContent = 'Privat beta';
     copy.appendChild(badge);
   });
-
-  /* Product-grade toast feedback instead of raw browser alert dialogs. */
-  let toastStack = document.querySelector('.vex-toast-stack');
-  if (!toastStack) {
-    toastStack = document.createElement('div');
-    toastStack.className = 'vex-toast-stack';
-    toastStack.setAttribute('aria-live', 'polite');
-    document.body.appendChild(toastStack);
-  }
-
-  function toast(message, timeout = 6500) {
-    const text = typeof message === 'string' ? message : JSON.stringify(message, null, 2);
-    const node = document.createElement('div');
-    node.className = 'vex-toast';
-    node.innerHTML = '<span class="vex-toast-icon">V</span><p></p><button type="button" aria-label="Stäng">×</button>';
-    node.querySelector('p').textContent = text;
-    const close = () => node.remove();
-    node.querySelector('button').addEventListener('click', close);
-    toastStack.appendChild(node);
-    if (timeout) window.setTimeout(close, timeout);
-  }
-  window.vexmeraToast = toast;
-  window.alert = (message) => toast(message);
 
   const exactPairs = new Map([
     ['Connected', 'Ansluten'],
@@ -94,18 +71,33 @@
     ['ENABLED', 'AKTIVERAD'],
     ['LOCKED', 'LÅST'],
     ['BLOCKED IN BETA', 'BLOCKERAD I BETA'],
+    ['Platform', 'Plattform'],
+    ['Campaign', 'Kampanj'],
+    ['Spend', 'Kostnad'],
+    ['Revenue', 'Omsättning'],
+    ['Action', 'Åtgärd'],
+    ['Request pause', 'Begär paus'],
+    ['Pending', 'Väntar'],
+    ['pending', 'väntar'],
+    ['Approved', 'Godkänd'],
+    ['approved', 'godkänd'],
+    ['Rejected', 'Avvisad'],
+    ['rejected', 'avvisad'],
+    ['Executed', 'Utförd'],
+    ['executed', 'utförd'],
+    ['Failed', 'Misslyckad'],
+    ['failed', 'misslyckad'],
+    ['high', 'hög'],
+    ['medium', 'medel'],
+    ['low', 'låg'],
     ['No anomalies detected.', 'Inga avvikelser upptäckta.'],
     ['No worker jobs yet.', 'Inga datakörningar ännu.'],
     ['No campaign-level rows yet. Sync Google or Meta.', 'Ingen kampanjdata ännu. Synka Google eller Meta.'],
     ['No priority signals yet.', 'Inga prioriterade signaler ännu.'],
+    ['No FX rates saved.', 'Inga valutakurser sparade.'],
     ['Core could not load priorities', 'Core kunde inte ladda prioriteringarna'],
     ['Your growth priorities', 'Dina tillväxtprioriteringar'],
-    ['Open', 'Öppna'],
-    ['Pending', 'Väntar'],
-    ['Approved', 'Godkänd'],
-    ['Rejected', 'Avvisad'],
-    ['Executed', 'Utförd'],
-    ['Failed', 'Misslyckad']
+    ['Open', 'Öppna']
   ]);
 
   const phrasePairs = [
@@ -125,20 +117,55 @@
     ['Invite created, but SMTP is not configured on this runtime.', 'Inbjudan skapades, men e-post är inte konfigurerad i den här miljön.'],
     ['Password updated. You can log in now.', 'Lösenordet är uppdaterat. Du kan logga in nu.'],
     ['Core is checking your workspace.', 'Core granskar ditt workspace.'],
-    ['Loading your priorities…', 'Laddar dina prioriteringar…']
+    ['Loading your priorities…', 'Laddar dina prioriteringar…'],
+    ['trial until ', 'provperiod till '],
+    [' · Jobs ', ' · Jobb '],
+    [' · Team ', ' · Team '],
+    [' · Stripe not configured', ' · Stripe är inte konfigurerat'],
+    ['Execution adapter is not available for this provider.', 'Det finns ingen körningsadapter för den här leverantören.'],
+    ['Scanned ', 'Skannade '],
+    [' competitors.', ' konkurrenter.'],
+    ['No workspace available', 'Inget workspace är tillgängligt']
   ];
+
+  function translateString(value) {
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (exactPairs.has(trimmed)) return value.replace(trimmed, exactPairs.get(trimmed));
+    let next = value;
+    phrasePairs.forEach(([from, to]) => { next = next.split(from).join(to); });
+    return next;
+  }
+
+  /* Product-grade toast feedback instead of raw browser alert dialogs. */
+  let toastStack = document.querySelector('.vex-toast-stack');
+  if (!toastStack) {
+    toastStack = document.createElement('div');
+    toastStack.className = 'vex-toast-stack';
+    toastStack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toastStack);
+  }
+
+  function toast(message, timeout = 6500) {
+    const raw = typeof message === 'string' ? message : JSON.stringify(message, null, 2);
+    const text = translateString(raw);
+    const node = document.createElement('div');
+    node.className = 'vex-toast';
+    node.innerHTML = '<span class="vex-toast-icon">V</span><p></p><button type="button" aria-label="Stäng">×</button>';
+    node.querySelector('p').textContent = text;
+    const close = () => node.remove();
+    node.querySelector('button').addEventListener('click', close);
+    toastStack.appendChild(node);
+    if (timeout) window.setTimeout(close, timeout);
+  }
+  window.vexmeraToast = toast;
+  window.alert = (message) => toast(message);
 
   function translateTextNode(node) {
     if (node.nodeType !== Node.TEXT_NODE) return;
     const original = node.nodeValue;
     if (!original || !original.trim()) return;
-    const trimmed = original.trim();
-    if (exactPairs.has(trimmed)) {
-      node.nodeValue = original.replace(trimmed, exactPairs.get(trimmed));
-      return;
-    }
-    let next = original;
-    phrasePairs.forEach(([from, to]) => { next = next.split(from).join(to); });
+    const next = translateString(original);
     if (next !== original) node.nodeValue = next;
   }
 
@@ -154,7 +181,8 @@
     [
       $('connectorGrid'), $('approvalList'), $('competitorList'), $('briefSchedulerState'),
       $('autopilotRuntime'), $('campaignInsights'), $('anomalyList'), $('jobList'),
-      $('teamMembers'), $('inviteResult'), $('resetState'), $('coreHeadline'), $('coreTodayCards')
+      $('teamMembers'), $('inviteResult'), $('billingStatus'), $('fxList'), $('resetState'),
+      $('coreHeadline'), $('coreTodayCards')
     ].forEach(translateTree);
 
     const mode = $('autopilotModeBadge');
