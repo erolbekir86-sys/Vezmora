@@ -5,7 +5,9 @@ from . import account_privacy_controls as _account_privacy_controls
 from . import beta_readiness as _beta_readiness
 from .http_error_safety import install_http_error_safety as _install_http_error_safety
 from .main import app as _app
+from .public_routing import install_public_routing as _install_public_routing
 
 _install_http_error_safety(_app)
+_install_public_routing(_app)
 
 __all__ = []
