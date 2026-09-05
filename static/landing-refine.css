@@ -1,0 +1,153 @@
+/* Vexmera refinement pass — smoother flow, stronger micro-contrast, cleaner states */
+:root{
+  --refine-ease:cubic-bezier(.18,.78,.24,1);
+  --refine-soft:cubic-bezier(.22,.61,.36,1);
+}
+
+/* Subtle page progress, designed to feel calm rather than gamified. */
+.site-header::after{
+  content:"";
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:-1px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--gold),color-mix(in srgb,var(--gold) 58%,transparent));
+  transform:scaleX(var(--page-progress,0));
+  transform-origin:left center;
+  opacity:.62;
+  pointer-events:none;
+  transition:transform .12s linear,opacity .25s ease;
+}
+
+/* Active navigation is clearer without becoming loud. */
+.desktop-nav a[aria-current="location"]{
+  color:var(--ink);
+  font-weight:700;
+}
+.desktop-nav a[aria-current="location"]::after{right:0}
+
+/* Lift washed-out microcopy another notch. */
+.pricing-note,
+.plan-list,
+.faq-item p,
+.footer,
+.footer a,
+.footer small,
+.founder-meta small,
+.dashboard-status-card small,
+.dashboard-status-card>span:last-child,
+.beta-data-pill{
+  color:color-mix(in srgb,var(--muted) 92%,var(--ink))!important;
+}
+html[data-theme="dark"] .pricing-note,
+html[data-theme="dark"] .plan-list,
+html[data-theme="dark"] .faq-item p,
+html[data-theme="dark"] .footer,
+html[data-theme="dark"] .footer a,
+html[data-theme="dark"] .footer small{
+  color:#b7c0cb!important;
+}
+
+/* Founder name should be real text, not a pseudo-element hack. */
+.founder-meta strong{font-size:14px!important;line-height:1.3!important}
+.founder-meta strong::after{display:none!important;content:none!important}
+
+/* Slightly richer tactile surfaces. */
+.value-card,.step,.module-card,.integration-card,.outcome-grid article,.plan-card,.faq-item{
+  position:relative;
+  overflow:hidden;
+}
+.value-card::after,.step::after,.module-card::after,.integration-card::after,.outcome-grid article::after,.plan-card::after{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(260px circle at var(--refine-mx,50%) var(--refine-my,50%),color-mix(in srgb,var(--gold) 8%,transparent),transparent 72%);
+  transition:opacity .32s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .value-card:hover::after,.step:hover::after,.module-card:hover::after,.integration-card:hover::after,.outcome-grid article:hover::after,.plan-card:hover::after{opacity:1}
+}
+
+/* Better visual separation when the page moves between light and dark product moments. */
+.modules-section{position:relative}
+.modules-section::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-1px;height:48px;
+  background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--dark) 5%,transparent));
+  pointer-events:none;
+}
+.pulse-feature.section-wrap{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.workflow-section.section-wrap{box-shadow:inset 0 -1px 0 rgba(255,255,255,.035)}
+
+/* Integration marks read as intentional product graphics. */
+.source-logo.ux-source{
+  width:44px!important;
+  height:44px!important;
+  border-radius:13px!important;
+  border:1px solid color-mix(in srgb,var(--line) 86%,transparent)!important;
+  background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface-soft) 78%,var(--surface)))!important;
+  box-shadow:0 9px 22px rgba(28,25,20,.055)!important;
+}
+.integration-card.ready .source-logo.ux-source{
+  border-color:color-mix(in srgb,var(--gold) 30%,var(--line))!important;
+  color:var(--gold-dark)!important;
+}
+.integration-card .source-logo .ux-icon{width:21px!important;height:21px!important}
+
+/* Dashboard micro states must stay readable. */
+.demo-data-pill{color:#e2bf86!important;border-color:rgba(226,191,134,.34)!important}
+.beta-data-pill{color:#b4becb!important;border-color:rgba(180,190,203,.26)!important}
+.dash-status-card strong{font-size:8.5px!important}
+.dash-status-card small{font-size:6.8px!important}
+
+/* Smoother feel when hovering buttons and links. */
+.button,.utility-btn,.mini-action,.desktop-nav a,.mobile-menu a{
+  transition-timing-function:var(--refine-ease)!important;
+}
+.button{transform-origin:center}
+@media (hover:hover) and (pointer:fine){
+  .button:hover{transform:translateY(-2px) scale(1.012)!important}
+  .button-primary:hover{box-shadow:0 18px 38px rgba(125,89,44,.25)!important}
+}
+
+/* Keep the portrait crisp and impossible to fade out. */
+img.founder-portrait{
+  opacity:1!important;
+  visibility:visible!important;
+  image-rendering:auto;
+  transform:translateZ(0);
+}
+.founder-photo-fallback{
+  width:300px;
+  aspect-ratio:4/5;
+  display:grid;
+  place-items:center;
+  justify-self:end;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface-soft);
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+  padding:24px;
+}
+
+/* Mobile: reduce perspective and keep small copy legible. */
+@media (max-width:760px){
+  .site-header::after{left:10px;right:10px}
+  .dashboard-window{transform:none!important}
+  .dash-nav{font-size:8.6px!important}
+  .dash-top p,.metric-row span,.recommendation-card p,.chart-head,.chart-axis{font-size:8px!important}
+  .dashboard-status-card small{font-size:6.5px!important}
+  .founder-photo-fallback{width:min(100%,320px);justify-self:center}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .site-header::after{transition:none!important}
+  .value-card::after,.step::after,.module-card::after,.integration-card::after,.outcome-grid article::after,.plan-card::after{display:none!important}
+}
