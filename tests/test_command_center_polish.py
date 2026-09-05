@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
+APP_JS = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
 POLISH_CSS = (ROOT / "static" / "app-polish.css").read_text(encoding="utf-8")
 POLISH_JS = (ROOT / "static" / "app-polish.js").read_text(encoding="utf-8")
 
@@ -34,6 +36,14 @@ def test_core_product_ids_are_preserved_for_existing_app_logic():
     )
     for element_id in required_ids:
         assert f'id="{element_id}"' in INDEX
+
+
+def test_every_literal_app_js_dom_id_still_exists_in_index():
+    # app.js uses the tiny $("id") helper as its DOM contract. Rebuilding the
+    # customer-facing HTML must never silently remove an element the product uses.
+    referenced_ids = set(re.findall(r"\$\(['\"]([A-Za-z0-9_-]+)['\"]\)", APP_JS))
+    missing = sorted(element_id for element_id in referenced_ids if f'id="{element_id}"' not in INDEX)
+    assert not missing, f"Missing DOM ids required by app.js: {missing}"
 
 
 def test_polish_keeps_private_beta_messaging_and_reduced_motion():
