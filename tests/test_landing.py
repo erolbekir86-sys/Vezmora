@@ -9,10 +9,18 @@ def test_marketing_landing_is_shipped_as_public_static_asset():
     with TestClient(app) as client:
         response = client.get('/static/landing.html')
         script = client.get('/static/landing.js')
+        ux_script = client.get('/static/landing-ux.js')
+        refine_script = client.get('/static/landing-refine.js')
+        refine_css = client.get('/static/landing-refine.css')
+        founder = client.get('/static/vexmera-founder.jpg')
 
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/html')
     assert script.status_code == 200
+    assert ux_script.status_code == 200
+    assert refine_script.status_code == 200
+    assert refine_css.status_code == 200
+    assert founder.status_code == 200
     html = response.text
     assert 'Vexmera — AI Marketing Officer' in html
     assert 'Kontroll före automation' in html
@@ -78,6 +86,10 @@ def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     assert 'href="/app"' in response.text
     assert '<link rel="canonical" href="https://vexmera.com/" />' in response.text
     assert '<meta name="robots" content="index,follow" />' in response.text
+    assert '/static/landing-ux.css?v=20260905-3' in response.text
+    assert '/static/landing-refine.css?v=20260905-1' in response.text
+    assert '/static/landing-refine.js?v=20260905-1' in response.text
+    assert '/static/vexmera-founder.jpg?v=20260905-5' in response.text
 
 
 def test_authenticated_product_shell_lives_under_app_and_is_noindex():
