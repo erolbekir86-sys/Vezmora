@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 62 automated tests passing on the latest verified CI run
+- [x] 66 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -99,12 +99,15 @@
 ## Privacy and data controls
 - [x] Prevent connector secret blobs from appearing in normal API responses
 - [x] Add self-service backend disconnect flow for Google and Meta
+- [x] Add customer-facing disconnect controls in the authenticated UI
 - [x] Delete local encrypted connector credentials even when provider-side revocation cannot be completed
 - [x] Clear saved provider/account identifiers and pending OAuth states on disconnect
 - [x] Keep disconnect idempotent and covered by regression tests
 - [x] Document that disconnect retains previously synchronized reporting history
-- [ ] Add customer-facing disconnect controls in the authenticated UI
-- [ ] Add an explicit, separately confirmed deletion flow for retained synchronized marketing history
+- [x] Add an owner/admin-only backend deletion flow for retained synchronized campaign metrics, provider KPIs, anomalies and anomaly notifications
+- [x] Require explicit destructive confirmation before synchronized-history deletion
+- [x] Preserve manually entered KPI rows during synchronized-history deletion
+- [ ] Add a customer-facing UI for the separately confirmed synchronized-history deletion flow
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -112,7 +115,8 @@
 - [x] Align public marketing and Command Center branding, pricing and private-beta language
 - [x] Complete the current AI Command Center customer-facing polish pass
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
-- [x] Verify connector-disconnect backend with 62-test green CI and successful Vercel deployment status
+- [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
+- [x] Verify synchronized-history deletion backend with 66-test green CI
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
