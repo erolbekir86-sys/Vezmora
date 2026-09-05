@@ -11,6 +11,11 @@ This file is a non-secret operational snapshot for the five-company private beta
 - The Python package identifies the product as `vexmera` version `0.6.1`.
 - CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment and beta readiness.
 - The pilot runbook explicitly requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
+- Production database intent is now confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback. Seeing PostgreSQL in production is therefore expected and is not itself a deployment blocker.
+
+## Diagnostic follow-up
+
+`app.store.storage_backend()` currently reports any configured `TURSO_DATABASE_URL` as `turso`. The Vercel bootstrap intentionally copies a Postgres URL into that variable while installing `app.postgres_compat`, so `/health/runtime` can label an active PostgreSQL backend as `turso`. This is a diagnostics-only mismatch, not evidence that the application is using the wrong database. Track and fix the reporting separately without changing database credentials or deployment configuration.
 
 ## Current blockers requiring manual or external resolution
 
