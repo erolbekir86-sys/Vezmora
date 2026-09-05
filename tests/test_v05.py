@@ -68,6 +68,9 @@ def test_team_invite_and_roles(tmp_path, monkeypatch):
     store.init_db()
     with TestClient(app) as client:
         workspace_id = register(client, 'owner-team@example.com')
+        # Starter is intentionally a one-user plan. Move this role/invite test
+        # to Growth so it tests team behavior without contradicting product limits.
+        store.set_workspace_billing(workspace_id, plan='growth')
         invite = client.post(f'/api/team/invites?workspace_id={workspace_id}', json={'email': 'viewer@example.com', 'role': 'viewer'})
         assert invite.status_code == 200
         token = invite.json()['invite_token']
