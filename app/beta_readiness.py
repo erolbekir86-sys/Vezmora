@@ -5,6 +5,13 @@ import os
 from .main import app as _app
 
 
+VERIFIED_STRIPE_SANDBOX_PRICES = {
+    "STRIPE_PRICE_STARTER": "price_1UCGVX32EFR9j6MxSP6VB2TF",
+    "STRIPE_PRICE_GROWTH": "price_1UCGVf32EFR9j6Mx0fCKTHzK",
+    "STRIPE_PRICE_SCALE": "price_1UCGVm32EFR9j6MxFOxJD3zp",
+}
+
+
 def _configured(name: str) -> bool:
     return bool((os.getenv(name) or "").strip())
 
@@ -42,12 +49,31 @@ def _transport_snapshot() -> dict[str, object]:
     }
 
 
+def _stripe_key_mode() -> str:
+    key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
+    if not key:
+        return "missing"
+    if key.startswith(("sk_test_", "rk_test_")):
+        return "test"
+    if key.startswith(("sk_live_", "rk_live_")):
+        return "live"
+    return "unknown"
+
+
+def _stripe_catalog_matches_verified_sandbox() -> bool:
+    return all((os.getenv(name) or "").strip() == expected for name, expected in VERIFIED_STRIPE_SANDBOX_PRICES.items())
+
+
 def beta_safety_snapshot() -> dict[str, object]:
     execution_enabled = _enabled("VEZMORA_EXECUTION_ENABLED")
     autopilot_execution_enabled = _enabled("VEZMORA_AUTOPILOT_EXECUTION_ENABLED")
     meta_execution_scope_enabled = _enabled("VEZMORA_ENABLE_META_EXECUTION_SCOPE")
     dev_show_tokens_enabled = _enabled("VEZMORA_DEV_SHOW_TOKENS")
     transport = _transport_snapshot()
+    stripe_key_mode = _stripe_key_mode()
+    stripe_catalog_configured = _all_configured(*VERIFIED_STRIPE_SANDBOX_PRICES.keys())
+    stripe_catalog_matches = _stripe_catalog_matches_verified_sandbox()
+    stripe_webhook_configured = _configured("STRIPE_WEBHOOK_SECRET")
 
     return {
         "ok": True,
@@ -65,12 +91,15 @@ def beta_safety_snapshot() -> dict[str, object]:
         ),
         "production_transport_safe": bool(transport["safe"]),
         "transport": transport,
-        "stripe_catalog_env_configured": _all_configured(
-            "STRIPE_PRICE_STARTER",
-            "STRIPE_PRICE_GROWTH",
-            "STRIPE_PRICE_SCALE",
+        "stripe_key_mode": stripe_key_mode,
+        "stripe_catalog_env_configured": stripe_catalog_configured,
+        "stripe_catalog_matches_verified_sandbox": stripe_catalog_matches,
+        "stripe_webhook_env_configured": stripe_webhook_configured,
+        "stripe_sandbox_ready": (
+            stripe_key_mode == "test"
+            and stripe_catalog_matches
+            and stripe_webhook_configured
         ),
-        "stripe_webhook_env_configured": _configured("STRIPE_WEBHOOK_SECRET"),
         "google_oauth_configured": _all_configured(
             "GOOGLE_CLIENT_ID",
             "GOOGLE_CLIENT_SECRET",
@@ -90,6 +119,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         },
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
+            "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
         ],
