@@ -28,6 +28,12 @@ Required before enabling production billing:
 - `STRIPE_PRICE_GROWTH`
 - `STRIPE_PRICE_SCALE`
 
+The three Price IDs must exist in the same Stripe account and mode as `STRIPE_SECRET_KEY` and must be monthly recurring SEK prices with these exact unit amounts before VAT:
+
+- Starter: `149900` öre = 1,499 SEK/month
+- Growth: `299900` öre = 2,999 SEK/month
+- Scale: `599900` öre = 5,999 SEK/month
+
 Optional:
 
 - `VEZMORA_TRIAL_DAYS` — defaults to `14`.
@@ -44,7 +50,15 @@ Expected event types:
 - `customer.subscription.deleted`
 - `invoice.payment_failed`
 
-Do not mix Stripe test-mode IDs/keys with live-mode IDs/keys.
+Do not mix Stripe test-mode IDs/keys with live-mode IDs/keys. Never assume a historical Price ID is still valid in the active Stripe account.
+
+Before enabling paid Checkout, run:
+
+```bash
+python scripts/verify_stripe_catalog.py
+```
+
+The preflight verifies active monthly SEK prices and expected amounts without printing the Stripe secret or any Price IDs. A non-zero exit status means billing must remain blocked until the catalog is reconciled.
 
 ## Transactional email
 
@@ -97,7 +111,8 @@ The redirect URI must exactly match the valid OAuth redirect URI registered in t
 ## External execution safety
 
 - `VEZMORA_EXECUTION_ENABLED` defaults to disabled.
-- Keep it disabled until Google/Meta connections, approval gates and real-account previews have been verified.
+- `VEZMORA_AUTOPILOT_EXECUTION_ENABLED` defaults to disabled.
+- Keep both disabled throughout the private beta unless a reviewed production policy explicitly enables them.
 - Vexmera should continue to prepare actions for human approval while execution remains disabled.
 
 ## Safe verification
@@ -114,10 +129,13 @@ The endpoint exposes booleans only for configuration/readiness and never returns
 - `google_oauth_configured`
 - `meta_oauth_configured`
 
+Important: `stripe_configured` only confirms that the expected environment variables are present. It does not prove that the configured Price IDs exist or match Vexmera's prices. Use `scripts/verify_stripe_catalog.py` for that check.
+
 ## Current recommended order
 
 1. Core internal secrets (`VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, `CRON_SECRET`).
 2. Transactional email.
 3. Google/Meta read-only OAuth.
-4. Stripe production billing after pricing/domain decisions are final.
-5. External ad-account execution only after explicit production approval and connector testing.
+4. Reconcile and verify the Stripe catalog, then run a full test-mode Checkout/webhook/portal flow.
+5. Stripe live billing only after pricing, legal pages and canonical domain are final.
+6. External ad-account execution only after explicit production approval and connector testing.
