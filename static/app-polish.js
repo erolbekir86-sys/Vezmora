@@ -77,6 +77,7 @@
     ['Revenue', 'Omsättning'],
     ['Action', 'Åtgärd'],
     ['Request pause', 'Begär paus'],
+    ['Sync-period', 'Synkperiod'],
     ['Pending', 'Väntar'],
     ['pending', 'väntar'],
     ['Approved', 'Godkänd'],
@@ -87,9 +88,23 @@
     ['executed', 'utförd'],
     ['Failed', 'Misslyckad'],
     ['failed', 'misslyckad'],
+    ['trialing', 'provperiod'],
+    ['active', 'aktiv'],
+    ['canceled', 'avslutad'],
+    ['unpaid', 'obetald'],
+    ['past_due', 'förfallen'],
+    ['marketer', 'marknadsförare'],
+    ['admin', 'administratör'],
+    ['viewer', 'läsbehörighet'],
     ['high', 'hög'],
     ['medium', 'medel'],
     ['low', 'låg'],
+    ['internal', 'internt'],
+    ['google_ads', 'Google Ads'],
+    ['meta_ads', 'Meta Ads'],
+    ['google_analytics', 'Google Analytics'],
+    ['sync_all', 'Synka alla'],
+    ['detect_anomalies', 'Upptäck avvikelser'],
     ['No anomalies detected.', 'Inga avvikelser upptäckta.'],
     ['No worker jobs yet.', 'Inga datakörningar ännu.'],
     ['No campaign-level rows yet. Sync Google or Meta.', 'Ingen kampanjdata ännu. Synka Google eller Meta.'],
@@ -97,6 +112,9 @@
     ['No FX rates saved.', 'Inga valutakurser sparade.'],
     ['Core could not load priorities', 'Core kunde inte ladda prioriteringarna'],
     ['Your growth priorities', 'Dina tillväxtprioriteringar'],
+    ['Inga actions i denna vy.', 'Inga åtgärder i den här vyn.'],
+    ['Brief schema sparat.', 'Brief-schemat är sparat.'],
+    ['Execute this already-approved external action?', 'Utför den här redan godkända externa åtgärden?'],
     ['Open', 'Öppna']
   ]);
 
@@ -121,8 +139,12 @@
     ['trial until ', 'provperiod till '],
     [' · Jobs ', ' · Jobb '],
     [' · Team ', ' · Team '],
+    [' · attempts ', ' · försök '],
     [' · Stripe not configured', ' · Stripe är inte konfigurerat'],
     ['Execution adapter is not available for this provider.', 'Det finns ingen körningsadapter för den här leverantören.'],
+    ['Pause campaign ', 'Pausa kampanj '],
+    ['Pause ', 'Pausa '],
+    [' after human review.', ' efter mänsklig granskning.'],
     ['Scanned ', 'Skannade '],
     [' competitors.', ' konkurrenter.'],
     ['No workspace available', 'Inget workspace är tillgängligt']
@@ -161,6 +183,9 @@
   window.vexmeraToast = toast;
   window.alert = (message) => toast(message);
 
+  const nativeConfirm = window.confirm.bind(window);
+  window.confirm = (message) => nativeConfirm(translateString(String(message)));
+
   function translateTextNode(node) {
     if (node.nodeType !== Node.TEXT_NODE) return;
     const original = node.nodeValue;
@@ -179,10 +204,10 @@
 
   function polishDynamicUi() {
     [
-      $('connectorGrid'), $('approvalList'), $('competitorList'), $('briefSchedulerState'),
+      $('connect'), $('connectorGrid'), $('approvalList'), $('competitorList'), $('briefSchedulerState'),
       $('autopilotRuntime'), $('campaignInsights'), $('anomalyList'), $('jobList'),
       $('teamMembers'), $('inviteResult'), $('billingStatus'), $('fxList'), $('resetState'),
-      $('coreHeadline'), $('coreTodayCards')
+      $('coreHeadline'), $('coreTodayCards'), $('authError'), $('feedbackState'), $('profileState')
     ].forEach(translateTree);
 
     const mode = $('autopilotModeBadge');
