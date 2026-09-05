@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import secrets
 import string
@@ -51,10 +52,34 @@ def _integration_identifier() -> str:
 
 
 def _trial_days(settings: dict[str, Any]) -> int:
-    """Grant the beta trial only before a Stripe customer/subscription has existed."""
+    """Grant at most the unused part of the workspace's first beta trial.
+
+    Registration currently starts the private-beta trial in Vexmera. Checkout
+    must therefore never reset the clock to a fresh 14 days. If a local trial
+    end exists, Stripe receives only the remaining whole-day ceiling so an
+    immediate Checkout still receives the advertised trial while a late
+    Checkout cannot extend it.
+    """
     if settings.get("stripe_customer_id") or settings.get("stripe_subscription_id"):
         return 0
-    return max(0, int(os.getenv("VEZMORA_TRIAL_DAYS", "14")))
+
+    configured_days = max(0, int(os.getenv("VEZMORA_TRIAL_DAYS", "14")))
+    raw_end = settings.get("trial_ends_at")
+    if not raw_end:
+        return configured_days
+
+    try:
+        end = datetime.fromisoformat(str(raw_end).replace("Z", "+00:00"))
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        seconds = (end.astimezone(timezone.utc) - datetime.now(timezone.utc)).total_seconds()
+    except (TypeError, ValueError):
+        return 0
+
+    if seconds <= 0:
+        return 0
+    remaining_days = int(math.ceil(seconds / 86_400))
+    return min(configured_days, remaining_days)
 
 
 def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
