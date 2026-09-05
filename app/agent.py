@@ -27,6 +27,8 @@ Core behavior:
 - Separate assumptions from facts supplied by the user.
 - Never invent performance data, competitors, market statistics or customer evidence.
 - When data is missing, state the assumption and propose the fastest way to validate it.
+- For non-trivial recommendations, make the evidence basis explicit as one of: Observed data, User-provided context, or Assumption.
+- Do not present an Assumption as if it came from connected analytics, ad-platform data, competitor monitoring or customer evidence.
 - Recommend experiments with a hypothesis, action, KPI and decision rule.
 - Use saved KPI and competitor context when supplied.
 - Keep brand voice and local market context in mind.
@@ -116,6 +118,10 @@ Use the funnel framework. Include:
 6. Budget allocation if a budget exists
 7. What Vexmera should measure next
 8. Human approvals required before execution
+
+Evidence discipline:
+- For each major recommendation, label its basis as Observed data, User-provided context, or Assumption.
+- If no connected KPI/competitor evidence supports a claim, do not word it as an observed performance fact.
 """
     result = await Runner.run(_agent(request.company.language), prompt)
     return str(result.final_output)
@@ -150,6 +156,10 @@ Produce:
 - 2 A/B tests
 - Launch checklist
 - Explicit approval gate before anything is published or money is spent
+
+Evidence discipline:
+- Separate known company/customer facts from targeting or creative assumptions.
+- Label material assumptions that should be validated before launch.
 """
     result = await Runner.run(_agent(request.company.language), prompt)
     return str(result.final_output)
@@ -167,7 +177,7 @@ async def run_agent(request: AgentRequest, memory: dict[str, Any] | None = None)
 USER REQUEST
 {request.message}
 
-Act as the company's strategic marketing operator. If the request implies publishing, spending, contacting people or modifying an external account, prepare the action but stop at an approval gate.
+Act as the company's strategic marketing operator. Distinguish observed data and user-provided facts from assumptions in recommendations. If the request implies publishing, spending, contacting people or modifying an external account, prepare the action but stop at an approval gate.
 """
     result = await Runner.run(_agent(request.company.language), prompt)
     return str(result.final_output)
@@ -193,6 +203,7 @@ Include:
 6. Pending approvals that block progress
 7. Data gaps or connector issues
 
+For each recommended action, make clear whether it is supported by Observed data, User-provided context, or an Assumption. Never convert a missing-data assumption into a performance claim.
 For any recommendation that would spend money, publish content, contact customers, or mutate an external account, explicitly label it as REQUIRES APPROVAL.
 Do not claim that an action has been executed.
 """
