@@ -82,7 +82,7 @@
 - [x] Confirm read-only Meta sync handles an account with no campaigns correctly
 
 ## Launch
-- [ ] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
+- [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
 - [ ] Finish AI Command Center customer-facing polish
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
