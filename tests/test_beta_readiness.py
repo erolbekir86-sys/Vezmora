@@ -16,6 +16,9 @@ def _clear(monkeypatch):
         "VEZMORA_COOKIE_SECURE",
         "VERCEL",
         "VERCEL_ENV",
+        "DATABASE_URL",
+        "POSTGRES_URL",
+        "TURSO_DATABASE_URL",
         "STRIPE_SECRET_KEY",
         "STRIPE_PRICE_STARTER",
         "STRIPE_PRICE_GROWTH",
@@ -43,6 +46,13 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     assert snapshot["autopilot_execution_enabled"] is False
     assert snapshot["meta_execution_scope_enabled"] is False
     assert snapshot["dev_show_tokens_enabled"] is False
+    assert snapshot["database"] == {
+        "backend_intent": "sqlite",
+        "database_url_configured": False,
+        "postgres_url_configured": False,
+        "turso_url_configured": False,
+        "remote_database_configured": False,
+    }
     assert snapshot["stripe_key_mode"] == "missing"
     assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
     assert snapshot["stripe_sandbox_ready"] is False
@@ -52,6 +62,30 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
         "account_deletion_backend": True,
         "full_account_deletion": True,
     }
+
+
+def test_beta_readiness_prefers_postgres_intent_over_turso_compat_alias(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://private-placeholder")
+    monkeypatch.setenv("TURSO_DATABASE_URL", "postgresql://compat-placeholder")
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["database"] == {
+        "backend_intent": "postgres",
+        "database_url_configured": True,
+        "postgres_url_configured": False,
+        "turso_url_configured": True,
+        "remote_database_configured": True,
+    }
+
+
+def test_beta_readiness_reports_legacy_turso_without_exposing_url(monkeypatch):
+    _clear(monkeypatch)
+    secret_url = "libsql://private-beta-secret.invalid"
+    monkeypatch.setenv("TURSO_DATABASE_URL", secret_url)
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["database"]["backend_intent"] == "turso"
+    assert snapshot["database"]["remote_database_configured"] is True
+    assert secret_url not in str(snapshot)
 
 
 def test_beta_readiness_detects_unsafe_execution_flags(monkeypatch):
@@ -132,6 +166,8 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
     values = {
         "VEZMORA_APP_URL": "https://example.test",
+        "DATABASE_URL": "postgresql://database-private",
+        "TURSO_DATABASE_URL": "postgresql://compat-private",
         "STRIPE_SECRET_KEY": "sk_test_private",
         "STRIPE_WEBHOOK_SECRET": "whsec_private",
         "GOOGLE_CLIENT_ID": "google-client-private",
@@ -152,6 +188,9 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         response = client.get("/health/beta-readiness")
     assert response.status_code == 200
     payload = response.json()
+    assert payload["database"]["backend_intent"] == "postgres"
+    assert payload["database"]["database_url_configured"] is True
+    assert payload["database"]["turso_url_configured"] is True
     assert payload["stripe_catalog_env_configured"] is True
     assert payload["stripe_catalog_matches_verified_sandbox"] is True
     assert payload["stripe_webhook_env_configured"] is True
