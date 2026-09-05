@@ -30,6 +30,7 @@ BETA_LOCKED_FLAGS = [
     "VEZMORA_EXECUTION_ENABLED",
     "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
     "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
+    "VEZMORA_DEV_SHOW_TOKENS",
 ]
 
 
@@ -64,6 +65,11 @@ def build_report() -> dict[str, Any]:
     meta_oauth_missing = _missing(META_OAUTH)
     unsafe_flags = [name for name in BETA_LOCKED_FLAGS if enabled(name)]
 
+    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().lower()
+    production_like = enabled("VERCEL") or (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
+    insecure_app_url = bool(production_like and app_url and not app_url.startswith("https://"))
+    insecure_cookie_override = bool(production_like and configured("VEZMORA_COOKIE_SECURE") and not enabled("VEZMORA_COOKIE_SECURE"))
+
     return {
         "brand": "Vexmera",
         "phase": "private_beta",
@@ -76,6 +82,7 @@ def build_report() -> dict[str, Any]:
         "meta_oauth_ready": not meta_oauth_missing,
         "serverless_enabled": enabled("VEZMORA_SERVERLESS"),
         "beta_execution_locked": not unsafe_flags,
+        "production_transport_safe": not insecure_app_url and not insecure_cookie_override,
         "missing": {
             "core": core_missing,
             "billing": billing_missing,
@@ -84,6 +91,14 @@ def build_report() -> dict[str, Any]:
             "meta_oauth": meta_oauth_missing,
         },
         "unsafe_beta_flags": unsafe_flags,
+        "transport_issues": [
+            issue
+            for issue, active in (
+                ("VEZMORA_APP_URL must use https in production", insecure_app_url),
+                ("VEZMORA_COOKIE_SECURE must not be disabled in production", insecure_cookie_override),
+            )
+            if active
+        ],
     }
 
 
@@ -103,6 +118,7 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"Meta OAuth: {_status(bool(report['meta_oauth_ready']))}")
     print(f"serverless mode enabled: {bool(report['serverless_enabled'])}")
     print(f"private-beta execution locks: {'SAFE' if report['beta_execution_locked'] else 'UNSAFE'}")
+    print(f"production transport: {'SAFE' if report['production_transport_safe'] else 'UNSAFE'}")
 
     missing = report["missing"]
     for group in ("core", "billing", "smtp", "google_oauth", "meta_oauth"):
@@ -111,6 +127,10 @@ def print_report(report: dict[str, Any]) -> None:
     print(
         "Unsafe beta flags:",
         ", ".join(report["unsafe_beta_flags"]) if report["unsafe_beta_flags"] else "none",
+    )
+    print(
+        "Transport issues:",
+        "; ".join(report["transport_issues"]) if report["transport_issues"] else "none",
     )
     print("Secret values are intentionally never printed.")
 
@@ -123,7 +143,11 @@ def main() -> int:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print_report(report)
-    return 1 if (not report["core_ready"] or not report["beta_execution_locked"]) else 0
+    return 1 if (
+        not report["core_ready"]
+        or not report["beta_execution_locked"]
+        or not report["production_transport_safe"]
+    ) else 0
 
 
 if __name__ == "__main__":
