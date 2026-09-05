@@ -55,6 +55,14 @@ from app.main import app, main
 import app.main as _app_main
 import app.connectors as _connectors
 
+# Importing app.postgres_compat executes app/__init__.py, which imports app.main
+# before the Postgres startup override above is installed. FastAPI's lifespan
+# therefore may still hold the original SQLite init_db name. Replace the
+# module-level name used by lifespan as well so Postgres startup only verifies
+# the already-provisioned schema instead of running SQLite DDL.
+if postgres_url:
+    _app_main.init_db = _verify_database
+
 # Facebook Login for Business uses permissions from the saved Login
 # Configuration. Remove the legacy scope parameter and force code response.
 _original_meta_authorization_url = _app_main.meta_authorization_url
