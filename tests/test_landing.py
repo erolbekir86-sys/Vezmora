@@ -8,13 +8,19 @@ from app.main import app
 def test_marketing_landing_is_shipped_as_public_static_asset():
     with TestClient(app) as client:
         response = client.get('/static/landing.html')
+        script = client.get('/static/landing.js')
 
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/html')
+    assert script.status_code == 200
     html = response.text
     assert 'Vexmera — AI Marketing Officer' in html
-    assert 'Privat beta' in html
     assert 'Kontroll före automation' in html
+    assert '/static/landing.js' in html
+    # The dashboard on the marketing page uses illustrative values. Keep a
+    # visible demo marker in the shipped UI so example metrics cannot silently
+    # turn into implied customer/live data during design iterations.
+    assert 'DEMO DATA' in script.text
 
 
 def test_marketing_landing_does_not_expose_internal_execution_controls():
