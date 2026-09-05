@@ -2,8 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 20 automated tests passing
-- [x] Stripe sandbox products and recurring prices created
+- [x] 57 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -13,6 +12,7 @@
 - [x] PostgreSQL compatibility layer implemented
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
+- [x] Validate Python plus all shipped frontend JavaScript in CI
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
 - [x] Add safe production readiness flags for remaining integrations
@@ -47,14 +47,18 @@
 - [ ] Add remaining Vercel Sensitive Environment Variables as required by final launch configuration
 
 ## Billing and email
+- [x] 14-day Stripe Checkout trial flow implemented in the application
 - [x] Create Stripe sandbox webhook endpoint against the production URL
 - [x] Trigger production redeploy after adding Stripe sandbox environment variables
-- [x] Configure and verify Stripe sandbox environment variables in production
+- [x] Configure Stripe sandbox environment variables in production
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
 - [x] Align Vexmera plan metadata and team limits with Starter 1 / Growth 3 / Scale 10 users
-- [ ] Verify Stripe Price IDs and Checkout amounts match Starter 1,499 / Growth 2,999 / Scale 5,999 SEK before public paid launch
+- [ ] Reconcile the active Stripe sandbox: the currently connected Vezmora test account returns no products or prices
+- [ ] Verify or recreate the three recurring Stripe test prices for Starter 1,499 / Growth 2,999 / Scale 5,999 SEK
+- [ ] Verify Vercel `STRIPE_PRICE_*` values point to those exact prices before public paid launch
+- [ ] Run a fresh end-to-end sandbox Checkout + webhook + Customer Portal test after price reconciliation
 
 ## Google
 - [x] Trigger production redeploy after adding Google OAuth environment variables
@@ -83,9 +87,12 @@
 - [x] Connect Meta ad account and verify account-level read access
 - [x] Confirm read-only Meta sync handles an account with no campaigns correctly
 
-## Launch
+## Product and launch
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
-- [ ] Finish AI Command Center customer-facing polish and verify the deployed build
+- [x] Align public marketing and Command Center branding, pricing and private-beta language
+- [x] Complete the current AI Command Center customer-facing polish pass
+- [x] Verify the polished Command Center commit received a successful Vercel deployment status
+- [ ] Perform final authenticated browser QA on the deployed Command Center after the latest CI-only commit settles
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
