@@ -6,14 +6,7 @@
   <meta name="description" content="Vexmera är din AI Marketing Officer för tydligare marknadsföringsbeslut, samlad data och prioriterade nästa steg." />
   <meta name="theme-color" content="#0b0e13" />
   <title>Vexmera — AI Marketing Officer</title>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YZESEE7XW0"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-YZESEE7XW0');
-  </script>
+  <!-- Google Analytics is loaded dynamically only after explicit consent. -->
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="stylesheet" href="/static/app-polish.css?v=1" />
 </head>
@@ -209,6 +202,7 @@
     </main>
   </div>
   <section id="resetModal" class="modal-shell hidden" aria-modal="true" role="dialog"><div class="modal-card"><p class="eyebrow">KONTOÅTERSTÄLLNING</p><h2>Återställ lösenord</h2><label>Nytt lösenord<input id="resetPassword" type="password" minlength="8" autocomplete="new-password" /></label><button id="confirmReset" class="primary">Spara nytt lösenord</button><p id="resetState" class="fineprint"></p></div></section>
+  <script src="/static/analytics-consent.js?v=1"></script>
   <script src="/static/app.js"></script>
   <script src="/static/app-polish.js?v=1"></script>
   <script src="/static/account-privacy-ui.js?v=1"></script>
