@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 94 automated tests passing on the latest verified CI run
+- [x] 97 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -13,7 +13,7 @@
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
 - [x] Modernize GitHub Actions to checkout/setup-python/setup-node v7 with read-only permissions, concurrency control, timeout and pip caching
-- [x] Validate Python plus all shipped frontend JavaScript in CI
+- [x] Validate Python plus all shipped frontend JavaScript in CI, including account privacy UI
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
 - [x] Add safe `/health/beta-readiness` diagnostics without exposing secret values
@@ -48,7 +48,7 @@
 - [x] Prevent caching of API and health responses
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Add private-beta safety verification for Stripe, SMTP, Google, Meta and execution-lock configuration
-- [x] Verify latest account-privacy backend commit received successful Vercel deployment status
+- [x] Verify complete account-deletion backend/UI commit chain with green CI and successful Vercel deployment status
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
@@ -125,8 +125,9 @@
 - [x] Remove solo-owned workspaces, sessions, memberships, pending invites and queued account email during local account deletion
 - [x] Best-effort revoke Google/Meta OAuth tokens for solo-owned workspaces before local account deletion
 - [x] Preserve workspaces owned by other users when a departing account is only a member
-- [x] Verify account-deletion backend with green CI and successful Vercel deployment status
-- [ ] Add the guarded account-deletion control to the authenticated customer UI before marking full self-service deletion complete
+- [x] Add guarded account-deletion control to the authenticated customer UI with preview, blockers, password re-authentication and final confirmation
+- [x] Validate the account-deletion UI JavaScript in CI and cover its destructive-flow wiring with regression tests
+- [x] Verify end-to-end account-deletion backend/UI code path with 97-test green CI and successful Vercel deployment status
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -136,7 +137,7 @@
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
 - [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
-- [x] Raise automated coverage to 94 passing tests across deployment, billing, privacy, integrations, UI and execution safety
+- [x] Raise automated coverage to 97 passing tests across deployment, billing, privacy, integrations, UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
