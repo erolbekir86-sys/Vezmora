@@ -2,6 +2,29 @@
 
 Use one copy of this template per pilot company. Keep it free of OAuth tokens, API keys, developer tokens, passwords, payment data, or other secrets.
 
+## Pre-session go / no-go
+
+Complete this before the customer joins. Do not use the pilot session itself to discover a known access, legal, or deployment blocker.
+
+- Production deployment healthy: yes / no
+- Privacy Policy reviewed, finalized and published for the pilot: yes / no
+- Beta Terms reviewed, finalized and published for the pilot: yes / no
+- Execution-off beta safety controls independently verified: yes / no
+- At least one customer-used source is expected to be testable today: yes / no
+- Google Ads selected for this pilot: yes / no
+- If Google Ads is selected, required API access and manager/client relationship are active: yes / no / not applicable
+- Customer has the normal provider-side access needed to authorize the selected source(s): yes / no / unknown
+
+Decision:
+
+- GO: all required legal/safety checks pass and at least one relevant source is expected to be testable.
+- RESCHEDULE: a known external access, legal, or deployment blocker would prevent a meaningful session.
+- GO WITHOUT BLOCKED SOURCE: another relevant source can still produce a meaningful pilot result; record the blocked source separately and do not treat it as a product failure.
+
+Pre-session decision:
+
+Known blocker(s), using non-secret wording only:
+
 ## Pilot profile
 
 - Pilot number: 1 / 2 / 3 / 4 / 5
@@ -29,6 +52,8 @@ For each connected source, record only non-secret status information.
 | Google Analytics |  |  |  |  |  |  |
 | Google Ads |  |  |  |  |  |  |
 | Meta |  |  |  |  |  |  |
+
+If the 30-day sync succeeds and the source has sufficient data, optionally verify the 7-day and 90-day windows as a consistency check. Do not turn a provider/account limitation into a product failure when the source legitimately lacks history for the requested period.
 
 If a provider fails, record only the user-visible error category/message and non-sensitive request/reference ID where available. Never paste credentials, OAuth tokens, developer tokens, API keys, authorization headers, or raw provider payloads containing secrets.
 
