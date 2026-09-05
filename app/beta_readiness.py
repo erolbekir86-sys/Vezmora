@@ -115,11 +115,13 @@ def beta_safety_snapshot() -> dict[str, object]:
         "privacy_controls": {
             "connector_disconnect": True,
             "scoped_synced_history_deletion": True,
-            "full_account_deletion": False,
+            "account_deletion_backend": True,
+            "full_account_deletion": True,
         },
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
+            "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
         ],
