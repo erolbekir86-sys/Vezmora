@@ -1,7 +1,8 @@
 (() => {
   const root = document.documentElement;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const PORTRAIT_SRC = '/static/vexmera-founder.jpg?v=20260905-5';
+  const BUILD = window.__VEXMERA_BUILD__ || 'local';
+  const PORTRAIT_SRC = `/static/vexmera-founder.jpg?build=${encodeURIComponent(BUILD)}`;
 
   const icon = (body) => `<svg class="ux-icon" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
   const themeIcons = {
@@ -56,8 +57,9 @@
     image.style.objectPosition = 'center 38%';
     image.style.aspectRatio = '4 / 5';
 
+    const expectedBuild = `build=${encodeURIComponent(BUILD)}`;
     const currentSrc = image.getAttribute('src') || '';
-    if (!currentSrc.includes('20260905-5') && image.dataset.refineRetried !== '1') image.src = PORTRAIT_SRC;
+    if (!currentSrc.includes(expectedBuild) && image.dataset.refineRetried !== '1') image.src = PORTRAIT_SRC;
 
     if (image.dataset.refinePhotoBound !== '1') {
       image.dataset.refinePhotoBound = '1';
@@ -68,7 +70,7 @@
       image.addEventListener('error', () => {
         if (image.dataset.refineRetried !== '1') {
           image.dataset.refineRetried = '1';
-          image.src = '/static/vexmera-founder.jpg';
+          image.src = `/static/vexmera-founder.jpg?build=${encodeURIComponent(BUILD)}&retry=1`;
           return;
         }
         const fallback = document.createElement('div');
