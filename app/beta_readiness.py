@@ -106,6 +106,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "GOOGLE_REDIRECT_URI",
         ),
         "google_ads_developer_token_configured": _configured("GOOGLE_ADS_DEVELOPER_TOKEN"),
+        "google_ads_login_customer_id_configured": _configured("GOOGLE_ADS_LOGIN_CUSTOMER_ID"),
         "meta_oauth_configured": _all_configured(
             "META_APP_ID",
             "META_APP_SECRET",
