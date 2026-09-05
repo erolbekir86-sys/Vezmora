@@ -63,10 +63,15 @@ def install_public_routing(app: FastAPI) -> None:
             '  <meta property="og:description" content="Förstå din marknadsföring, se vad som driver resultat och vet vad du ska göra härnäst." />\n'
             f'  <meta property="og:url" content="{CANONICAL_ORIGIN}/" />\n'
             '  <meta name="twitter:card" content="summary_large_image" />\n'
-            '  <script src="/static/founder-photo-fix.js?v=20260905-2" defer></script>'
+            '  <link rel="stylesheet" href="/static/landing-ux.css?v=20260905-3" />\n'
+            '  <script src="/static/founder-photo-fix.js?v=20260905-2" defer></script>\n'
+            '  <script src="/static/landing-ux.js?v=20260905-3" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
-        return HTMLResponse(html, headers={"Cache-Control": "public, max-age=300"})
+        return HTMLResponse(
+            html,
+            headers={"Cache-Control": "no-cache, max-age=0, must-revalidate"},
+        )
 
     async def product_shell() -> HTMLResponse:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
