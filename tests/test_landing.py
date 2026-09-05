@@ -86,10 +86,11 @@ def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     assert 'href="/app"' in response.text
     assert '<link rel="canonical" href="https://vexmera.com/" />' in response.text
     assert '<meta name="robots" content="index,follow" />' in response.text
-    assert '/static/landing-ux.css?v=20260905-3' in response.text
-    assert '/static/landing-refine.css?v=20260905-1' in response.text
-    assert '/static/landing-refine.js?v=20260905-1' in response.text
-    assert '/static/vexmera-founder.jpg?v=20260905-5' in response.text
+    assert '/static/landing-ux.css?build=' in response.text
+    assert '/static/landing-refine.css?build=' in response.text
+    assert '/static/landing-refine.js?build=' in response.text
+    assert '/static/vexmera-founder.jpg?build=' in response.text
+    assert 'window.__VEXMERA_BUILD__=' in response.text
 
 
 def test_authenticated_product_shell_lives_under_app_and_is_noindex():
@@ -100,7 +101,7 @@ def test_authenticated_product_shell_lives_under_app_and_is_noindex():
     assert response.status_code == 200
     assert slash.status_code == 200
     assert 'id="authScreen"' in response.text
-    assert '/static/app.js' in response.text
+    assert '/static/app.js?build=' in response.text
     assert '<meta name="robots" content="noindex,nofollow" />' in response.text
     assert response.headers['x-robots-tag'] == 'noindex, nofollow'
     assert 'Förstå din marknadsföring.' not in response.text
