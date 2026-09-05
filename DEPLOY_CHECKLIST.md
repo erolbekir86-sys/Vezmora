@@ -53,6 +53,8 @@
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
+- [x] Align Vexmera plan metadata and team limits with Starter 1 / Growth 3 / Scale 10 users
+- [ ] Verify Stripe Price IDs and Checkout amounts match Starter 1,499 / Growth 2,999 / Scale 5,999 SEK before public paid launch
 
 ## Google
 - [x] Trigger production redeploy after adding Google OAuth environment variables
@@ -83,6 +85,7 @@
 
 ## Launch
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
-- [ ] Finish AI Command Center customer-facing polish
+- [ ] Finish AI Command Center customer-facing polish and verify the deployed build
+- [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
