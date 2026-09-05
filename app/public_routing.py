@@ -63,9 +63,12 @@ def install_public_routing(app: FastAPI) -> None:
             '  <meta property="og:description" content="Förstå din marknadsföring, se vad som driver resultat och vet vad du ska göra härnäst." />\n'
             f'  <meta property="og:url" content="{CANONICAL_ORIGIN}/" />\n'
             '  <meta name="twitter:card" content="summary_large_image" />\n'
+            '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg?v=20260905-5" fetchpriority="high" />\n'
             '  <link rel="stylesheet" href="/static/landing-ux.css?v=20260905-3" />\n'
-            '  <script src="/static/founder-photo-fix.js?v=20260905-2" defer></script>\n'
-            '  <script src="/static/landing-ux.js?v=20260905-3" defer></script>'
+            '  <link rel="stylesheet" href="/static/landing-refine.css?v=20260905-1" />\n'
+            '  <script src="/static/founder-photo-fix.js?v=20260905-5" defer></script>\n'
+            '  <script src="/static/landing-ux.js?v=20260905-3" defer></script>\n'
+            '  <script src="/static/landing-refine.js?v=20260905-1" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
         return HTMLResponse(
