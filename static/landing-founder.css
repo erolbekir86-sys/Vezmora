@@ -296,12 +296,136 @@ html[data-theme="dark"]{
 /* The final CTA remains deliberately dark. */
 .final-cta .eyebrow{color:#d2b17a}
 
+/* Hero product preview: show enough navigation to feel like a real platform. */
+.dashboard-window{
+  grid-template-columns:142px 1fr;
+  min-height:520px;
+}
+.dash-sidebar{
+  padding:16px 10px;
+  gap:4px;
+}
+.dash-sidebar .mini-brand{margin-bottom:8px}
+.dash-nav{
+  height:29px;
+  padding:0 7px;
+  gap:7px;
+  font-size:8.5px;
+}
+.dash-nav b{width:7px;height:7px}
+.dash-nav.product-real small{font-size:5.5px}
+.dash-spacer{min-height:4px}
+.dash-main{padding:22px 20px 18px}
+.dash-status-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:10px;
+}
+.dash-status-card{
+  min-height:58px;
+  display:grid;
+  grid-template-columns:30px 1fr auto;
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  border:1px solid rgba(111,122,140,.23);
+  border-radius:11px;
+  background:linear-gradient(155deg,rgba(19,24,32,.96),rgba(13,17,24,.98));
+}
+.dash-status-icon{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:rgba(199,165,108,.09);
+  border:1px solid rgba(199,165,108,.18);
+  color:#d2b17a;
+  font-size:11px;
+  font-weight:800;
+}
+.dash-status-card span{display:block;color:#727d8b;font-size:6.5px;letter-spacing:.06em;text-transform:uppercase}
+.dash-status-card strong{display:block;margin-top:3px;color:#eef1f4;font-size:9.5px;font-weight:650}
+.dash-status-card small{color:#697483;font-size:6.5px;text-align:right}
+
+/* Make feature graphics read like miniature pieces of the real product. */
+.modules-section .module-card{min-height:320px;padding:28px}
+.modules-section .module-card h3{margin-top:26px}
+.modules-section .module-ui{
+  width:170px;
+  right:26px;
+  bottom:25px;
+  padding:14px;
+  gap:7px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--paper-2);
+}
+.modules-section .module-ui::before{
+  content:"NEXT ACTION";
+  font-size:6px;
+  font-weight:800;
+  letter-spacing:.11em;
+  color:var(--gold-dark);
+}
+.modules-section .module-ui::after{
+  content:"Budget +15%";
+  font-family:Manrope,Inter,sans-serif;
+  font-size:11px;
+  font-weight:700;
+  color:var(--ink);
+}
+.modules-section .pulse-ui{
+  width:170px;
+  height:82px;
+  right:26px;
+  bottom:25px;
+  padding:15px 14px 11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--paper-2);
+}
+.modules-section .pulse-ui::before{
+  content:"LIVE SIGNAL";
+  position:absolute;
+  left:13px;
+  top:9px;
+  font-size:6px;
+  font-style:normal;
+  font-weight:800;
+  letter-spacing:.11em;
+  color:var(--gold-dark);
+}
+.modules-section .launch-ui{
+  width:190px;
+  right:26px;
+  bottom:25px;
+  padding:13px;
+}
+.modules-section .auto-ui{
+  right:26px;
+  bottom:25px;
+  padding:5px;
+}
+.modules-section .auto-ui::before{
+  content:"CONTROL LEVEL";
+  position:absolute;
+  right:0;
+  bottom:40px;
+  font-size:6px;
+  font-weight:800;
+  letter-spacing:.11em;
+  color:var(--gold-dark);
+}
+
 @media(max-width:980px){
   .site-header .brand-mark{width:43px;height:43px}
   .site-header .brand-mark svg{width:30px;height:30px}
   .site-header .brand-copy strong{font-size:14px}
   .founder-card{grid-template-columns:minmax(0,1fr) 260px;gap:44px}
   .founder-portrait{width:260px;min-height:325px}
+  .dashboard-window{grid-template-columns:128px 1fr}
 }
 @media(max-width:900px){
   .founder-card{grid-template-columns:1fr;gap:32px;padding:22px 0}
@@ -309,6 +433,12 @@ html[data-theme="dark"]{
   .founder-portrait{order:1;width:260px;min-height:325px;justify-self:start}
   .pulse-feature.section-wrap,
   .workflow-section.section-wrap{padding-left:20px;padding-right:20px}
+}
+@media(max-width:720px){
+  .dash-status-row{display:none}
+  .dashboard-window{grid-template-columns:104px 1fr;min-height:460px}
+  .dash-nav{font-size:7.5px}
+  .dash-nav.product-real small{display:none}
 }
 @media(max-width:620px){
   .site-header{height:68px}
@@ -323,4 +453,7 @@ html[data-theme="dark"]{
   .founder-quote{font-size:17px}
   .founder-portrait{width:220px;min-height:275px;border-radius:12px}
   .demo-data-pill{display:none}
+  .modules-section .module-ui,
+  .modules-section .pulse-ui,
+  .modules-section .launch-ui{transform:scale(.9);transform-origin:right bottom}
 }
