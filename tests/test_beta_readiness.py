@@ -16,6 +16,7 @@ def _clear(monkeypatch):
         "VEZMORA_COOKIE_SECURE",
         "VERCEL",
         "VERCEL_ENV",
+        "STRIPE_SECRET_KEY",
         "STRIPE_PRICE_STARTER",
         "STRIPE_PRICE_GROWTH",
         "STRIPE_PRICE_SCALE",
@@ -42,6 +43,9 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     assert snapshot["autopilot_execution_enabled"] is False
     assert snapshot["meta_execution_scope_enabled"] is False
     assert snapshot["dev_show_tokens_enabled"] is False
+    assert snapshot["stripe_key_mode"] == "missing"
+    assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
+    assert snapshot["stripe_sandbox_ready"] is False
     assert snapshot["privacy_controls"] == {
         "connector_disconnect": True,
         "scoped_synced_history_deletion": True,
@@ -93,13 +97,41 @@ def test_beta_readiness_accepts_secure_production_transport(monkeypatch):
     assert snapshot["transport"]["secure_cookie_explicitly_disabled"] is False
 
 
+def test_beta_readiness_marks_verified_stripe_sandbox_ready(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    for name, value in beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES.items():
+        monkeypatch.setenv(name, value)
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["stripe_key_mode"] == "test"
+    assert snapshot["stripe_catalog_env_configured"] is True
+    assert snapshot["stripe_catalog_matches_verified_sandbox"] is True
+    assert snapshot["stripe_webhook_env_configured"] is True
+    assert snapshot["stripe_sandbox_ready"] is True
+
+
+def test_beta_readiness_detects_live_key_or_wrong_sandbox_catalog(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_wrong")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES["STRIPE_PRICE_GROWTH"])
+    monkeypatch.setenv("STRIPE_PRICE_SCALE", beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES["STRIPE_PRICE_SCALE"])
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["stripe_key_mode"] == "live"
+    assert snapshot["stripe_catalog_env_configured"] is True
+    assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
+    assert snapshot["stripe_sandbox_ready"] is False
+
+
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
     values = {
         "VEZMORA_APP_URL": "https://example.test",
-        "STRIPE_PRICE_STARTER": "price_private_starter",
-        "STRIPE_PRICE_GROWTH": "price_private_growth",
-        "STRIPE_PRICE_SCALE": "price_private_scale",
+        "STRIPE_SECRET_KEY": "sk_test_private",
         "STRIPE_WEBHOOK_SECRET": "whsec_private",
         "GOOGLE_CLIENT_ID": "google-client-private",
         "GOOGLE_CLIENT_SECRET": "google-secret-private",
@@ -111,6 +143,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         "SMTP_HOST": "smtp.example.test",
         "SMTP_FROM": "sender@example.test",
     }
+    values.update(beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES)
     for name, value in values.items():
         monkeypatch.setenv(name, value)
 
@@ -119,7 +152,10 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert response.status_code == 200
     payload = response.json()
     assert payload["stripe_catalog_env_configured"] is True
+    assert payload["stripe_catalog_matches_verified_sandbox"] is True
     assert payload["stripe_webhook_env_configured"] is True
+    assert payload["stripe_key_mode"] == "test"
+    assert payload["stripe_sandbox_ready"] is True
     assert payload["google_oauth_configured"] is True
     assert payload["google_ads_developer_token_configured"] is True
     assert payload["meta_oauth_configured"] is True
