@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 67 automated tests passing on the latest verified CI run
+- [x] 79 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -15,6 +15,9 @@
 - [x] Validate Python plus all shipped frontend JavaScript in CI
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
+- [x] Add safe `/health/beta-readiness` diagnostics without exposing secret values
+- [x] Add deployment preflight that fails if private-beta execution flags are accidentally enabled
+- [x] Verify external execution and Autopilot are blocked by default before external adapters can run
 - [x] Add safe production readiness flags for remaining integrations
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
 - [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
@@ -40,6 +43,8 @@
 - [x] Add browser security headers to production responses
 - [x] Prevent caching of API and health responses
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
+- [x] Add private-beta safety verification for Stripe, SMTP, Google, Meta and execution-lock configuration
+- [x] Verify `/health/beta-readiness` commit received successful Vercel deployment status
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
@@ -48,6 +53,7 @@
 
 ## Billing and email
 - [x] 14-day Stripe Checkout trial flow implemented in the application
+- [x] Prevent Checkout from resetting or extending an already-running/expired private-beta trial
 - [x] Customer Portal and signed webhook handling implemented in the application
 - [x] Trigger production redeploy after earlier Stripe sandbox environment setup
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
@@ -108,7 +114,7 @@
 - [x] Require explicit destructive confirmation before synchronized-history deletion
 - [x] Preserve manually entered KPI rows during synchronized-history deletion
 - [x] Add a customer-facing UI for the separately confirmed synchronized-history deletion flow
-- [x] Verify privacy UI/backend with 67-test green CI and a successful Vercel deployment status
+- [x] Verify privacy UI/backend with green CI and a successful Vercel deployment status
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -117,7 +123,8 @@
 - [x] Complete the current AI Command Center customer-facing polish pass
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
-- [x] Verify synchronized-history deletion backend and UI with 67-test green CI
+- [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
+- [x] Raise automated coverage to 79 passing tests across deployment, billing, privacy, integrations, UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
