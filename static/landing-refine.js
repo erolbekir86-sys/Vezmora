@@ -25,12 +25,12 @@
 
     Object.entries(replacements).forEach(([key, value]) => {
       document.querySelectorAll(`[data-i18n="${key}"]`).forEach((el) => {
-        el.textContent = value;
+        if (el.textContent !== value) el.textContent = value;
       });
     });
 
     const founder = document.querySelector('.founder-meta strong');
-    if (founder) founder.textContent = 'Erol Bekir';
+    if (founder && founder.textContent !== 'Erol Bekir') founder.textContent = 'Erol Bekir';
   }
 
   function ensurePortrait() {
@@ -44,7 +44,8 @@
       existing.replaceWith(image);
     }
 
-    image.alt = root.lang === 'en' ? 'Erol Bekir, founder of Vexmera' : 'Erol Bekir, grundare av Vexmera';
+    const alt = root.lang === 'en' ? 'Erol Bekir, founder of Vexmera' : 'Erol Bekir, grundare av Vexmera';
+    if (image.alt !== alt) image.alt = alt;
     image.width = 300;
     image.height = 375;
     image.loading = 'eager';
@@ -56,7 +57,7 @@
     image.style.aspectRatio = '4 / 5';
 
     const currentSrc = image.getAttribute('src') || '';
-    if (!currentSrc.includes('20260905-5')) image.src = PORTRAIT_SRC;
+    if (!currentSrc.includes('20260905-5') && image.dataset.refineRetried !== '1') image.src = PORTRAIT_SRC;
 
     if (image.dataset.refinePhotoBound !== '1') {
       image.dataset.refinePhotoBound = '1';
@@ -85,7 +86,9 @@
     const preference = localStorage.getItem('vexmera-theme') || 'light';
     const key = ['light','dark','system'].includes(preference) ? preference : 'light';
     const slot = button.querySelector('.theme-icon') || button;
+    if (slot.dataset.refineThemeIcon === key) return;
     slot.innerHTML = themeIcons[key];
+    slot.dataset.refineThemeIcon = key;
   }
 
   function installActiveNavigation() {
@@ -98,8 +101,8 @@
     const update = (id) => {
       links.forEach((link) => {
         const active = link.getAttribute('href') === `#${id}`;
-        if (active) link.setAttribute('aria-current','location');
-        else link.removeAttribute('aria-current');
+        if (active && link.getAttribute('aria-current') !== 'location') link.setAttribute('aria-current','location');
+        if (!active && link.hasAttribute('aria-current')) link.removeAttribute('aria-current');
       });
     };
 
@@ -116,6 +119,8 @@
     if (prefersReducedMotion.matches || !window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
     const cards = document.querySelectorAll('.value-card,.step,.module-card,.integration-card,.outcome-grid article,.plan-card');
     cards.forEach((card) => {
+      if (card.dataset.refinePointer === '1') return;
+      card.dataset.refinePointer = '1';
       card.addEventListener('pointermove', (event) => {
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--refine-mx', `${((event.clientX - rect.left) / rect.width * 100).toFixed(1)}%`);
@@ -138,20 +143,34 @@
     applyLanguageCleanup();
     ensurePortrait();
     installThemeIcon();
+    installPointerHighlights();
   }
 
   refresh();
   installActiveNavigation();
-  installPointerHighlights();
   installScrollProgress();
 
+  let refreshQueued = false;
+  const queueRefresh = () => {
+    if (refreshQueued) return;
+    refreshQueued = true;
+    window.requestAnimationFrame(() => {
+      refreshQueued = false;
+      refresh();
+    });
+  };
+
   const observer = new MutationObserver((mutations) => {
-    let needsRefresh = false;
     for (const mutation of mutations) {
-      if (mutation.type === 'attributes' && mutation.target === root && (mutation.attributeName === 'lang' || mutation.attributeName === 'data-theme')) needsRefresh = true;
-      if (mutation.type === 'childList') needsRefresh = true;
+      if (mutation.type === 'attributes' && mutation.target === root && (mutation.attributeName === 'lang' || mutation.attributeName === 'data-theme')) {
+        queueRefresh();
+        return;
+      }
+      if (mutation.type === 'childList') {
+        queueRefresh();
+        return;
+      }
     }
-    if (needsRefresh) window.requestAnimationFrame(refresh);
   });
   observer.observe(document.documentElement, {subtree:true, childList:true, attributes:true, attributeFilter:['lang','data-theme']});
 })();
