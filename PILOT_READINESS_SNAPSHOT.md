@@ -1,17 +1,17 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-09-05
+Last reviewed: 2026-09-06
 
 This file is a non-secret operational snapshot for the five-company private beta. It records only evidence that can be safely verified without changing credentials, billing, permissions, domains, DNS, or live advertising settings.
 
 ## Verified healthy
 
 - GitHub repository is reachable and the default branch is `main`.
-- Latest observed GitHub Actions run for `Vexmera CI` completed successfully on commit `36060f67f28b39ed020bd54c565249a765cb1e21`.
+- Latest observed GitHub Actions run for `Vexmera CI` completed successfully on commit `a82ae16e4e40d98b654db39deb765b738cfbdadd` (`Guard deployment-wide frontend cache busting`) on 2026-09-05.
 - The Python package identifies the product as `vexmera` version `0.6.1`.
 - CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment and beta readiness.
 - The pilot runbook explicitly requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
-- Production database intent is now confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback. Seeing PostgreSQL in production is therefore expected and is not itself a deployment blocker.
+- Production database intent is confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback. Seeing PostgreSQL in production is therefore expected and is not itself a deployment blocker.
 
 ## Diagnostic follow-up
 
@@ -21,7 +21,7 @@ This file is a non-secret operational snapshot for the five-company private beta
 
 ### 1. Vercel project visibility mismatch
 
-The connected Vercel account exposes the team `Vezmora`, but that team currently returns no projects through the Vercel connection. Direct lookup of project slugs `vezmora` and `vexmera` in that team returns 404.
+Rechecked 2026-09-06: the connected Vercel account exposes the team `Vezmora`, but that team still returns zero projects through the Vercel connection.
 
 This conflicts with `DEPLOY_CHECKLIST.md`, which records earlier successful Vercel deployment work. Treat this as an account/team visibility or connection-scope issue until proven otherwise. Do not change domains, DNS, secrets, credentials or permissions to troubleshoot it.
 
