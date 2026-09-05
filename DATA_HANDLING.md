@@ -50,7 +50,7 @@ Google Ads diagnostics intentionally extract only safe error metadata such as AP
 
 ## Disconnect and credential deletion
 
-A backend self-service disconnect flow is now implemented for Google and Meta at `POST /api/connectors/{provider}/disconnect`.
+A self-service disconnect flow is implemented for Google and Meta at `POST /api/connectors/{provider}/disconnect`, with a corresponding control in the authenticated Connect view.
 
 The flow:
 
@@ -71,12 +71,46 @@ Disconnecting an account **does not delete previously synchronized KPI or campai
 
 The connector record is reduced to a disconnected state with a timestamp and a marker that historical data is retained. Previously saved property IDs, ad-account IDs and similar connector configuration values are removed from that record.
 
-A separate, explicitly confirmed historical-data deletion flow is still required before Vexmera can promise one-click deletion of all previously synchronized marketing data. Customer-facing text must distinguish clearly between:
+Customer-facing text distinguishes clearly between:
 
 - **Disconnect account:** remove stored connector credentials and stop future sync access.
-- **Delete synchronized history:** separately delete retained campaign/KPI history after an explicit destructive confirmation.
+- **Delete synchronized history:** separately delete retained provider-synchronized reporting history after explicit destructive confirmation.
 
-Until the second flow is implemented and tested, Vexmera must not claim that disconnecting an account also purges all historical marketing data.
+## Synchronized reporting-history deletion
+
+A separate deletion endpoint is implemented at `DELETE /api/privacy/synced-marketing-history`. The authenticated Connect view exposes this as a distinct destructive control rather than combining it with account disconnect.
+
+The operation:
+
+1. requires an authenticated workspace owner or admin;
+2. requires the exact backend confirmation token `DELETE_SYNCED_HISTORY`;
+3. requires the customer-facing UI to request a separate typed confirmation before calling the endpoint;
+4. deletes all workspace rows from `campaign_metrics`;
+5. deletes normalized KPI rows only when `source` is `google_analytics`, `google_ads`, or `meta_ads`;
+6. deletes workspace anomaly records and anomaly notifications derived from synchronized reporting data;
+7. preserves KPI rows whose source is `manual`;
+8. does not alter or delete connector credentials;
+9. returns only deleted record counts and safe status flags;
+10. is covered by regression tests for confirmation, deletion scope, manual-KPI retention and role enforcement.
+
+This control should be described precisely as deletion of **synchronized marketing/reporting history**. It is not a complete workspace, account, or privacy-rights erasure mechanism.
+
+### Data not deleted by synchronized-history deletion
+
+The synchronized-history deletion endpoint does not claim to delete:
+
+- user accounts, passwords or sessions
+- workspace membership or settings
+- company/brand profiles
+- AI requests, generated outputs or run history
+- billing/customer subscription state
+- competitor records or snapshots
+- beta feedback
+- email-delivery records
+- manually entered KPI data
+- connector credentials
+
+Broader account-deletion, retention and data-subject-request procedures must therefore be finalized separately before Vexmera makes any claim of complete account or personal-data deletion.
 
 ## Private beta operating rule
 
