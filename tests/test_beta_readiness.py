@@ -11,6 +11,11 @@ def _clear(monkeypatch):
         "VEZMORA_EXECUTION_ENABLED",
         "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
         "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
+        "VEZMORA_DEV_SHOW_TOKENS",
+        "VEZMORA_APP_URL",
+        "VEZMORA_COOKIE_SECURE",
+        "VERCEL",
+        "VERCEL_ENV",
         "STRIPE_PRICE_STARTER",
         "STRIPE_PRICE_GROWTH",
         "STRIPE_PRICE_SCALE",
@@ -32,9 +37,11 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     _clear(monkeypatch)
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["private_beta_execution_safe"] is True
+    assert snapshot["production_transport_safe"] is True
     assert snapshot["external_execution_enabled"] is False
     assert snapshot["autopilot_execution_enabled"] is False
     assert snapshot["meta_execution_scope_enabled"] is False
+    assert snapshot["dev_show_tokens_enabled"] is False
     assert snapshot["privacy_controls"] == {
         "connector_disconnect": True,
         "scoped_synced_history_deletion": True,
@@ -50,9 +57,46 @@ def test_beta_readiness_detects_unsafe_execution_flags(monkeypatch):
     assert snapshot["private_beta_execution_safe"] is False
 
 
+def test_beta_readiness_treats_dev_token_exposure_as_unsafe(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VEZMORA_DEV_SHOW_TOKENS", "true")
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["dev_show_tokens_enabled"] is True
+    assert snapshot["private_beta_execution_safe"] is False
+
+
+def test_beta_readiness_detects_insecure_production_transport(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://example.test")
+    monkeypatch.setenv("VEZMORA_COOKIE_SECURE", "false")
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["production_transport_safe"] is False
+    assert snapshot["transport"] == {
+        "production_like": True,
+        "app_url_configured": True,
+        "app_url_https": False,
+        "secure_cookie_explicitly_disabled": True,
+        "safe": False,
+    }
+
+
+def test_beta_readiness_accepts_secure_production_transport(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["production_transport_safe"] is True
+    assert snapshot["transport"]["app_url_https"] is True
+    assert snapshot["transport"]["secure_cookie_explicitly_disabled"] is False
+
+
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
     values = {
+        "VEZMORA_APP_URL": "https://example.test",
         "STRIPE_PRICE_STARTER": "price_private_starter",
         "STRIPE_PRICE_GROWTH": "price_private_growth",
         "STRIPE_PRICE_SCALE": "price_private_scale",
@@ -80,6 +124,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["google_ads_developer_token_configured"] is True
     assert payload["meta_oauth_configured"] is True
     assert payload["smtp_minimum_configured"] is True
+    assert payload["production_transport_safe"] is True
 
     rendered = response.text
     for secret in values.values():
