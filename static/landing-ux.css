@@ -1,0 +1,145 @@
+/* Vexmera UX clarity layer — contrast, icons, motion, tactile feedback */
+:root{
+  --muted:#565e69;
+  --line:#d6d0c6;
+  --line-strong:#c4bcae;
+  --ux-ease:cubic-bezier(.2,.75,.25,1);
+  --ux-ease-soft:cubic-bezier(.22,.61,.36,1);
+}
+html[data-theme="dark"]{
+  --muted:#b1bac6;
+  --line:#34404d;
+  --line-strong:#465565;
+}
+html{scroll-padding-top:112px}
+body{font-feature-settings:"kern" 1,"liga" 1;text-rendering:optimizeLegibility}
+
+/* Stronger readability. Keep hierarchy, remove washed-out copy. */
+.hero-lead,
+.section-heading p,
+.split-heading p,
+.value-card p,
+.step p,
+.module-card p,
+.feature-copy>p,
+.workflow-section .section-heading p,
+.integration-card small,
+.outcome-grid article p,
+.plan-card p,
+.faq-answer,
+.founder-lead,
+.trust-strip p,
+.floating-card small,
+.text-link{color:var(--muted)!important}
+.hero-proof span{color:color-mix(in srgb,var(--muted) 92%,var(--ink))}
+.desktop-nav{color:color-mix(in srgb,var(--muted) 92%,var(--ink))}
+.eyebrow{color:color-mix(in srgb,var(--gold-dark) 92%,var(--ink));font-weight:800}
+
+/* Product preview needs to be legible even on a photographed laptop screen. */
+.dashboard-window{border-color:#353e4a;box-shadow:0 42px 100px rgba(16,18,22,.24),0 0 0 1px rgba(255,255,255,.02) inset}
+.dash-sidebar{border-right-color:#303844}
+.dash-nav{color:#aab3c0;font-weight:600}
+.dash-nav.muted{opacity:.92}
+.dash-nav.active{color:#efd29c}
+.dash-top p{color:#a7b0bd}
+.dash-date{color:#c0c7d0;border-color:#394350}
+.metric-row span{color:#a5aebb}
+.metric-row article{border-color:#343d49}
+.recommendation-card,.chart-card{border-color:#343d49}
+.recommendation-card p{color:#aeb7c3}
+.rec-bottom span{color:#9ba5b3}
+.chart-head{color:#c0c7d0}
+.chart-head small,.chart-axis{color:#929dab}
+.dash-status-card{border-color:rgba(142,153,169,.38)!important}
+.dash-status-card small,.dash-status-card span{color:#aab3bf!important}
+
+/* Better icon language. */
+.ux-icon{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.trust-icon,.icon-box{
+  width:42px!important;height:42px!important;display:grid!important;place-items:center!important;
+  border:1px solid color-mix(in srgb,var(--gold) 28%,var(--line))!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--gold-soft) 78%,var(--surface)),var(--surface))!important;
+  color:var(--gold-dark)!important;box-shadow:0 8px 20px rgba(87,65,34,.06);
+}
+.trust-icon .ux-icon,.icon-box .ux-icon{width:21px;height:21px}
+.dash-nav .ux-icon{width:13px;height:13px;color:currentColor;flex:0 0 auto}
+.dash-nav>b{display:none!important}
+.module-letter.ux-symbol{font-size:0!important}
+.module-letter.ux-symbol .ux-icon{width:20px;height:20px}
+.source-logo.ux-source{font-size:0!important;display:grid!important;place-items:center!important}
+.source-logo.ux-source .ux-icon{width:20px;height:20px}
+
+/* Tactile, calm motion. */
+a,button,.utility-btn,.trust-strip article,.value-card,.step,.module-card,.integration-card,.outcome-grid article,.plan-card,.faq-item,.floating-card{
+  transition-property:transform,box-shadow,border-color,background-color,color,opacity;
+  transition-duration:.34s;
+  transition-timing-function:var(--ux-ease);
+}
+.ux-hover{will-change:transform;transform:translate3d(var(--ux-x,0px),var(--ux-y,0px),0)}
+@media (hover:hover) and (pointer:fine){
+  .trust-strip article:hover,.value-card:hover,.step:hover,.module-card:hover,.integration-card:hover,.outcome-grid article:hover,.plan-card:hover{
+    transform:translate3d(var(--ux-x,0px),calc(var(--ux-y,0px) - 4px),0)!important;
+    border-color:color-mix(in srgb,var(--gold) 34%,var(--line))!important;
+    box-shadow:0 20px 50px rgba(31,28,22,.075);
+  }
+  html[data-theme="dark"] .trust-strip article:hover,
+  html[data-theme="dark"] .value-card:hover,
+  html[data-theme="dark"] .step:hover,
+  html[data-theme="dark"] .module-card:hover,
+  html[data-theme="dark"] .integration-card:hover,
+  html[data-theme="dark"] .outcome-grid article:hover,
+  html[data-theme="dark"] .plan-card:hover{box-shadow:0 22px 54px rgba(0,0,0,.24)}
+  .button:hover,.utility-btn:hover,.mini-action:hover{transform:translateY(-2px) scale(1.01)}
+  .desktop-nav a:hover{transform:translateY(-1px)}
+}
+.button:active,.utility-btn:active,.mini-action:active,a.button:active{transform:translateY(0) scale(.985)!important;transition-duration:.08s}
+
+/* More visible interactive affordances. */
+.button,.utility-btn,.mini-action,.billing-toggle button{outline:none}
+:where(a,button,[tabindex]):focus-visible{outline:2px solid color-mix(in srgb,var(--gold) 74%,#fff);outline-offset:3px}
+.mini-action{font-weight:700;letter-spacing:.01em}
+.utility-btn{color:color-mix(in srgb,var(--muted) 86%,var(--ink));background:color-mix(in srgb,var(--surface) 82%,transparent)}
+.utility-btn:hover{background:var(--surface);border-color:var(--line-strong)}
+.sound-toggle{min-width:38px;position:relative}
+.sound-toggle .ux-icon{width:16px;height:16px}
+.sound-toggle i{position:absolute;right:5px;bottom:5px;width:6px;height:6px}
+.sound-toggle.enabled{color:var(--ink);border-color:color-mix(in srgb,var(--success) 38%,var(--line))}
+.sound-toggle.enabled i{background:var(--success);box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 15%,transparent)}
+
+/* Founder portrait: never fade, hide or collapse. */
+img.founder-portrait{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  width:300px!important;max-width:100%!important;height:auto!important;aspect-ratio:4/5!important;
+  min-height:0!important;object-fit:cover!important;object-position:center 38%!important;
+  border-radius:14px!important;border:1px solid color-mix(in srgb,var(--line) 88%,transparent)!important;
+  background:var(--surface-soft)!important;box-shadow:0 16px 38px rgba(26,23,18,.09)!important;
+  filter:none!important;
+}
+.founder-portrait.ux-photo-loading{background:linear-gradient(110deg,var(--surface-soft) 30%,color-mix(in srgb,var(--surface-soft) 65%,#fff) 45%,var(--surface-soft) 60%);background-size:220% 100%;animation:uxShimmer 1.5s linear infinite}
+.founder-portrait.ux-photo-ready{animation:uxPhotoIn .55s var(--ux-ease) both}
+
+/* Reveal flow is softer and more continuous. */
+.reveal{transition:opacity .72s var(--ux-ease-soft),transform .72s var(--ux-ease-soft),filter .72s var(--ux-ease-soft)!important}
+.reveal:not(.in-view){filter:blur(2px)}
+.reveal.in-view{filter:blur(0)}
+.pointer-light{transition:left .16s linear,top .16s linear,opacity .3s ease!important}
+.site-header{transition:background .38s var(--ux-ease),border-color .38s var(--ux-ease),box-shadow .38s var(--ux-ease),transform .38s var(--ux-ease)!important}
+
+/* Cards should read cleanly before decoration. */
+.value-card,.step,.module-card,.integration-card,.outcome-grid article,.plan-card{isolation:isolate}
+.value-card h3,.step h3,.module-card h3,.integration-card strong,.plan-card h3{color:var(--ink)}
+.integration-card small{font-weight:700}
+
+@keyframes uxPhotoIn{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes uxShimmer{to{background-position:-220% 0}}
+
+@media (prefers-reduced-motion:reduce){
+  .ux-hover,.reveal,img.founder-portrait{transform:none!important;animation:none!important;transition-duration:.01ms!important}
+}
+@media (max-width:760px){
+  :root{--muted:#515965}
+  html[data-theme="dark"]{--muted:#b7c0cb}
+  .hero-lead{font-size:16px;line-height:1.68}
+  .trust-icon,.icon-box{width:40px!important;height:40px!important}
+  img.founder-portrait{width:min(100%,320px)!important;justify-self:center!important}
+}
