@@ -27,7 +27,7 @@ def test_cron_requires_secret(tmp_path, monkeypatch):
         assert payload["jobs_processed"] == 0
 
 
-def test_checkout_has_beta_trial_and_real_test_price(tmp_path, monkeypatch):
+def test_checkout_has_beta_trial_and_configured_test_price(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DB_PATH", tmp_path / "stripe.db")
     store.init_db()
     _, workspace_id = store.create_user("owner@example.com", "salt", "hash", "Stripe test")
@@ -55,12 +55,12 @@ def test_checkout_has_beta_trial_and_real_test_price(tmp_path, monkeypatch):
 
     monkeypatch.setitem(sys.modules, "stripe", SimpleNamespace(StripeClient=FakeStripeClient))
     monkeypatch.setenv("STRIPE_SECRET_KEY", "test-only-placeholder")
-    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_1U82XoKROcXIKEHsjhbAapsJ")
+    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_test_starter")
     monkeypatch.setenv("VEZMORA_TRIAL_DAYS", "14")
 
     result = stripe_billing.create_checkout(workspace_id, "owner@example.com", "starter")
     assert result["trial_days"] == 14
-    assert captured["line_items"][0]["price"] == "price_1U82XoKROcXIKEHsjhbAapsJ"
+    assert captured["line_items"][0]["price"] == "price_test_starter"
     assert captured["subscription_data"]["trial_period_days"] == 14
     assert captured["mode"] == "subscription"
     assert captured["integration_identifier"].startswith("vezmora_beta_")
