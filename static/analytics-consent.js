@@ -11,7 +11,7 @@
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function gtag(){ window.dataLayer.push(arguments); };
 
-  // Keep analytics and ad-related storage denied unless the visitor explicitly opts in.
+  // Privacy-first default. Analytics is not loaded until the visitor opts in.
   window.gtag('consent', 'default', {
     analytics_storage: 'denied',
     ad_storage: 'denied',
@@ -33,10 +33,45 @@
     try { window.localStorage.setItem(STORAGE_KEY, value); } catch (_) {}
   }
 
+  function analyticsCookieDomains() {
+    const host = String(window.location.hostname || '').trim().toLowerCase();
+    const domains = new Set(['']);
+    if (!host || host === 'localhost' || /^[\d.]+$/.test(host)) return [...domains];
+
+    domains.add(host);
+    domains.add(`.${host}`);
+    const parts = host.split('.').filter(Boolean);
+    for (let index = 1; index <= parts.length - 2; index += 1) {
+      domains.add(`.${parts.slice(index).join('.')}`);
+    }
+    return [...domains];
+  }
+
+  function clearAnalyticsCookies() {
+    const names = document.cookie
+      .split(';')
+      .map((item) => item.split('=')[0].trim())
+      .filter((name) => /^_ga(?:_|$)/.test(name));
+
+    if (!names.length) return;
+    const expires = 'Thu, 01 Jan 1970 00:00:00 GMT';
+    names.forEach((name) => {
+      analyticsCookieDomains().forEach((domain) => {
+        const domainPart = domain ? `; domain=${domain}` : '';
+        document.cookie = `${name}=; expires=${expires}; max-age=0; path=/${domainPart}; SameSite=Lax`;
+      });
+    });
+  }
+
   function loadAnalytics() {
     if (loaded || document.querySelector('script[data-vexmera-analytics]')) return;
     loaded = true;
-    window.gtag('consent', 'update', { analytics_storage: 'granted' });
+    window.gtag('consent', 'update', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied'
+    });
 
     const script = document.createElement('script');
     script.async = true;
@@ -53,13 +88,14 @@
     document.head.appendChild(script);
   }
 
-  function disableAnalytics() {
+  function disableAnalytics({clearCookies = true} = {}) {
     window.gtag('consent', 'update', {
       analytics_storage: 'denied',
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied'
     });
+    if (clearCookies) clearAnalyticsCookies();
   }
 
   function ensureStyles() {
@@ -93,9 +129,10 @@
   }
 
   function applyChoice(value) {
+    if (!VALID.has(value)) return;
     writeConsent(value);
     if (value === 'granted') loadAnalytics();
-    else disableAnalytics();
+    else disableAnalytics({clearCookies: true});
     removeBanner();
     renderManageButton();
   }
@@ -109,9 +146,10 @@
     banner = document.createElement('section');
     banner.className = 'vex-consent';
     banner.setAttribute('role', 'dialog');
+    banner.setAttribute('aria-modal', 'false');
     banner.setAttribute('aria-label', 'Cookieinställningar');
     banner.innerHTML = `
-      <div><strong>Hjälp oss förbättra Vexmera</strong><p>Nödvändiga funktioner fungerar utan statistikcookies. Du kan frivilligt tillåta anonymiserad användningsstatistik via Google Analytics och ändra valet när som helst.</p></div>
+      <div><strong>Hjälp oss förbättra Vexmera</strong><p>Nödvändiga funktioner fungerar utan statistikcookies. Du kan frivilligt tillåta användningsstatistik via Google Analytics och ändra valet när som helst.</p></div>
       <div class="vex-consent-actions"><button type="button" data-consent="denied">Endast nödvändiga</button><button type="button" class="primary" data-consent="granted">Tillåt statistik</button></div>
     `;
     banner.querySelectorAll('[data-consent]').forEach((button) => {
@@ -120,13 +158,27 @@
     document.body.appendChild(banner);
   }
 
+  function bindCookieSettingsLinks() {
+    document.querySelectorAll('[data-vexmera-cookie-settings]').forEach((control) => {
+      if (control.dataset.vexmeraCookieBound === 'true') return;
+      control.dataset.vexmeraCookieBound = 'true';
+      control.addEventListener('click', (event) => {
+        event.preventDefault();
+        renderBanner(true);
+      });
+    });
+  }
+
   function init() {
+    bindCookieSettingsLinks();
     const consent = readConsent();
     if (consent === 'granted') loadAnalytics();
-    else if (consent === 'denied') disableAnalytics();
+    else if (consent === 'denied') disableAnalytics({clearCookies: true});
     else renderBanner();
     if (consent) renderManageButton();
   }
+
+  window.vexmeraOpenCookieSettings = () => renderBanner(true);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once: true});
   else init();
