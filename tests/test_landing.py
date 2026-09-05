@@ -46,4 +46,7 @@ def test_existing_app_root_still_serves_authenticated_app_shell():
     assert response.status_code == 200
     assert 'id="authScreen"' in response.text
     assert '/static/app.js' in response.text
-    assert 'AI-DRIVEN MARKETING INTELLIGENCE' not in response.text
+    # Root remains the authenticated product shell, not the public landing.
+    # Shared brand language is allowed, so use the landing hero itself as the
+    # regression marker instead of banning a reusable eyebrow phrase.
+    assert 'Förstå din marknadsföring.' not in response.text
