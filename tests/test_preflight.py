@@ -18,6 +18,9 @@ def _clear(monkeypatch):
             "TURSO_AUTH_TOKEN",
             "GOOGLE_ADS_DEVELOPER_TOKEN",
             "VEZMORA_SERVERLESS",
+            "VEZMORA_COOKIE_SECURE",
+            "VERCEL",
+            "VERCEL_ENV",
         ]
     )
     for name in names:
@@ -36,17 +39,20 @@ def test_preflight_report_is_safe_and_marks_beta_execution_locked(monkeypatch):
     assert report["core_ready"] is True
     assert report["database_ready"] is True
     assert report["beta_execution_locked"] is True
+    assert report["production_transport_safe"] is True
     assert report["unsafe_beta_flags"] == []
+    assert report["transport_issues"] == []
     serialized = str(report)
     assert "never-print-this" not in serialized
     assert "postgresql://" not in serialized
 
 
-def test_preflight_detects_accidentally_enabled_execution(monkeypatch):
+def test_preflight_detects_accidentally_enabled_execution_and_dev_tokens(monkeypatch):
     _clear(monkeypatch)
     monkeypatch.setenv("VEZMORA_EXECUTION_ENABLED", "true")
     monkeypatch.setenv("VEZMORA_AUTOPILOT_EXECUTION_ENABLED", "1")
     monkeypatch.setenv("VEZMORA_ENABLE_META_EXECUTION_SCOPE", "yes")
+    monkeypatch.setenv("VEZMORA_DEV_SHOW_TOKENS", "on")
 
     report = preflight.build_report()
     assert report["beta_execution_locked"] is False
@@ -54,7 +60,35 @@ def test_preflight_detects_accidentally_enabled_execution(monkeypatch):
         "VEZMORA_EXECUTION_ENABLED",
         "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
         "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
+        "VEZMORA_DEV_SHOW_TOKENS",
     ]
+
+
+def test_preflight_rejects_insecure_production_transport(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://example.test")
+    monkeypatch.setenv("VEZMORA_COOKIE_SECURE", "false")
+
+    report = preflight.build_report()
+    assert report["production_transport_safe"] is False
+    assert report["transport_issues"] == [
+        "VEZMORA_APP_URL must use https in production",
+        "VEZMORA_COOKIE_SECURE must not be disabled in production",
+    ]
+
+
+def test_preflight_allows_secure_production_transport(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
+    monkeypatch.setenv("VEZMORA_COOKIE_SECURE", "true")
+
+    report = preflight.build_report()
+    assert report["production_transport_safe"] is True
+    assert report["transport_issues"] == []
 
 
 def test_preflight_reports_optional_service_readiness_without_secret_values(monkeypatch, capsys):
@@ -78,3 +112,4 @@ def test_preflight_reports_optional_service_readiness_without_secret_values(monk
     assert "secret-" not in output
     assert "postgresql://" not in output
     assert "private-beta execution locks: SAFE" in output
+    assert "production transport: SAFE" in output
