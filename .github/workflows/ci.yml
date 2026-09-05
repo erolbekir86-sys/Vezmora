@@ -24,6 +24,7 @@ jobs:
       - name: Check frontend JavaScript
         run: |
           node --check static/app.js
+          node --check static/app-polish.js
           node --check static/landing.js
       - name: Test
         run: pytest -q
