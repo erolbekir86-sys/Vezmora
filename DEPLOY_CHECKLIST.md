@@ -48,17 +48,24 @@
 
 ## Billing and email
 - [x] 14-day Stripe Checkout trial flow implemented in the application
-- [x] Create Stripe sandbox webhook endpoint against the production URL
-- [x] Trigger production redeploy after adding Stripe sandbox environment variables
-- [x] Configure Stripe sandbox environment variables in production
+- [x] Customer Portal and signed webhook handling implemented in the application
+- [x] Trigger production redeploy after earlier Stripe sandbox environment setup
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
 - [x] Align Vexmera plan metadata and team limits with Starter 1 / Growth 3 / Scale 10 users
-- [ ] Reconcile the active Stripe sandbox: the currently connected Vezmora test account returns no products or prices
-- [ ] Verify or recreate the three recurring Stripe test prices for Starter 1,499 / Growth 2,999 / Scale 5,999 SEK
-- [ ] Verify Vercel `STRIPE_PRICE_*` values point to those exact prices before public paid launch
-- [ ] Run a fresh end-to-end sandbox Checkout + webhook + Customer Portal test after price reconciliation
+- [x] Verify the currently connected Stripe test account had no usable Vexmera products/prices before reconciliation
+- [x] Create fresh Vexmera Starter / Growth / Scale products in the connected Stripe test account
+- [x] Create and verify monthly recurring SEK test prices at 1,499 / 2,999 / 5,999 SEK
+- [x] Add safe Stripe catalog verification code and unit tests without exposing secrets
+- [x] Document the verified test-only catalog in `STRIPE_SANDBOX_CATALOG.md`
+- [x] Confirm the currently connected Stripe test account has no webhook endpoint yet
+- [ ] Point Vercel `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_SCALE` to the newly verified test prices
+- [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same connected Stripe test account
+- [ ] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
+- [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment
+- [ ] Run a fresh end-to-end sandbox Checkout + 14-day trial + signed webhook + Customer Portal test
+- [ ] Make a separate VAT/tax decision before any live-mode paid launch
 
 ## Google
 - [x] Trigger production redeploy after adding Google OAuth environment variables
