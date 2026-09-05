@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 
 import httpx
 
@@ -8,6 +9,33 @@ from . import connectors as _connectors
 
 
 _original_sync_google = _connectors.sync_google
+
+_SENSITIVE_ENV_NAMES = (
+    "GOOGLE_ADS_DEVELOPER_TOKEN",
+    "GOOGLE_CLIENT_SECRET",
+    "META_APP_SECRET",
+    "OPENAI_API_KEY",
+    "STRIPE_SECRET_KEY",
+    "CRON_SECRET",
+    "VEZMORA_ENCRYPTION_KEY",
+)
+
+_SENSITIVE_INLINE_PATTERNS = (
+    re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
+    re.compile(r"(?i)((?:developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|api[-_ ]?key)\s*[:=]\s*)[^\s,;|]+"),
+)
+
+
+def _redact_sensitive_text(value: object) -> str:
+    """Redact credentials from upstream diagnostic text before it becomes user-visible."""
+    text = str(value)
+    for name in _SENSITIVE_ENV_NAMES:
+        secret = (os.getenv(name) or "").strip()
+        if secret:
+            text = text.replace(secret, "[REDACTED]")
+    for pattern in _SENSITIVE_INLINE_PATTERNS:
+        text = pattern.sub(r"\1[REDACTED]", text)
+    return text
 
 
 def _google_ads_error_summary(response: httpx.Response) -> str | None:
@@ -23,9 +51,9 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
     status = error.get("status")
     message = error.get("message")
     if status:
-        parts.append(str(status))
+        parts.append(_redact_sensitive_text(status))
     if message:
-        parts.append(str(message))
+        parts.append(_redact_sensitive_text(message))
 
     request_id = None
     google_error_code = None
@@ -45,11 +73,11 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
             break
 
     if google_error_code:
-        parts.append(google_error_code)
+        parts.append(_redact_sensitive_text(google_error_code))
     if google_error_message and google_error_message != message:
-        parts.append(str(google_error_message))
+        parts.append(_redact_sensitive_text(google_error_message))
     if request_id:
-        parts.append(f"request_id={request_id}")
+        parts.append(f"request_id={_redact_sensitive_text(request_id)}")
 
     summary = " | ".join(part for part in parts if part)
     return summary[:900] if summary else None
