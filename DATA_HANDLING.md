@@ -48,22 +48,35 @@ OAuth tokens, developer tokens, API keys, app secrets, and encrypted connector s
 
 Google Ads diagnostics intentionally extract only safe error metadata such as API status, human-readable message, Google Ads error code, and request ID. They must not expose authorization headers, OAuth tokens, developer tokens, or raw secret blobs.
 
-## Disconnect and deletion status
+## Disconnect and credential deletion
 
-A dedicated customer-facing connector disconnect/revoke-and-delete flow is not yet implemented in the current beta codebase. This is a release-readiness gap and must be completed before Vexmera promises self-service connector deletion or immediate OAuth revocation.
+A backend self-service disconnect flow is now implemented for Google and Meta at `POST /api/connectors/{provider}/disconnect`.
 
-Until that feature exists, pilot documentation and customer-facing legal text must not claim that a user can fully purge connector credentials from the product with a single in-app action.
+The flow:
 
-The intended future disconnect flow should:
+1. requires an authenticated workspace owner or admin;
+2. performs a best-effort provider-side revocation where supported;
+3. removes the locally stored encrypted connector credential even if upstream revocation is unavailable or fails;
+4. clears saved external/account identifiers and connector configuration metadata;
+5. marks the connector as disconnected;
+6. removes outstanding OAuth states for that workspace/provider;
+7. returns only safe status booleans and never exposes credentials or provider secrets;
+8. is covered by regression tests, including secret-removal and idempotency checks.
 
-1. require an authenticated workspace owner/admin;
-2. revoke the provider token where the provider supports revocation;
-3. remove or invalidate the stored encrypted connector secret;
-4. mark the connector disconnected;
-5. clearly define whether previously synced campaign/KPI history is retained or deleted;
-6. provide a separate explicit data-deletion path for retained historical data;
-7. avoid exposing secrets in success/error responses;
-8. be covered by regression tests.
+Provider-side revocation is intentionally best-effort. A temporary provider/network failure must not prevent Vexmera from deleting its own local credential copy.
+
+### Historical data after disconnect
+
+Disconnecting an account **does not delete previously synchronized KPI or campaign-performance history**. This is deliberate so that a user does not accidentally erase reporting history merely by rotating or reconnecting an OAuth account.
+
+The connector record is reduced to a disconnected state with a timestamp and a marker that historical data is retained. Previously saved property IDs, ad-account IDs and similar connector configuration values are removed from that record.
+
+A separate, explicitly confirmed historical-data deletion flow is still required before Vexmera can promise one-click deletion of all previously synchronized marketing data. Customer-facing text must distinguish clearly between:
+
+- **Disconnect account:** remove stored connector credentials and stop future sync access.
+- **Delete synchronized history:** separately delete retained campaign/KPI history after an explicit destructive confirmation.
+
+Until the second flow is implemented and tested, Vexmera must not claim that disconnecting an account also purges all historical marketing data.
 
 ## Private beta operating rule
 
