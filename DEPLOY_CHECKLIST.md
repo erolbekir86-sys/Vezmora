@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 60 automated tests passing on the latest verified CI run
+- [x] 62 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -81,6 +81,7 @@
 - [x] Add `GOOGLE_ADS_DEVELOPER_TOKEN` to Vercel Production and redeploy successfully
 - [x] Submit Google Ads API Basic Access application with Vexmera tool documentation
 - [x] Send manager-account link request from Vexmera MCC to Google Ads account `638-343-6270`
+- [x] Add owner/admin-only Google disconnect endpoint with local credential deletion and best-effort upstream revocation
 - [ ] Accept the pending manager-account link request from Google Ads account `638-343-6270`
 - [ ] Receive Google approval for Basic Access
 - [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required after manager linking is active
@@ -93,13 +94,25 @@
 - [x] End-to-end test Meta OAuth with a beta test account
 - [x] Connect Meta ad account and verify account-level read access
 - [x] Confirm read-only Meta sync handles an account with no campaigns correctly
+- [x] Add owner/admin-only Meta disconnect endpoint with local credential deletion and best-effort upstream revocation
+
+## Privacy and data controls
+- [x] Prevent connector secret blobs from appearing in normal API responses
+- [x] Add self-service backend disconnect flow for Google and Meta
+- [x] Delete local encrypted connector credentials even when provider-side revocation cannot be completed
+- [x] Clear saved provider/account identifiers and pending OAuth states on disconnect
+- [x] Keep disconnect idempotent and covered by regression tests
+- [x] Document that disconnect retains previously synchronized reporting history
+- [ ] Add customer-facing disconnect controls in the authenticated UI
+- [ ] Add an explicit, separately confirmed deletion flow for retained synchronized marketing history
+- [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
 - [x] Align public marketing and Command Center branding, pricing and private-beta language
 - [x] Complete the current AI Command Center customer-facing polish pass
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
-- [x] Verify the latest polished Command Center commit passed CI and received a successful Vercel deployment status
+- [x] Verify connector-disconnect backend with 62-test green CI and successful Vercel deployment status
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
