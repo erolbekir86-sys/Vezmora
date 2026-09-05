@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 101 automated tests passing on the latest verified CI run
+- [x] 104 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -49,7 +49,7 @@
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Add private-beta safety verification for Stripe, SMTP, Google, Meta and execution-lock configuration
 - [x] Verify complete account-deletion backend/UI commit chain with green CI and successful Vercel deployment status
-- [x] Verify privacy-first analytics-consent commit chain with 101-test green CI and successful Vercel deployment status
+- [x] Verify privacy-first analytics-consent commit chain with green CI and successful Vercel deployment status
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
@@ -134,6 +134,8 @@
 - [x] Provide customer-facing cookie settings so analytics consent can be changed later
 - [x] Best-effort clear first-party `_ga` cookies when analytics consent is denied or withdrawn
 - [x] Cover analytics-consent loading, denial, withdrawal and no-preconsent-tag guarantees with regression tests
+- [x] Create a legal-review preparation inventory for entity details, processors, retention, rights workflow and beta terms
+- [x] Refresh Privacy Policy and Beta Terms drafts to match current deletion, consent and private-beta controls
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -143,7 +145,10 @@
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
 - [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
-- [x] Raise automated coverage to 101 passing tests across deployment, billing, privacy, integrations, UI and execution safety
+- [x] Align marketing hero demo to the current 14-day story and harden desktop hero layout against copy clipping
+- [x] Correct the marketing integrations grid so verified GA4 support is no longer labeled “Kommer snart”
+- [x] Add regression tests for marketing demo window, GA4 status and hero clipping guard
+- [x] Raise automated coverage to 104 passing tests across deployment, billing, privacy, integrations, marketing UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
