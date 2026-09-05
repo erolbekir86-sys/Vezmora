@@ -10,6 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/landing.css" />
+  <style id="hero-layout-guard">
+    @media (min-width:1101px){
+      .hero{grid-template-columns:minmax(0,.92fr) minmax(560px,1.08fr)!important;gap:clamp(36px,4vw,62px)!important}
+      .hero-copy{min-width:0!important;max-width:690px!important}
+      .hero h1{max-width:690px!important;font-size:clamp(52px,4.8vw,72px)!important;line-height:1.01!important;overflow:visible!important}
+    }
+  </style>
 </head>
 <body>
   <div class="ambient-light ambient-light-a" aria-hidden="true"></div>
@@ -82,7 +89,7 @@
           <div class="dash-main">
             <div class="dash-top">
               <div><small data-i18n="dash.overviewUpper">ÖVERSIKT</small><strong data-i18n="dash.morning">God morgon.</strong><p data-i18n="dash.summary">Här är vad som händer i din marknadsföring.</p></div>
-              <div class="dash-date">30 <span data-i18n="dash.days">dagar</span></div>
+              <div class="dash-date">14 <span data-i18n="dash.days">dagar</span></div>
             </div>
             <div class="metric-row">
               <article><span data-i18n="dash.revenue">Omsättning</span><strong class="count-up" data-target="128540">128 540 kr</strong><small class="positive">↗ 23,8%</small></article>
@@ -98,7 +105,7 @@
                 <button class="mini-action" type="button" data-sound="insight" data-i18n="dash.viewAnalysis">Visa analys</button>
               </article>
               <article class="chart-card">
-                <div class="chart-head"><span data-i18n="dash.performance">Resultatutveckling</span><small data-i18n="dash.days30">30 dagar</small></div>
+                <div class="chart-head"><span data-i18n="dash.performance">Resultatutveckling</span><small>14 dagar</small></div>
                 <div class="chart">
                   <svg viewBox="0 0 360 150" preserveAspectRatio="none" aria-hidden="true">
                     <defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#b38a4a" stop-opacity=".26"/><stop offset="100%" stop-color="#b38a4a" stop-opacity="0"/></linearGradient></defs>
@@ -106,7 +113,7 @@
                     <path class="chart-line" d="M0 128 C35 116 42 92 72 98 S122 124 151 82 S203 87 232 55 S286 63 360 24" fill="none" stroke="#b38a4a" stroke-width="3" stroke-linecap="round"/>
                   </svg>
                 </div>
-                <div class="chart-axis"><span>1 aug</span><span>15 aug</span><span>30 aug</span></div>
+                <div class="chart-axis"><span>Dag 1</span><span>Dag 7</span><span>Dag 14</span></div>
               </article>
             </div>
           </div>
@@ -199,7 +206,7 @@
     <section class="section integrations-section">
       <div class="section-wrap">
         <div class="section-heading centered reveal"><div class="eyebrow" data-i18n="integrations.eyebrow">INTEGRATIONER</div><h2 data-i18n="integrations.title">Vexmera arbetar med verktygen du redan använder.</h2></div>
-        <div class="integration-grid reveal"><article class="integration-card ready"><span class="source-logo google">G</span><strong>Google Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card ready"><span class="source-logo meta">∞</span><strong>Meta Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card"><span class="source-logo analytics">▥</span><strong>GA4</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo linkedin">in</span><strong>LinkedIn</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo tiktok">♪</span><strong>TikTok</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo shop">S</span><strong>Shopify</strong><small data-i18n="integrations.soon">Kommer snart</small></article></div>
+        <div class="integration-grid reveal"><article class="integration-card ready"><span class="source-logo google">G</span><strong>Google Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card ready"><span class="source-logo meta">∞</span><strong>Meta Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card ready"><span class="source-logo analytics">▥</span><strong>GA4</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card"><span class="source-logo linkedin">in</span><strong>LinkedIn</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo tiktok">♪</span><strong>TikTok</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo shop">S</span><strong>Shopify</strong><small data-i18n="integrations.soon">Kommer snart</small></article></div>
       </div>
     </section>
 
@@ -230,7 +237,7 @@
         <details><summary data-i18n="faq.q1">Vad är Vexmera?</summary><p data-i18n="faq.a1">Vexmera är en AI-driven marknadsföringsplattform som hjälper företag att samla data, förstå resultat och prioritera nästa steg.</p></details>
         <details><summary data-i18n="faq.q2">Behöver jag vara marknadsföringsexpert?</summary><p data-i18n="faq.a2">Nej. Vexmera är byggt för att göra komplex marknadsföringsdata begriplig och handlingsbar.</p></details>
         <details><summary data-i18n="faq.q3">Kan Vexmera ändra mina kampanjer automatiskt?</summary><p data-i18n="faq.a3">Automation sker inom tydliga regler och kontrollnivåer. Du väljer hur mycket Vexmera får göra och när mänskligt godkännande krävs.</p></details>
-        <details><summary data-i18n="faq.q4">Vilka plattformar stöds?</summary><p data-i18n="faq.a4">Google Ads och Meta Ads är i fokus i den nuvarande privata betan. Fler integrationer byggs stegvis.</p></details>
+        <details><summary data-i18n="faq.q4">Vilka plattformar stöds?</summary><p data-i18n="faq.a4">Google Ads, Meta Ads och GA4 är i fokus i den nuvarande privata betan. Fler integrationer byggs stegvis.</p></details>
         <details><summary data-i18n="faq.q5">Kan jag byta språk och tema?</summary><p data-i18n="faq.a5">Ja. Vexmera är byggt med svenska och engelska från start samt stöd för ljust, mörkt och systembaserat tema.</p></details>
         <details><summary data-i18n="faq.q6">Hur skyddas min data?</summary><p data-i18n="faq.a6">Vexmera använder behörighetsstyrning, tydliga godkännandeflöden och visar aldrig live-data som inte faktiskt är ansluten.</p></details>
       </div>
