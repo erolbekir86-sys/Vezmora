@@ -202,6 +202,61 @@
     nodes.forEach(translateTextNode);
   }
 
+  async function disconnectConnector(provider, button) {
+    const workspaceId = $('workspaceSelect')?.value;
+    if (!workspaceId) {
+      toast('Kunde inte hitta aktivt workspace.');
+      return;
+    }
+    const label = provider === 'google' ? 'Google' : 'Meta';
+    const confirmed = window.confirm(
+      `Koppla från ${label}? Vexmera tar bort sparade anslutningsuppgifter och stoppar framtida synkning. Redan synkad rapporthistorik behålls.`
+    );
+    if (!confirmed) return;
+
+    button.disabled = true;
+    const previousText = button.textContent;
+    button.textContent = 'Kopplar från…';
+    try {
+      const response = await fetch(`/api/connectors/${encodeURIComponent(provider)}/disconnect?workspace_id=${encodeURIComponent(workspaceId)}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+      });
+      let payload = null;
+      try { payload = await response.json(); } catch (_) {}
+      if (!response.ok) {
+        const detail = typeof payload?.detail === 'string' ? payload.detail : `HTTP ${response.status}`;
+        throw new Error(detail);
+      }
+      toast(`${label} är frånkopplat. Sparade anslutningsuppgifter är raderade. Tidigare synkad rapporthistorik finns kvar.`);
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (error) {
+      toast(`Kunde inte koppla från ${label}: ${error.message}`);
+      button.disabled = false;
+      button.textContent = previousText;
+    }
+  }
+
+  function enhanceConnectorPrivacyControls() {
+    document.querySelectorAll('#connectorGrid .connector-card').forEach((card) => {
+      const sync = card.querySelector('[data-sync]');
+      const actions = card.querySelector('.card-actions');
+      if (!sync || !actions || sync.disabled) return;
+      const provider = String(sync.dataset.sync || '').toLowerCase();
+      if (!['google', 'meta'].includes(provider)) return;
+      if (actions.querySelector(`[data-vex-disconnect="${provider}"]`)) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ghost danger vex-disconnect';
+      button.dataset.vexDisconnect = provider;
+      button.textContent = 'Koppla från';
+      button.title = 'Tar bort sparade OAuth-uppgifter. Tidigare synkad rapporthistorik behålls.';
+      button.addEventListener('click', () => disconnectConnector(provider, button));
+      actions.appendChild(button);
+    });
+  }
+
   function polishDynamicUi() {
     [
       $('connect'), $('connectorGrid'), $('approvalList'), $('competitorList'), $('briefSchedulerState'),
@@ -209,6 +264,7 @@
       $('teamMembers'), $('inviteResult'), $('billingStatus'), $('fxList'), $('resetState'),
       $('coreHeadline'), $('coreTodayCards'), $('authError'), $('feedbackState'), $('profileState')
     ].forEach(translateTree);
+    enhanceConnectorPrivacyControls();
 
     const mode = $('autopilotModeBadge');
     if (mode) {
