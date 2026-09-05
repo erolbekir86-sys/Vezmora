@@ -94,6 +94,20 @@ def test_authenticated_product_shell_lives_under_app_and_is_noindex():
     assert 'Förstå din marknadsföring.' not in response.text
 
 
+def test_legacy_product_return_links_are_forwarded_to_app():
+    with TestClient(app, follow_redirects=False) as client:
+        reset = client.get('/?reset=abc123')
+        invite = client.get('/?invite=invite123')
+        billing = client.get('/?billing=success&session_id=cs_test_123')
+
+    assert reset.status_code == 302
+    assert reset.headers['location'] == '/app?reset=abc123'
+    assert invite.status_code == 302
+    assert invite.headers['location'] == '/app?invite=invite123'
+    assert billing.status_code == 302
+    assert billing.headers['location'] == '/app?billing=success&session_id=cs_test_123'
+
+
 def test_search_engine_files_publish_only_the_public_marketing_root():
     with TestClient(app) as client:
         robots = client.get('/robots.txt')
