@@ -68,14 +68,43 @@ def test_marketing_landing_does_not_expose_internal_execution_controls():
         assert marker not in html
 
 
-def test_existing_app_root_still_serves_authenticated_app_shell():
+def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     with TestClient(app) as client:
         response = client.get('/')
 
     assert response.status_code == 200
+    assert 'Förstå din marknadsföring.' in response.text
+    assert 'id="authScreen"' not in response.text
+    assert 'href="/app"' in response.text
+    assert '<link rel="canonical" href="https://vexmera.com/" />' in response.text
+    assert '<meta name="robots" content="index,follow" />' in response.text
+
+
+def test_authenticated_product_shell_lives_under_app_and_is_noindex():
+    with TestClient(app) as client:
+        response = client.get('/app')
+        slash = client.get('/app/')
+
+    assert response.status_code == 200
+    assert slash.status_code == 200
     assert 'id="authScreen"' in response.text
     assert '/static/app.js' in response.text
-    # Root remains the authenticated product shell, not the public landing.
-    # Shared brand language is allowed, so use the landing hero itself as the
-    # regression marker instead of banning a reusable eyebrow phrase.
+    assert '<meta name="robots" content="noindex,nofollow" />' in response.text
+    assert response.headers['x-robots-tag'] == 'noindex, nofollow'
     assert 'Förstå din marknadsföring.' not in response.text
+
+
+def test_search_engine_files_publish_only_the_public_marketing_root():
+    with TestClient(app) as client:
+        robots = client.get('/robots.txt')
+        sitemap = client.get('/sitemap.xml')
+
+    assert robots.status_code == 200
+    assert 'Disallow: /app' in robots.text
+    assert 'Disallow: /api/' in robots.text
+    assert 'Sitemap: https://vexmera.com/sitemap.xml' in robots.text
+
+    assert sitemap.status_code == 200
+    assert sitemap.headers['content-type'].startswith('application/xml')
+    assert '<loc>https://vexmera.com/</loc>' in sitemap.text
+    assert '<loc>https://vexmera.com/app</loc>' not in sitemap.text
