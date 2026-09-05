@@ -62,7 +62,8 @@ def install_public_routing(app: FastAPI) -> None:
             '  <meta property="og:title" content="Vexmera — AI Marketing Officer" />\n'
             '  <meta property="og:description" content="Förstå din marknadsföring, se vad som driver resultat och vet vad du ska göra härnäst." />\n'
             f'  <meta property="og:url" content="{CANONICAL_ORIGIN}/" />\n'
-            '  <meta name="twitter:card" content="summary_large_image" />'
+            '  <meta name="twitter:card" content="summary_large_image" />\n'
+            '  <script src="/static/founder-photo-fix.js?v=20260905-2" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
         return HTMLResponse(html, headers={"Cache-Control": "public, max-age=300"})
