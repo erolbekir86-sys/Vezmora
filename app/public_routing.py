@@ -39,7 +39,7 @@ def install_public_routing(app: FastAPI) -> None:
         )
     ]
 
-    async def marketing_home(request: Request) -> HTMLResponse | RedirectResponse:
+    async def marketing_home(request: Request) -> Response:
         # Existing private-beta email, invite, and Stripe return links were built
         # against the old product-at-root layout. Preserve those links while the
         # canonical base URL remains the apex domain.
