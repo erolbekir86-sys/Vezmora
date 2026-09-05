@@ -38,11 +38,18 @@ def test_core_product_ids_are_preserved_for_existing_app_logic():
         assert f'id="{element_id}"' in INDEX
 
 
-def test_every_literal_app_js_dom_id_still_exists_in_index():
-    # app.js uses the tiny $("id") helper as its DOM contract. Rebuilding the
-    # customer-facing HTML must never silently remove an element the product uses.
+def test_every_literal_app_js_dom_id_exists_statically_or_is_created_dynamically():
+    # app.js uses the tiny $("id") helper as its DOM contract. Some controls,
+    # such as syncDays, are intentionally created by app.js itself. A redesign
+    # must preserve every referenced id either in shipped HTML or in that
+    # explicit dynamic markup.
     referenced_ids = set(re.findall(r"\$\(['\"]([A-Za-z0-9_-]+)['\"]\)", APP_JS))
-    missing = sorted(element_id for element_id in referenced_ids if f'id="{element_id}"' not in INDEX)
+    dynamic_ids = set(re.findall(r"id=[\\\"']([A-Za-z0-9_-]+)[\\\"']", APP_JS))
+    missing = sorted(
+        element_id
+        for element_id in referenced_ids
+        if f'id="{element_id}"' not in INDEX and element_id not in dynamic_ids
+    )
     assert not missing, f"Missing DOM ids required by app.js: {missing}"
 
 
