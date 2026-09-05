@@ -1,12 +1,13 @@
 (() => {
-  const PHOTO_SRC = '/static/vexmera-founder.jpg?v=20260905-5';
+  const BUILD = window.__VEXMERA_BUILD__ || 'local';
+  const PHOTO_SRC = `/static/vexmera-founder.jpg?build=${encodeURIComponent(BUILD)}`;
 
   function installFounderPhoto() {
     const current = document.querySelector('.founder-portrait');
     if (!current) return false;
 
     if (current.tagName === 'IMG') {
-      if (!current.src.includes('20260905-5')) current.src = PHOTO_SRC;
+      if (!current.src.includes(`build=${encodeURIComponent(BUILD)}`)) current.src = PHOTO_SRC;
       current.loading = 'eager';
       current.decoding = 'async';
       current.fetchPriority = 'high';
