@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, Response
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.routing import APIRoute
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
 CANONICAL_ORIGIN = "https://vexmera.com"
+PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing"})
 
 
 def _inject_before_head_end(html: str, fragment: str) -> str:
@@ -38,7 +39,16 @@ def install_public_routing(app: FastAPI) -> None:
         )
     ]
 
-    async def marketing_home() -> HTMLResponse:
+    async def marketing_home(request: Request) -> HTMLResponse | RedirectResponse:
+        # Existing private-beta email, invite, and Stripe return links were built
+        # against the old product-at-root layout. Preserve those links while the
+        # canonical base URL remains the apex domain.
+        if PRODUCT_QUERY_KEYS.intersection(request.query_params.keys()):
+            target = "/app"
+            if request.url.query:
+                target = f"{target}?{request.url.query}"
+            return RedirectResponse(target, status_code=302)
+
         html = (STATIC / "landing.html").read_text(encoding="utf-8")
         # The landing page was originally shipped beside the app while `/`
         # pointed to login. Keep all existing CTA copy/design, but send those
