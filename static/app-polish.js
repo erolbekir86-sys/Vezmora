@@ -257,6 +257,65 @@
     });
   }
 
+  async function deleteSyncedMarketingHistory(button) {
+    const workspaceId = $('workspaceSelect')?.value;
+    if (!workspaceId) {
+      toast('Kunde inte hitta aktivt workspace.');
+      return;
+    }
+    const typed = window.prompt(
+      'Detta raderar synkade kampanjmått, automatiskt synkade KPI:er och tillhörande avvikelser. Manuellt inmatade KPI:er behålls. Skriv RADERA för att fortsätta.'
+    );
+    if (typed !== 'RADERA') {
+      if (typed !== null) toast('Radering avbröts. Skriv exakt RADERA för att bekräfta.');
+      return;
+    }
+
+    button.disabled = true;
+    const previousText = button.textContent;
+    button.textContent = 'Raderar…';
+    try {
+      const response = await fetch(
+        `/api/privacy/synced-marketing-history?workspace_id=${encodeURIComponent(workspaceId)}&confirm=DELETE_SYNCED_HISTORY`,
+        {method: 'DELETE', headers: {'Content-Type': 'application/json'}}
+      );
+      let payload = null;
+      try { payload = await response.json(); } catch (_) {}
+      if (!response.ok) {
+        const detail = typeof payload?.detail === 'string' ? payload.detail : `HTTP ${response.status}`;
+        throw new Error(detail);
+      }
+      const deleted = payload?.deleted || {};
+      const total = Number(deleted.campaign_metrics || 0) + Number(deleted.synced_kpis || 0) + Number(deleted.anomalies || 0) + Number(deleted.anomaly_notifications || 0);
+      toast(`Synkad marknadsföringshistorik är raderad. ${total} sparade poster togs bort. Manuellt inmatade KPI:er behölls.`);
+      window.setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      toast(`Kunde inte radera synkad historik: ${error.message}`);
+      button.disabled = false;
+      button.textContent = previousText;
+    }
+  }
+
+  function enhanceHistoryDeletionControl() {
+    const connectView = $('connect');
+    if (!connectView || connectView.querySelector('[data-vex-history-control]')) return;
+
+    const section = document.createElement('section');
+    section.className = 'panel table-panel';
+    section.dataset.vexHistoryControl = 'true';
+    section.innerHTML = `
+      <div class="module-head">
+        <div>
+          <div class="panel-title"><span>DATAKONTROLL</span> Synkad rapporthistorik</div>
+          <p>Radera importerade kampanjmått, synkade KPI:er och tillhörande avvikelser utan att ta bort manuellt inmatade KPI:er eller ändra dina anslutningsuppgifter.</p>
+        </div>
+        <button type="button" class="ghost danger" data-vex-delete-history>Radera synkad historik</button>
+      </div>
+      <p class="fineprint">Endast ägare och administratörer. Åtgärden kräver att du skriver RADERA och kan inte ångras.</p>`;
+    connectView.appendChild(section);
+    section.querySelector('[data-vex-delete-history]').addEventListener('click', (event) => deleteSyncedMarketingHistory(event.currentTarget));
+  }
+
   function polishDynamicUi() {
     [
       $('connect'), $('connectorGrid'), $('approvalList'), $('competitorList'), $('briefSchedulerState'),
@@ -265,6 +324,7 @@
       $('coreHeadline'), $('coreTodayCards'), $('authError'), $('feedbackState'), $('profileState')
     ].forEach(translateTree);
     enhanceConnectorPrivacyControls();
+    enhanceHistoryDeletionControl();
 
     const mode = $('autopilotModeBadge');
     if (mode) {
