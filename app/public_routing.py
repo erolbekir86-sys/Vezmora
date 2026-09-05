@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import re
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
@@ -11,11 +13,26 @@ STATIC = ROOT / "static"
 CANONICAL_ORIGIN = "https://vexmera.com"
 PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing"})
 
+_raw_build_id = (os.getenv("VERCEL_GIT_COMMIT_SHA") or "local").strip()
+BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
+_STATIC_ASSET_RE = re.compile(r'(?P<prefix>(?:src|href)=["\'])(?P<url>/static/[^"\']+)')
+
 
 def _inject_before_head_end(html: str, fragment: str) -> str:
     if fragment.strip() in html:
         return html
     return html.replace("</head>", f"{fragment}\n</head>", 1)
+
+
+def _version_static_assets(html: str) -> str:
+    """Cache-bust every local frontend asset with the current deployment id."""
+
+    def replace(match: re.Match[str]) -> str:
+        url = match.group("url")
+        separator = "&" if "?" in url else "?"
+        return f'{match.group("prefix")}{url}{separator}build={BUILD_ID}'
+
+    return _STATIC_ASSET_RE.sub(replace, html)
 
 
 def install_public_routing(app: FastAPI) -> None:
@@ -63,14 +80,16 @@ def install_public_routing(app: FastAPI) -> None:
             '  <meta property="og:description" content="Förstå din marknadsföring, se vad som driver resultat och vet vad du ska göra härnäst." />\n'
             f'  <meta property="og:url" content="{CANONICAL_ORIGIN}/" />\n'
             '  <meta name="twitter:card" content="summary_large_image" />\n'
-            '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg?v=20260905-5" fetchpriority="high" />\n'
-            '  <link rel="stylesheet" href="/static/landing-ux.css?v=20260905-3" />\n'
-            '  <link rel="stylesheet" href="/static/landing-refine.css?v=20260905-1" />\n'
-            '  <script src="/static/founder-photo-fix.js?v=20260905-5" defer></script>\n'
-            '  <script src="/static/landing-ux.js?v=20260905-3" defer></script>\n'
-            '  <script src="/static/landing-refine.js?v=20260905-1" defer></script>'
+            f'  <script>window.__VEXMERA_BUILD__="{BUILD_ID}";</script>\n'
+            '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg" fetchpriority="high" />\n'
+            '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
+            '  <script src="/static/founder-photo-fix.js" defer></script>\n'
+            '  <script src="/static/landing-ux.js" defer></script>\n'
+            '  <script src="/static/landing-refine.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
+        html = _version_static_assets(html)
         return HTMLResponse(
             html,
             headers={"Cache-Control": "no-cache, max-age=0, must-revalidate"},
@@ -80,8 +99,10 @@ def install_public_routing(app: FastAPI) -> None:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
         html = _inject_before_head_end(
             html,
-            '  <meta name="robots" content="noindex,nofollow" />',
+            f'  <meta name="robots" content="noindex,nofollow" />\n'
+            f'  <script>window.__VEXMERA_BUILD__="{BUILD_ID}";</script>',
         )
+        html = _version_static_assets(html)
         return HTMLResponse(
             html,
             headers={
