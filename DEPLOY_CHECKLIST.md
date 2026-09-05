@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 79 automated tests passing on the latest verified CI run
+- [x] 94 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -12,13 +12,17 @@
 - [x] PostgreSQL compatibility layer implemented
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
+- [x] Modernize GitHub Actions to checkout/setup-python/setup-node v7 with read-only permissions, concurrency control, timeout and pip caching
 - [x] Validate Python plus all shipped frontend JavaScript in CI
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
 - [x] Add safe `/health/beta-readiness` diagnostics without exposing secret values
 - [x] Add deployment preflight that fails if private-beta execution flags are accidentally enabled
+- [x] Treat development reset-token exposure as an unsafe private-beta configuration
+- [x] Reject non-HTTPS app URLs or explicitly insecure cookies in production-like preflight checks
 - [x] Verify external execution and Autopilot are blocked by default before external adapters can run
 - [x] Add safe production readiness flags for remaining integrations
+- [x] Add safe Stripe sandbox readiness diagnostics that compare configured test prices without exposing Price IDs or keys
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
 - [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
 
@@ -44,7 +48,7 @@
 - [x] Prevent caching of API and health responses
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Add private-beta safety verification for Stripe, SMTP, Google, Meta and execution-lock configuration
-- [x] Verify `/health/beta-readiness` commit received successful Vercel deployment status
+- [x] Verify latest account-privacy backend commit received successful Vercel deployment status
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
@@ -66,9 +70,11 @@
 - [x] Add safe Stripe catalog verification code and unit tests without exposing secrets
 - [x] Document the verified test-only catalog in `STRIPE_SANDBOX_CATALOG.md`
 - [x] Confirm the currently connected Stripe test account has no webhook endpoint yet
+- [x] Add non-secret `/health/beta-readiness` checks for Stripe key mode, exact verified sandbox catalog match and webhook-secret presence
 - [ ] Point Vercel `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_SCALE` to the newly verified test prices
 - [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same connected Stripe test account
 - [ ] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
+- [ ] Confirm `/health/beta-readiness` reports `stripe_sandbox_ready=true` in the configured deployment
 - [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment
 - [ ] Run a fresh end-to-end sandbox Checkout + 14-day trial + signed webhook + Customer Portal test
 - [ ] Make a separate VAT/tax decision before any live-mode paid launch
@@ -114,7 +120,13 @@
 - [x] Require explicit destructive confirmation before synchronized-history deletion
 - [x] Preserve manually entered KPI rows during synchronized-history deletion
 - [x] Add a customer-facing UI for the separately confirmed synchronized-history deletion flow
-- [x] Verify privacy UI/backend with green CI and a successful Vercel deployment status
+- [x] Add guarded self-service account-deletion backend with current-password re-authentication and exact destructive confirmation
+- [x] Block account deletion while an owned workspace contains other members or has an active Stripe subscription
+- [x] Remove solo-owned workspaces, sessions, memberships, pending invites and queued account email during local account deletion
+- [x] Best-effort revoke Google/Meta OAuth tokens for solo-owned workspaces before local account deletion
+- [x] Preserve workspaces owned by other users when a departing account is only a member
+- [x] Verify account-deletion backend with green CI and successful Vercel deployment status
+- [ ] Add the guarded account-deletion control to the authenticated customer UI before marking full self-service deletion complete
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -124,7 +136,7 @@
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
 - [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
-- [x] Raise automated coverage to 79 passing tests across deployment, billing, privacy, integrations, UI and execution safety
+- [x] Raise automated coverage to 94 passing tests across deployment, billing, privacy, integrations, UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
