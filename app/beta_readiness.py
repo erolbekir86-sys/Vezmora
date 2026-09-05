@@ -49,6 +49,28 @@ def _transport_snapshot() -> dict[str, object]:
     }
 
 
+def _database_snapshot() -> dict[str, object]:
+    """Report non-secret database intent without exposing connection strings."""
+    database_url_configured = _configured("DATABASE_URL")
+    postgres_url_configured = _configured("POSTGRES_URL")
+    turso_url_configured = _configured("TURSO_DATABASE_URL")
+
+    if database_url_configured or postgres_url_configured:
+        backend_intent = "postgres"
+    elif turso_url_configured:
+        backend_intent = "turso"
+    else:
+        backend_intent = "sqlite"
+
+    return {
+        "backend_intent": backend_intent,
+        "database_url_configured": database_url_configured,
+        "postgres_url_configured": postgres_url_configured,
+        "turso_url_configured": turso_url_configured,
+        "remote_database_configured": database_url_configured or postgres_url_configured or turso_url_configured,
+    }
+
+
 def _stripe_key_mode() -> str:
     key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
     if not key:
@@ -70,6 +92,7 @@ def beta_safety_snapshot() -> dict[str, object]:
     meta_execution_scope_enabled = _enabled("VEZMORA_ENABLE_META_EXECUTION_SCOPE")
     dev_show_tokens_enabled = _enabled("VEZMORA_DEV_SHOW_TOKENS")
     transport = _transport_snapshot()
+    database = _database_snapshot()
     stripe_key_mode = _stripe_key_mode()
     stripe_catalog_configured = _all_configured(*VERIFIED_STRIPE_SANDBOX_PRICES.keys())
     stripe_catalog_matches = _stripe_catalog_matches_verified_sandbox()
@@ -91,6 +114,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         ),
         "production_transport_safe": bool(transport["safe"]),
         "transport": transport,
+        "database": database,
         "stripe_key_mode": stripe_key_mode,
         "stripe_catalog_env_configured": stripe_catalog_configured,
         "stripe_catalog_matches_verified_sandbox": stripe_catalog_matches,
@@ -121,6 +145,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         },
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
+            "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
