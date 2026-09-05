@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 97 automated tests passing on the latest verified CI run
+- [x] 101 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -13,7 +13,7 @@
 - [x] Secret scan clean
 - [x] GitHub Actions CI included
 - [x] Modernize GitHub Actions to checkout/setup-python/setup-node v7 with read-only permissions, concurrency control, timeout and pip caching
-- [x] Validate Python plus all shipped frontend JavaScript in CI, including account privacy UI
+- [x] Validate Python plus all shipped frontend JavaScript in CI, including account privacy and analytics-consent UI
 - [x] Fix Python packaging and restore green GitHub Actions CI
 - [x] Add safe `/health/runtime` deployment diagnostics
 - [x] Add safe `/health/beta-readiness` diagnostics without exposing secret values
@@ -49,6 +49,7 @@
 - [x] Update deployment preflight for Neon/Postgres instead of legacy Turso-only requirements
 - [x] Add private-beta safety verification for Stripe, SMTP, Google, Meta and execution-lock configuration
 - [x] Verify complete account-deletion backend/UI commit chain with green CI and successful Vercel deployment status
+- [x] Verify privacy-first analytics-consent commit chain with 101-test green CI and successful Vercel deployment status
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
@@ -85,7 +86,7 @@
 - [x] End-to-end test Google OAuth with a beta test account
 - [x] Enable Google Analytics Data API
 - [x] Configure GA4 property and web stream
-- [x] Install GA4 tag in production
+- [x] Install GA4 tag in production behind explicit analytics consent
 - [x] Confirm Google Analytics sync returns real rows
 - [x] Save Google Ads customer ID `638-343-6270` in Vexmera
 - [x] Create Google Ads Manager account for Vexmera (`944-502-2492`)
@@ -127,7 +128,12 @@
 - [x] Preserve workspaces owned by other users when a departing account is only a member
 - [x] Add guarded account-deletion control to the authenticated customer UI with preview, blockers, password re-authentication and final confirmation
 - [x] Validate the account-deletion UI JavaScript in CI and cover its destructive-flow wiring with regression tests
-- [x] Verify end-to-end account-deletion backend/UI code path with 97-test green CI and successful Vercel deployment status
+- [x] Verify end-to-end account-deletion backend/UI code path with green CI and successful Vercel deployment status
+- [x] Default Google Analytics and all ad-related Google consent storage to denied until explicit opt-in
+- [x] Keep Google Signals and ad-personalization signals disabled for Vexmera analytics
+- [x] Provide customer-facing cookie settings so analytics consent can be changed later
+- [x] Best-effort clear first-party `_ga` cookies when analytics consent is denied or withdrawn
+- [x] Cover analytics-consent loading, denial, withdrawal and no-preconsent-tag guarantees with regression tests
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -137,7 +143,7 @@
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
 - [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
-- [x] Raise automated coverage to 97 passing tests across deployment, billing, privacy, integrations, UI and execution safety
+- [x] Raise automated coverage to 101 passing tests across deployment, billing, privacy, integrations, UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
