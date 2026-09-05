@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 66 automated tests passing on the latest verified CI run
+- [x] 67 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -107,7 +107,8 @@
 - [x] Add an owner/admin-only backend deletion flow for retained synchronized campaign metrics, provider KPIs, anomalies and anomaly notifications
 - [x] Require explicit destructive confirmation before synchronized-history deletion
 - [x] Preserve manually entered KPI rows during synchronized-history deletion
-- [ ] Add a customer-facing UI for the separately confirmed synchronized-history deletion flow
+- [x] Add a customer-facing UI for the separately confirmed synchronized-history deletion flow
+- [x] Verify privacy UI/backend with 67-test green CI and a successful Vercel deployment status
 - [ ] Finalize concrete production retention periods and subprocessor disclosures
 
 ## Product and launch
@@ -116,7 +117,7 @@
 - [x] Complete the current AI Command Center customer-facing polish pass
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
-- [x] Verify synchronized-history deletion backend with 66-test green CI
+- [x] Verify synchronized-history deletion backend and UI with 67-test green CI
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
