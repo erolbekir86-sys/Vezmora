@@ -191,3 +191,66 @@
   .founder-quote{font-size:17px}
   .demo-data-pill{display:none}
 }
+
+/* Approved founder portrait: same uploaded photo, no AI regeneration. */
+.founder-portrait{
+  min-height:470px;
+  overflow:visible;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  isolation:isolate;
+}
+.founder-portrait::before{
+  content:"";
+  position:absolute;
+  inset:-3% -5%;
+  width:auto;
+  height:auto;
+  left:-5%;
+  top:-3%;
+  bottom:-3%;
+  transform:none;
+  border-radius:34% 28% 31% 26% / 24% 31% 26% 34%;
+  background:url('/static/vexmera-founder.jpg') center 42% / cover no-repeat;
+  box-shadow:none;
+  -webkit-mask-image:radial-gradient(ellipse 78% 79% at 50% 48%,#000 52%,rgba(0,0,0,.98) 68%,rgba(0,0,0,.72) 80%,rgba(0,0,0,.22) 91%,transparent 100%);
+  mask-image:radial-gradient(ellipse 78% 79% at 50% 48%,#000 52%,rgba(0,0,0,.98) 68%,rgba(0,0,0,.72) 80%,rgba(0,0,0,.22) 91%,transparent 100%);
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  z-index:1;
+}
+.founder-portrait::after{
+  content:"";
+  position:absolute;
+  inset:-8%;
+  width:auto;
+  height:auto;
+  left:-8%;
+  bottom:-8%;
+  transform:none;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 52% 52%,transparent 55%,color-mix(in srgb,var(--surface) 34%,transparent) 79%,color-mix(in srgb,var(--surface) 74%,transparent) 100%);
+  pointer-events:none;
+  z-index:2;
+}
+.founder-placeholder-label{display:none!important}
+.founder-meta strong{font-size:0;line-height:1.25}
+.founder-meta strong::after{
+  content:"Erol Bekir";
+  display:block;
+  font-family:Manrope,Inter,sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:-.015em;
+}
+
+@media(max-width:900px){
+  .founder-portrait{min-height:440px;max-width:560px}
+}
+@media(max-width:620px){
+  .founder-portrait{min-height:390px;border-radius:0}
+  .founder-portrait::before{inset:-2% -4%;left:-4%;top:-2%;bottom:-2%;background-position:center 39%}
+}
