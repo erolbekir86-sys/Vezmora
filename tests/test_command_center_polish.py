@@ -58,3 +58,10 @@ def test_polish_keeps_private_beta_messaging_and_reduced_motion():
     assert 'prefers-reduced-motion' in POLISH_CSS
     assert 'window.alert = (message) => toast(message)' in POLISH_JS
     assert 'Autonoma högriskåtgärder' in POLISH_JS
+
+
+def test_connected_accounts_have_a_truthful_disconnect_ui():
+    assert 'data-vex-disconnect' in POLISH_JS
+    assert 'Koppla från' in POLISH_JS
+    assert '/api/connectors/${encodeURIComponent(provider)}/disconnect' in POLISH_JS
+    assert 'Redan synkad rapporthistorik behålls' in POLISH_JS
