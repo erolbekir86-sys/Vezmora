@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 57 automated tests passing on the latest verified CI run
+- [x] 60 automated tests passing on the latest verified CI run
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -98,8 +98,9 @@
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
 - [x] Align public marketing and Command Center branding, pricing and private-beta language
 - [x] Complete the current AI Command Center customer-facing polish pass
-- [x] Verify the polished Command Center commit received a successful Vercel deployment status
-- [ ] Perform final authenticated browser QA on the deployed Command Center after the latest CI-only commit settles
+- [x] Finish the Swedish dynamic-copy polish for the authenticated app
+- [x] Verify the latest polished Command Center commit passed CI and received a successful Vercel deployment status
+- [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
 - [ ] Purchase/attach `vexmera.com` when the product is production-ready
 - [ ] Run five-company pilot
