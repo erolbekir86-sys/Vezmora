@@ -65,9 +65,13 @@ For users in the EEA/UK, the applicable legal basis depends on the processing ac
 The final production policy should map each material processing purpose to its precise legal basis.
 
 ## 6. Google and Meta connections
-When a user connects Google or Meta, authentication occurs through the provider's authorization flow. Vexmera stores the resulting authorization credentials securely so that it can access the data the user has permitted.
+When a user connects Google or Meta, authentication occurs through the provider's authorization flow. Vexmera stores the resulting authorization credentials in encrypted form so that it can access the data the user has permitted.
 
-Users can revoke provider access through the relevant Google or Meta account controls. Vexmera should also provide a product-level disconnect flow before external launch.
+Vexmera now includes a product-level disconnect control for supported Google and Meta connections. Disconnecting is restricted to authorized workspace owners or administrators. When a supported account is disconnected, Vexmera removes its locally stored connector credential and saved connector/account identifiers, stops future sync access through that credential, and performs a best-effort provider-side revocation where supported.
+
+Provider-side revocation may also be performed directly through the relevant Google or Meta account controls. A provider or network failure during revocation does not prevent Vexmera from deleting its own stored credential copy.
+
+**Disconnecting an account does not currently delete previously synchronized campaign or KPI history.** Retained reporting history must be deleted through a separate explicit deletion process once that production control is implemented. Until then, Vexmera must not describe the disconnect action as a complete purge of all historical marketing data.
 
 Vexmera must not expose OAuth tokens, developer tokens, API keys or provider secrets in user-visible diagnostics.
 
@@ -92,6 +96,8 @@ Before external launch, define concrete retention rules for:
 - AI request/response records
 - Deleted accounts and backups
 
+Connector credentials are removed from Vexmera's active connector record when the supported self-service disconnect action completes. This does not by itself determine the retention period for previously synchronized reporting data.
+
 ## 10. Security
 Vexmera uses technical and organizational safeguards intended to protect data, including encrypted credential storage, HTTPS, secure session settings, access controls and safeguards designed to prevent secrets from appearing in user-visible diagnostics.
 
@@ -112,7 +118,7 @@ Depending on location, users may have rights to:
 - Withdraw consent where processing relies on consent
 - Complain to a data-protection authority
 
-The final policy should provide a verified privacy contact channel for exercising these rights.
+The final policy should provide a verified privacy contact channel for exercising these rights. A dedicated production process for complete historical-data deletion and account-deletion requests must be finalized before external launch.
 
 ## 13. Business-customer data
 Where a business customer provides or connects data relating to its own customers, employees or other individuals, the business may act as controller and Vexmera may act as processor for some processing activities.
