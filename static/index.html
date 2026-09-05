@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Vexmera är din AI Marketing Officer för tydligare marknadsföringsbeslut, samlad data och prioriterade nästa steg." />
+  <meta name="theme-color" content="#0b0e13" />
   <title>Vexmera — AI Marketing Officer</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-YZESEE7XW0"></script>
@@ -13,48 +15,49 @@
     gtag('config', 'G-YZESEE7XW0');
   </script>
   <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/app-polish.css?v=1" />
 </head>
 <body>
   <section id="authScreen" class="auth-screen">
     <div class="auth-card">
-      <div class="brand auth-brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span></div></div>
-      <p class="eyebrow">AUTONOMOUS MARKETING INTELLIGENCE</p>
-      <h1>Build growth with an AI CMO.</h1>
+      <div class="brand auth-brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span><span class="beta-brand-badge">Privat beta</span></div></div>
+      <p class="eyebrow">AI-DRIVEN MARKETING INTELLIGENCE</p>
+      <h1>Få tydligare marknadsföringsbeslut med en AI Marketing Officer.</h1>
       <p class="lead">Logga in eller skapa ditt första Vexmera-workspace.</p>
       <div class="auth-tabs"><button id="showLogin" class="active">Logga in</button><button id="showRegister">Skapa konto</button></div>
       <form id="loginForm" class="auth-form">
-        <label>E-post<input id="loginEmail" type="email" required placeholder="you@company.com" /></label>
-        <label>Lösenord<input id="loginPassword" type="password" required /></label>
+        <label>E-post<input id="loginEmail" type="email" required autocomplete="email" placeholder="du@foretag.se" /></label>
+        <label>Lösenord<input id="loginPassword" type="password" required autocomplete="current-password" /></label>
         <button class="primary" type="submit">Logga in</button><button id="forgotPassword" class="text-button" type="button">Glömt lösenord?</button>
       </form>
       <form id="registerForm" class="auth-form hidden">
-        <label>E-post<input id="registerEmail" type="email" required placeholder="you@company.com" /></label>
-        <label>Lösenord<input id="registerPassword" type="password" minlength="8" required /></label>
-        <label>Workspace<input id="registerWorkspace" value="My Company" required /></label>
+        <label>E-post<input id="registerEmail" type="email" required autocomplete="email" placeholder="du@foretag.se" /></label>
+        <label>Lösenord<input id="registerPassword" type="password" minlength="8" required autocomplete="new-password" /></label>
+        <label>Företagsnamn<input id="registerWorkspace" value="Mitt företag" required /></label>
         <button class="primary" type="submit">Skapa Vexmera-konto</button>
       </form>
       <p id="authError" class="error-text"></p>
     </div>
   </section>
 
-  <section id="onboardingModal" class="modal-shell hidden" aria-modal="true" role="dialog">
+  <section id="onboardingModal" class="modal-shell hidden" aria-modal="true" role="dialog" aria-labelledby="onboardingTitle">
     <div class="modal-card onboarding-card">
-      <div class="onboarding-top"><div><p class="eyebrow">PRIVATE BETA SETUP</p><h2>Teach Core how your business grows.</h2></div><span id="onboardingStepLabel" class="module-pill">Step 1 of 3</span></div>
+      <div class="onboarding-top"><div><p class="eyebrow">PRIVAT BETA · KONFIGURATION</p><h2 id="onboardingTitle">Lär Core hur ditt företag växer.</h2></div><span id="onboardingStepLabel" class="module-pill">Steg 1 av 3</span></div>
       <div class="onboarding-progress"><span id="onboardingProgress"></span></div>
       <div class="onboarding-step" data-onboarding-step="1">
         <div class="two"><label>Företagsnamn<input id="obCompany" /></label><label>Bransch<input id="obIndustry" /></label></div>
-        <div class="two"><label>Marknad<input id="obMarket" value="Sweden" /></label><label>Webbplats<input id="obWebsite" type="url" placeholder="https://..." /></label></div>
+        <div class="two"><label>Marknad<input id="obMarket" value="Sverige" /></label><label>Webbplats<input id="obWebsite" type="url" placeholder="https://..." /></label></div>
         <label>Vad säljer ni?<textarea id="obOffer" placeholder="Beskriv erbjudandet kort och konkret."></textarea></label>
       </div>
       <div class="onboarding-step hidden" data-onboarding-step="2">
         <label>Primär målgrupp<textarea id="obAudience" placeholder="Vem köper, varför och i vilken situation?"></textarea></label>
-        <div class="two"><label>Huvudmål<select id="obGoal"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Retention</option><option value="launch">Lansering</option></select></label><label>Månadsbudget<input id="obBudget" type="number" min="0" value="25000" /></label></div>
-        <label>Viktigaste marknadsföringsproblemet<textarea id="obProblem" placeholder="Vad tar mest tid eller kostar mest idag?"></textarea></label>
+        <div class="two"><label>Huvudmål<select id="obGoal"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Kundlojalitet</option><option value="launch">Lansering</option></select></label><label>Månadsbudget<input id="obBudget" type="number" min="0" value="25000" /></label></div>
+        <label>Viktigaste marknadsföringsproblemet<textarea id="obProblem" placeholder="Vad tar mest tid eller kostar mest i dag?"></textarea></label>
       </div>
       <div class="onboarding-step hidden" data-onboarding-step="3">
-        <div class="two"><label>Tillväxtmål<input id="obGrowth" placeholder="Ex. +25% omsättning inom 6 månader" /></label><label>Teamstorlek<input id="obTeamSize" type="number" min="1" value="1" /></label></div>
+        <div class="two"><label>Tillväxtmål<input id="obGrowth" placeholder="Ex. +25 % omsättning inom 6 månader" /></label><label>Teamstorlek<input id="obTeamSize" type="number" min="1" value="1" /></label></div>
         <div class="two"><label>Varumärkesröst<input id="obVoice" value="trygg, tydlig, kunnig" /></label><label>Tidszon<input id="obTimezone" value="Europe/Stockholm" /></label></div>
-        <label>Primära kanaler<div class="channel-checks"><label><input type="checkbox" value="meta" class="obChannel" /> Meta</label><label><input type="checkbox" value="google" class="obChannel" /> Google</label><label><input type="checkbox" value="organic" class="obChannel" /> Organic</label><label><input type="checkbox" value="email" class="obChannel" /> Email</label><label><input type="checkbox" value="linkedin" class="obChannel" /> LinkedIn</label><label><input type="checkbox" value="tiktok" class="obChannel" /> TikTok</label></div></label>
+        <label>Primära kanaler<div class="channel-checks"><label><input type="checkbox" value="meta" class="obChannel" /> Meta</label><label><input type="checkbox" value="google" class="obChannel" /> Google</label><label><input type="checkbox" value="organic" class="obChannel" /> Organiskt</label><label><input type="checkbox" value="email" class="obChannel" /> E-post</label><label><input type="checkbox" value="linkedin" class="obChannel" /> LinkedIn</label><label><input type="checkbox" value="tiktok" class="obChannel" /> TikTok</label></div></label>
       </div>
       <div class="modal-actions"><button id="onboardingBack" class="ghost hidden">Tillbaka</button><span></span><button id="onboardingNext" class="primary">Nästa</button><button id="onboardingFinish" class="primary hidden">Starta Vexmera</button></div>
       <p id="onboardingError" class="error-text"></p>
@@ -63,149 +66,150 @@
 
   <div id="appShell" class="shell hidden">
     <aside class="sidebar">
-      <div class="brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span></div></div>
-      <nav>
-        <button class="nav active" data-view="dashboard">Overview <span>KPIs</span></button>
-        <button class="nav" data-view="agent">Core <span>AI CMO</span></button>
-        <button class="nav" data-view="strategy">Pulse <span>Strategy</span></button>
-        <button class="nav" data-view="campaign">Launch <span>Campaign</span></button>
-        <button class="nav" data-view="brief">Brief <span>Executive</span></button>
-        <button class="nav" data-view="queue">Queue <span>Approvals</span></button>
-        <button class="nav" data-view="autopilot">Autopilot <span>Control</span></button>
-        <button class="nav" data-view="rivals">Rivals <span>Monitor</span></button>
-        <button class="nav" data-view="connect">Connect <span>Data</span></button>
-        <button class="nav" data-view="insights">Insights <span>Campaigns</span></button>
+      <div class="brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span><span class="beta-brand-badge">Privat beta</span></div></div>
+      <nav aria-label="Vexmera navigation">
+        <button class="nav active" data-view="dashboard">Översikt <span>KPI:er</span></button>
+        <button class="nav" data-view="agent">Core <span>AI Marketing Officer</span></button>
+        <button class="nav" data-view="strategy">Pulse <span>Strategi</span></button>
+        <button class="nav" data-view="campaign">Launch <span>Kampanjer</span></button>
+        <button class="nav" data-view="brief">Brief <span>Ledning</span></button>
+        <button class="nav" data-view="queue">Queue <span>Godkännanden</span></button>
+        <button class="nav" data-view="autopilot">Autopilot <span>Kontroll</span></button>
+        <button class="nav" data-view="rivals">Konkurrenter <span>Bevakning</span></button>
+        <button class="nav" data-view="connect">Anslutningar <span>Data</span></button>
+        <button class="nav" data-view="insights">Insikter <span>Kampanjer</span></button>
         <button class="nav" data-view="team">Team <span>Workspace</span></button>
-        <button class="nav" data-view="profile">Profile <span>Brand</span></button>
+        <button class="nav" data-view="profile">Varumärke <span>Profil</span></button>
       </nav>
-      <div class="status" id="status">Kontrollerar system…</div>
+      <div class="status" id="status">Kontrollerar systemet…</div>
     </aside>
 
     <main>
       <header>
-        <div><p class="eyebrow">AUTONOMOUS MARKETING INTELLIGENCE</p><h1 id="pageTitle">Growth overview.</h1><p class="lead" id="pageLead">Beslut, signaler och nästa drag på ett ställe.</p></div>
+        <div><p class="eyebrow">AI-DRIVEN MARKETING INTELLIGENCE</p><h1 id="pageTitle">Översikt.</h1><p class="lead" id="pageLead">Beslut, signaler och nästa drag på ett ställe.</p></div>
         <div class="header-controls">
           <select id="workspaceSelect" aria-label="Workspace"></select>
-          <select id="language" aria-label="Language"><option value="sv">Svenska</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="tr">Türkçe</option></select>
-          <button id="notificationsButton" class="ghost">Alerts <span id="notificationCount" class="count-badge">0</span></button>
+          <label class="header-language-control"><span>AI-svar</span><select id="language" aria-label="Språk för AI-svar"><option value="sv">Svenska</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="tr">Türkçe</option></select></label>
+          <button id="notificationsButton" class="ghost">Signaler <span id="notificationCount" class="count-badge">0</span></button>
           <button id="logout" class="ghost">Logga ut</button>
         </div>
       </header>
 
       <section class="signal-strip">
         <div><strong>CORE</strong><span>Strategisk AI-operatör</span></div>
-        <div><strong>LIVE DATA</strong><span>Campaign-level Google & Meta sync</span></div>
-        <div><strong>CONTROL</strong><span>Suggest · Assisted · Autopilot</span></div>
+        <div><strong>DATAKÄLLOR</strong><span>Google, Meta och Analytics i samma vy</span></div>
+        <div><strong>KONTROLL</strong><span>Föreslå · Assisterad · Autopilot</span></div>
       </section>
 
       <section id="dashboard" class="view active">
         <section class="panel core-today-panel">
-          <div class="core-today-head"><div><p class="eyebrow">CORE · TODAY</p><h2 id="coreHeadline">Loading your priorities…</h2><p class="muted">What needs your attention right now, based only on saved and connected data.</p></div><button id="refreshCoreToday" class="ghost">Refresh</button></div>
-          <div id="coreTodayCards" class="core-card-grid"><p class="muted">Core is checking your workspace.</p></div>
+          <div class="core-today-head"><div><p class="eyebrow">CORE · IDAG</p><h2 id="coreHeadline">Laddar dina prioriteringar…</h2><p class="muted">Det som behöver din uppmärksamhet just nu, baserat på sparad och ansluten data.</p></div><button id="refreshCoreToday" class="ghost">Uppdatera</button></div>
+          <div id="coreTodayCards" class="core-card-grid"><p class="muted">Core granskar ditt workspace.</p></div>
         </section>
         <div class="metric-grid">
-          <article class="metric"><span>Revenue</span><strong id="metricRevenue">0 kr</strong><small>attribuerad omsättning</small></article>
-          <article class="metric"><span>Spend</span><strong id="metricSpend">0 kr</strong><small>marknadsföringskostnad</small></article>
-          <article class="metric"><span>ROAS</span><strong id="metricRoas">0.00x</strong><small>revenue / spend</small></article>
+          <article class="metric"><span>Omsättning</span><strong id="metricRevenue">0 kr</strong><small>attribuerad omsättning</small></article>
+          <article class="metric"><span>Kostnad</span><strong id="metricSpend">0 kr</strong><small>marknadsföringskostnad</small></article>
+          <article class="metric"><span>ROAS</span><strong id="metricRoas">0.00x</strong><small>omsättning / kostnad</small></article>
           <article class="metric"><span>Leads</span><strong id="metricLeads">0</strong><small>registrerade leads</small></article>
-          <article class="metric"><span>Conversions</span><strong id="metricConversions">0</strong><small>registrerade conversions</small></article>
-          <article class="metric"><span>CTR</span><strong id="metricCtr">0.00%</strong><small>clicks / impressions</small></article>
-          <article class="metric"><span>Approvals</span><strong id="metricApprovals">0</strong><small>väntar på beslut</small></article>
-          <article class="metric"><span>Alerts</span><strong id="metricAlerts">0</strong><small>olästa signaler</small></article>
-          <article class="metric"><span>Anomalies</span><strong id="metricAnomalies">0</strong><small>upptäckta avvikelser</small></article>
+          <article class="metric"><span>Konverteringar</span><strong id="metricConversions">0</strong><small>registrerade konverteringar</small></article>
+          <article class="metric"><span>CTR</span><strong id="metricCtr">0.00%</strong><small>klick / visningar</small></article>
+          <article class="metric"><span>Godkännanden</span><strong id="metricApprovals">0</strong><small>väntar på beslut</small></article>
+          <article class="metric"><span>Signaler</span><strong id="metricAlerts">0</strong><small>olästa signaler</small></article>
+          <article class="metric"><span>Avvikelser</span><strong id="metricAnomalies">0</strong><small>upptäckta avvikelser</small></article>
         </div>
         <div class="grid dashboard-grid">
           <section class="panel">
-            <div class="output-head"><div class="panel-title"><span>INPUT</span> KPI-data</div><button id="syncAllDashboard" class="ghost">Sync Google + Meta</button></div>
+            <div class="output-head"><div class="panel-title"><span>INPUT</span> KPI-data</div><button id="syncAllDashboard" class="ghost">Synka Google + Meta</button></div>
             <div class="three">
-              <label>Datum<input id="kpiDate" type="date" /></label><label>Impressions<input id="kpiImpressions" type="number" min="0" value="0" /></label><label>Clicks<input id="kpiClicks" type="number" min="0" value="0" /></label>
-              <label>Leads<input id="kpiLeads" type="number" min="0" value="0" /></label><label>Conversions<input id="kpiConversions" type="number" min="0" value="0" /></label><label>Spend<input id="kpiSpend" type="number" min="0" step="0.01" value="0" /></label>
-              <label>Revenue<input id="kpiRevenue" type="number" min="0" step="0.01" value="0" /></label><label>Currency<input id="kpiCurrency" maxlength="3" value="SEK" /></label><label>Källa<select id="kpiSource"><option>manual</option><option>other</option></select></label>
+              <label>Datum<input id="kpiDate" type="date" /></label><label>Visningar<input id="kpiImpressions" type="number" min="0" value="0" /></label><label>Klick<input id="kpiClicks" type="number" min="0" value="0" /></label>
+              <label>Leads<input id="kpiLeads" type="number" min="0" value="0" /></label><label>Konverteringar<input id="kpiConversions" type="number" min="0" value="0" /></label><label>Kostnad<input id="kpiSpend" type="number" min="0" step="0.01" value="0" /></label>
+              <label>Omsättning<input id="kpiRevenue" type="number" min="0" step="0.01" value="0" /></label><label>Valuta<input id="kpiCurrency" maxlength="3" value="SEK" /></label><label>Källa<select id="kpiSource"><option value="manual">Manuell</option><option value="other">Övrigt</option></select></label>
             </div>
             <button id="addKpi" class="primary">Spara datapunkt</button>
-            <p class="fineprint">Google/Meta-rader skrivs automatiskt av Connect. Revenue från annonsplattformar är plattformsattribuerad och kan överlappa mellan källor.</p>
+            <p class="fineprint">Google- och Meta-rader skrivs automatiskt från Anslutningar. Omsättning från annonsplattformar är plattformsattribuerad och kan överlappa mellan källor.</p>
           </section>
           <section class="panel"><div class="panel-title"><span>TREND</span> Senaste datapunkter</div><div id="kpiBars" class="bars"></div></section>
         </div>
-        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>DATA</span> KPI-historik</div><button id="refreshDashboard" class="ghost">Uppdatera</button></div><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Clicks</th><th>Leads</th><th>Conv.</th><th>Spend</th><th>Revenue</th><th>Källa</th><th></th></tr></thead><tbody id="kpiRows"></tbody></table></div></section>
-        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>ALERTS</span> Senaste signaler</div><button id="markAlerts" class="ghost">Markera lästa</button></div><div id="notificationList" class="notification-list"></div></section>
+        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>DATA</span> KPI-historik</div><button id="refreshDashboard" class="ghost">Uppdatera</button></div><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Klick</th><th>Leads</th><th>Konv.</th><th>Kostnad</th><th>Omsättning</th><th>Källa</th><th></th></tr></thead><tbody id="kpiRows"></tbody></table></div></section>
+        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>SIGNALER</span> Senaste signaler</div><button id="markAlerts" class="ghost">Markera lästa</button></div><div id="notificationList" class="notification-list"></div></section>
       </section>
 
-      <section id="agent" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>CORE</span> Fråga Vexmera</div><p>Core använder företagsprofil, KPI:er, konkurrentförändringar och approval queue.</p></div><span class="module-pill">AI CMO</span></div><textarea id="agentMessage" class="big">Vi vill öka försäljningen under nästa 30 dagar utan att förstöra premiumkänslan. Ge mig de tre viktigaste dragen.</textarea><button class="primary" id="runAgent">Kör Core</button></section></section>
+      <section id="agent" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>CORE</span> Fråga Vexmera</div><p>Core använder företagsprofil, KPI:er, konkurrentförändringar och godkännandekön.</p></div><span class="module-pill">AI Marketing Officer</span></div><textarea id="agentMessage" class="big">Vi vill öka försäljningen under nästa 30 dagar utan att förstöra premiumkänslan. Ge mig de tre viktigaste dragen.</textarea><button class="primary" id="runAgent">Kör Core</button></section></section>
 
-      <section id="strategy" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>PULSE</span> Tillväxtstrategi</div><p>Översätter affärsmål och verkliga signaler till en konkret plan.</p></div><span class="module-pill">Strategy</span></div><div class="two"><label>Mål<select id="strategyObjective"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Retention</option><option value="launch">Lansering</option></select></label><label>Budget SEK<input id="strategyBudget" type="number" value="25000" /></label></div><label>Horisont, dagar<input id="horizon" type="number" value="30" min="7" max="365" /></label><label>Extra kontext<textarea id="strategyNotes">Prioritera lönsam tillväxt och mätbara experiment.</textarea></label><button class="primary" id="runStrategy">Generera Pulse-plan</button></section></section>
+      <section id="strategy" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>PULSE</span> Tillväxtstrategi</div><p>Översätter affärsmål och verkliga signaler till en konkret plan.</p></div><span class="module-pill">Strategi</span></div><div class="two"><label>Mål<select id="strategyObjective"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Kundlojalitet</option><option value="launch">Lansering</option></select></label><label>Budget SEK<input id="strategyBudget" type="number" value="25000" /></label></div><label>Horisont, dagar<input id="horizon" type="number" value="30" min="7" max="365" /></label><label>Extra kontext<textarea id="strategyNotes">Prioritera lönsam tillväxt och mätbara experiment.</textarea></label><button class="primary" id="runStrategy">Generera Pulse-plan</button></section></section>
 
-      <section id="campaign" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>LAUNCH</span> Kampanjbyggare</div><p>Skapar kampanjpaket som kan skickas direkt till Queue för mänskligt godkännande.</p></div><span class="module-pill">Campaign</span></div><div class="two"><label>Kanal<select id="channel"><option value="meta">Meta</option><option value="google">Google</option><option value="tiktok">TikTok</option><option value="linkedin">LinkedIn</option><option value="email">Email</option><option value="organic">Organic</option></select></label><label>Mål<select id="campaignObjective"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Retention</option><option value="launch">Lansering</option></select></label></div><label>Kampanjnamn<input id="campaignName" value="Autumn Trail" /></label><label>Budget SEK<input id="campaignBudget" type="number" value="12000" /></label><label>Extra kontext<textarea id="campaignNotes">Skapa en premiumkampanj som känns svensk och trovärdig.</textarea></label><button class="primary" id="runCampaign">Bygg med Launch</button></section></section>
+      <section id="campaign" class="view"><section class="panel work-panel"><div class="module-head"><div><div class="panel-title"><span>LAUNCH</span> Kampanjbyggare</div><p>Skapar kampanjförslag som kan skickas direkt till Queue för mänskligt godkännande.</p></div><span class="module-pill">Kampanj</span></div><div class="two"><label>Kanal<select id="channel"><option value="meta">Meta</option><option value="google">Google</option><option value="tiktok">TikTok</option><option value="linkedin">LinkedIn</option><option value="email">E-post</option><option value="organic">Organiskt</option></select></label><label>Mål<select id="campaignObjective"><option value="sales">Försäljning</option><option value="leads">Leads</option><option value="bookings">Bokningar</option><option value="awareness">Kännedom</option><option value="retention">Kundlojalitet</option><option value="launch">Lansering</option></select></label></div><label>Kampanjnamn<input id="campaignName" value="Autumn Trail" /></label><label>Budget SEK<input id="campaignBudget" type="number" value="12000" /></label><label>Extra kontext<textarea id="campaignNotes">Skapa en premiumkampanj som känns svensk och trovärdig.</textarea></label><button class="primary" id="runCampaign">Bygg med Launch</button></section></section>
 
       <section id="brief" class="view">
         <div class="grid">
-          <section class="panel"><div class="module-head"><div><div class="panel-title"><span>BRIEF</span> Executive morning brief</div><p>Performance, rival-signaler, blockers och dagens viktigaste actions.</p></div><span class="module-pill">Daily</span></div><button id="generateBrief" class="primary">Generera brief nu</button><div class="two brief-settings"><label><input id="briefEnabled" type="checkbox" class="inline-check" /> Automatisk morgonbrief</label><label>Klockslag<select id="briefHour"></select></label></div><label>Tidszon<input id="briefTimezone" value="Europe/Stockholm" /></label><button id="saveBriefSettings" class="ghost">Spara schema</button><p id="briefSchedulerState" class="fineprint"></p></section>
-          <section class="panel"><div class="output-head"><div class="panel-title"><span>LATEST</span> Senaste brief</div><span id="briefModelBadge" class="module-pill"></span></div><div id="briefOutput" class="output"><p>Ingen brief genererad ännu.</p></div></section>
+          <section class="panel"><div class="module-head"><div><div class="panel-title"><span>BRIEF</span> Ledningsbrief för morgonen</div><p>Resultat, konkurrentssignaler, hinder och dagens viktigaste åtgärder.</p></div><span class="module-pill">Daglig</span></div><button id="generateBrief" class="primary">Generera brief nu</button><div class="two brief-settings"><label><input id="briefEnabled" type="checkbox" class="inline-check" /> Automatisk morgonbrief</label><label>Klockslag<select id="briefHour"></select></label></div><label>Tidszon<input id="briefTimezone" value="Europe/Stockholm" /></label><button id="saveBriefSettings" class="ghost">Spara schema</button><p id="briefSchedulerState" class="fineprint"></p></section>
+          <section class="panel"><div class="output-head"><div class="panel-title"><span>SENASTE</span> Senaste brief</div><span id="briefModelBadge" class="module-pill"></span></div><div id="briefOutput" class="output"><p>Ingen brief genererad ännu.</p></div></section>
         </div>
       </section>
 
       <section id="queue" class="view">
-        <section class="panel"><div class="module-head"><div><div class="panel-title"><span>QUEUE</span> Human approval gate</div><p>Queue har två separata steg: godkänn först, granska sedan Preview och välj Execute. Extern execution är dessutom miljölåst och avstängd som standard.</p></div><select id="approvalFilter"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="executed">Executed</option><option value="failed">Failed</option><option value="">All</option></select></div><div id="approvalList" class="approval-list"></div></section>
+        <section class="panel"><div class="module-head"><div><div class="panel-title"><span>QUEUE</span> Mänsklig godkännandekontroll</div><p>Queue har två tydliga steg: godkänn först, förhandsgranska sedan och välj Utför. Externa åtgärder är dessutom miljölåsta och avstängda som standard i privat beta.</p></div><select id="approvalFilter"><option value="pending">Väntar</option><option value="approved">Godkänd</option><option value="rejected">Avvisad</option><option value="executed">Utförd</option><option value="failed">Misslyckad</option><option value="">Alla</option></select></div><div id="approvalList" class="approval-list"></div></section>
       </section>
 
       <section id="autopilot" class="view">
         <div class="grid">
           <section class="panel">
-            <div class="module-head"><div><div class="panel-title"><span>AUTOPILOT</span> Control level</div><p>Choose how much authority Vexmera has. Server safety switches still override this setting.</p></div><span id="autopilotModeBadge" class="module-pill">Suggest</span></div>
+            <div class="module-head"><div><div class="panel-title"><span>AUTOPILOT</span> Kontrollnivå</div><p>Bestäm hur mycket Vexmera får förbereda inom dina gränser. Serverns säkerhetsspärrar har alltid sista ordet.</p></div><span id="autopilotModeBadge" class="module-pill">Föreslå</span></div>
             <div class="mode-cards">
-              <button class="mode-card active" data-mode="suggest"><strong>Suggest</strong><span>Vexmera recommends. Nothing external can run.</span></button>
-              <button class="mode-card" data-mode="assisted"><strong>Assisted</strong><span>Vexmera prepares. A human approves and executes.</span></button>
-              <button class="mode-card" data-mode="autopilot"><strong>Autopilot</strong><span>Pre-approved low/medium-risk actions may run inside your limits.</span></button>
+              <button class="mode-card active" data-mode="suggest"><strong>Föreslå</strong><span>Vexmera rekommenderar. Inget externt kan köras automatiskt.</span></button>
+              <button class="mode-card" data-mode="assisted"><strong>Assisterad</strong><span>Vexmera förbereder. En människa granskar, godkänner och utför.</span></button>
+              <button class="mode-card" data-mode="autopilot"><strong>Autopilot</strong><span>Förgodkända åtgärder med låg eller medelhög risk kan endast köras när serverns säkerhetsspärrar tillåter det.</span></button>
             </div>
-            <div class="two"><label>Daily execution cap<input id="autopilotSpendCap" type="number" min="0" value="0" /></label><label>Max budget change %<input id="autopilotBudgetPct" type="number" min="0" max="100" value="15" /></label></div>
-            <label>Pre-approved action types<div id="autopilotActions" class="action-checks"><label><input type="checkbox" value="google.pause_campaign" /> Google pause campaign</label><label><input type="checkbox" value="google.enable_campaign" /> Google enable campaign</label><label><input type="checkbox" value="google.set_daily_budget" /> Google set daily budget</label><label><input type="checkbox" value="meta.pause_campaign" /> Meta pause campaign</label><label><input type="checkbox" value="meta.activate_campaign" /> Meta activate campaign</label></div></label>
-            <button id="saveAutopilot" class="primary">Save control policy</button>
+            <div class="two"><label>Daglig körningsgräns<input id="autopilotSpendCap" type="number" min="0" value="0" /></label><label>Maximal budgetändring %<input id="autopilotBudgetPct" type="number" min="0" max="100" value="15" /></label></div>
+            <label>Förgodkända åtgärdstyper<div id="autopilotActions" class="action-checks"><label><input type="checkbox" value="google.pause_campaign" /> Pausa Google-kampanj</label><label><input type="checkbox" value="google.enable_campaign" /> Aktivera Google-kampanj</label><label><input type="checkbox" value="google.set_daily_budget" /> Ändra Google-dagbudget</label><label><input type="checkbox" value="meta.pause_campaign" /> Pausa Meta-kampanj</label><label><input type="checkbox" value="meta.activate_campaign" /> Aktivera Meta-kampanj</label></div></label>
+            <button id="saveAutopilot" class="primary">Spara kontrollpolicy</button>
           </section>
           <section class="panel">
-            <div class="panel-title"><span>SAFETY</span> Runtime gates</div>
+            <div class="panel-title"><span>SÄKERHET</span> Körningsspärrar</div>
             <div id="autopilotRuntime" class="safety-stack"></div>
-            <button id="runAutopilotOnce" class="ghost">Run one policy check</button>
-            <p class="fineprint">Private Beta never auto-executes high-risk actions. Autopilot also requires both external execution and Autopilot execution to be enabled in the server environment.</p>
+            <button id="runAutopilotOnce" class="ghost">Kör en policykontroll</button>
+            <p class="fineprint">Privat beta kör aldrig högriskåtgärder autonomt. Autopilot kräver dessutom att både extern körning och Autopilot-körning uttryckligen har aktiverats i servermiljön.</p>
           </section>
         </div>
       </section>
 
       <section id="rivals" class="view">
         <div class="grid rivals-grid">
-          <section class="panel"><div class="panel-title"><span>RIVALS</span> Lägg till konkurrent</div><label>Namn<input id="competitorName" placeholder="Competitor AB" /></label><label>Webbplats<input id="competitorUrl" type="url" placeholder="https://competitor.com" /></label><label>Vad vill du bevaka?<textarea id="competitorNotes" placeholder="Priser, erbjudanden, tonalitet, nya produkter…"></textarea></label><button id="addCompetitor" class="primary">Lägg till i watchlist</button><p class="fineprint">Vexmera kontrollerar endast publika HTML-sidor och blockerar localhost/private nätverk.</p></section>
-          <section class="panel"><div class="output-head"><div class="panel-title"><span>WATCHLIST</span> Konkurrenter</div><button id="scanAllRivals" class="ghost">Scan all</button></div><div id="competitorList" class="competitor-list"></div></section>
+          <section class="panel"><div class="panel-title"><span>KONKURRENTER</span> Lägg till konkurrent</div><label>Namn<input id="competitorName" placeholder="Konkurrent AB" /></label><label>Webbplats<input id="competitorUrl" type="url" placeholder="https://konkurrent.se" /></label><label>Vad vill du bevaka?<textarea id="competitorNotes" placeholder="Priser, erbjudanden, tonalitet, nya produkter…"></textarea></label><button id="addCompetitor" class="primary">Lägg till i bevakning</button><p class="fineprint">Vexmera kontrollerar endast publika HTML-sidor och blockerar localhost och privata nätverk.</p></section>
+          <section class="panel"><div class="output-head"><div class="panel-title"><span>BEVAKNING</span> Konkurrenter</div><button id="scanAllRivals" class="ghost">Skanna alla</button></div><div id="competitorList" class="competitor-list"></div></section>
         </div>
       </section>
 
       <section id="connect" class="view">
-        <section class="panel"><div class="module-head"><div><div class="panel-title"><span>CONNECT</span> Datakällor</div><p>Koppla OAuth, ange konto-ID:n och synka read-only performance-data.</p></div><button id="syncAllConnect" class="ghost">Sync all</button></div><div id="connectorGrid" class="connector-grid"></div></section>
-        <section class="panel table-panel"><div class="panel-title"><span>ACCOUNT IDS</span> Rapportinställningar</div><div class="three"><label>GA4 Property ID<input id="analyticsPropertyId" placeholder="123456789" /></label><label>Google Ads Customer ID<input id="googleAdsCustomerId" placeholder="123-456-7890" /></label><label>Meta Ad Account ID<input id="metaAdAccountId" placeholder="act_123456789" /></label></div><button id="saveConnectorSettings" class="primary">Spara konto-ID:n</button><p class="fineprint">Google Ads kräver developer token. 0.6 sparar campaign-level data och stödjer flera valutor via workspace base currency + FX-rates. Externa mutations kräver separat execution-gate.</p></section>
+        <section class="panel"><div class="module-head"><div><div class="panel-title"><span>ANSLUTNINGAR</span> Datakällor</div><p>Koppla OAuth, ange relevanta konto-ID:n och synka skrivskyddad resultatdata.</p></div><button id="syncAllConnect" class="ghost">Synka alla</button></div><div id="connectorGrid" class="connector-grid"></div></section>
+        <section class="panel table-panel"><div class="panel-title"><span>KONTO-ID:N</span> Rapportinställningar</div><div class="three"><label>GA4 Property ID<input id="analyticsPropertyId" placeholder="123456789" /></label><label>Google Ads Customer ID<input id="googleAdsCustomerId" placeholder="123-456-7890" /></label><label>Meta Ad Account ID<input id="metaAdAccountId" placeholder="act_123456789" /></label></div><button id="saveConnectorSettings" class="primary">Spara konto-ID:n</button><p class="fineprint">Google Ads kräver developer token och godkänd API-åtkomst. Vexmera sparar kampanjdata och stödjer flera valutor via workspacets basvaluta och valutakurser. Externa ändringar kräver alltid separata säkerhetsspärrar.</p></section>
       </section>
 
       <section id="insights" class="view">
         <div class="grid">
-          <section class="panel"><div class="output-head"><div class="panel-title"><span>CAMPAIGNS</span> 30-day performance</div><button id="refreshInsights" class="ghost">Refresh</button></div><div id="campaignInsights" class="table-wrap"></div></section>
-          <section class="panel"><div class="output-head"><div class="panel-title"><span>ANOMALIES</span> Vexmera detection</div><button id="detectAnomalies" class="ghost">Run detection</button></div><div id="anomalyList" class="notification-list"></div></section>
+          <section class="panel"><div class="output-head"><div class="panel-title"><span>KAMPANJER</span> Resultat senaste 30 dagarna</div><button id="refreshInsights" class="ghost">Uppdatera</button></div><div id="campaignInsights" class="table-wrap"></div></section>
+          <section class="panel"><div class="output-head"><div class="panel-title"><span>AVVIKELSER</span> Vexmera-detektering</div><button id="detectAnomalies" class="ghost">Kör detektering</button></div><div id="anomalyList" class="notification-list"></div></section>
         </div>
-        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>WORKER</span> Durable jobs</div><button id="enqueueSync" class="ghost">Queue data sync</button></div><div id="jobList" class="notification-list"></div></section>
+        <section class="panel table-panel"><div class="output-head"><div class="panel-title"><span>BAKGRUNDSJOBB</span> Datakörningar</div><button id="enqueueSync" class="ghost">Köa datasynk</button></div><div id="jobList" class="notification-list"></div></section>
       </section>
 
       <section id="team" class="view">
         <div class="grid">
-          <section class="panel"><div class="panel-title"><span>TEAM</span> Workspace members</div><div id="teamMembers" class="notification-list"></div><div class="two"><label>Invite email<input id="inviteEmail" type="email" placeholder="colleague@company.com" /></label><label>Role<select id="inviteRole"><option value="marketer">Marketer</option><option value="admin">Admin</option><option value="viewer">Viewer</option></select></label></div><button id="createInvite" class="primary">Create invite</button><p id="inviteResult" class="fineprint"></p></section>
-          <section class="panel"><div class="panel-title"><span>WORKSPACE</span> Currency</div><label>Base currency<input id="baseCurrency" maxlength="3" value="SEK" /></label><button id="saveWorkspaceSettings" class="ghost">Save base currency</button><div class="two"><label>FX quote currency<input id="fxCurrency" maxlength="3" placeholder="USD" /></label><label>1 quote = base<input id="fxRate" type="number" step="0.000001" placeholder="10.50" /></label></div><button id="saveFxRate" class="ghost">Save FX rate</button><div id="fxList" class="fineprint"></div></section>
+          <section class="panel"><div class="panel-title"><span>TEAM</span> Medlemmar i workspacet</div><div id="teamMembers" class="notification-list"></div><div class="two"><label>E-post för inbjudan<input id="inviteEmail" type="email" placeholder="kollega@foretag.se" /></label><label>Roll<select id="inviteRole"><option value="marketer">Marknadsförare</option><option value="admin">Administratör</option><option value="viewer">Läsbehörighet</option></select></label></div><button id="createInvite" class="primary">Skapa inbjudan</button><p id="inviteResult" class="fineprint"></p></section>
+          <section class="panel"><div class="panel-title"><span>WORKSPACE</span> Valuta</div><label>Basvaluta<input id="baseCurrency" maxlength="3" value="SEK" /></label><button id="saveWorkspaceSettings" class="ghost">Spara basvaluta</button><div class="two"><label>Valuta att konvertera<input id="fxCurrency" maxlength="3" placeholder="USD" /></label><label>1 enhet = basvaluta<input id="fxRate" type="number" step="0.000001" placeholder="10.50" /></label></div><button id="saveFxRate" class="ghost">Spara valutakurs</button><div id="fxList" class="fineprint"></div></section>
         </div>
-        <section class="panel table-panel"><div class="output-head"><div><div class="panel-title"><span>BILLING</span> Private Beta plans</div><p id="billingStatus" class="muted"></p></div><button id="manageBilling" class="ghost">Manage billing</button></div><div class="plan-grid"><article class="plan-card"><span>Starter</span><strong>499 kr</strong><small>/ month</small><button data-plan="starter" class="ghost plan-button">Choose Starter</button></article><article class="plan-card featured"><span>Growth</span><strong>1 499 kr</strong><small>/ month</small><button data-plan="growth" class="primary plan-button">Choose Growth</button></article><article class="plan-card"><span>Scale</span><strong>3 999 kr+</strong><small>/ month</small><button data-plan="scale" class="ghost plan-button">Choose Scale</button></article></div></section>
-        <section class="panel table-panel"><div class="panel-title"><span>BETA FEEDBACK</span> Help shape Vexmera</div><div class="two"><label>Score<select id="feedbackScore"><option value="5">5 — Excellent</option><option value="4">4 — Good</option><option value="3">3 — Okay</option><option value="2">2 — Weak</option><option value="1">1 — Poor</option></select></label><label>Area<select id="feedbackCategory"><option value="general">General</option><option value="core">Core</option><option value="data">Data</option><option value="campaigns">Campaigns</option><option value="billing">Billing</option><option value="bug">Bug</option></select></label></div><label>What should be better?<textarea id="feedbackMessage"></textarea></label><button id="sendFeedback" class="ghost">Send beta feedback</button><span id="feedbackState" class="fineprint"></span></section>
+        <section class="panel table-panel"><div class="output-head"><div><div class="panel-title"><span>FAKTURERING</span> Planer</div><p id="billingStatus" class="muted"></p></div><button id="manageBilling" class="ghost">Hantera fakturering</button></div><div class="plan-grid"><article class="plan-card"><span>Starter</span><strong>1 499 kr</strong><small>/ mån</small><button data-plan="starter" class="ghost plan-button">Välj Starter</button></article><article class="plan-card featured"><span>Growth</span><strong>2 999 kr</strong><small>/ mån</small><button data-plan="growth" class="primary plan-button">Välj Growth</button></article><article class="plan-card"><span>Scale</span><strong>5 999 kr</strong><small>/ mån</small><button data-plan="scale" class="ghost plan-button">Välj Scale</button></article></div><p class="fineprint">Priser exkl. moms. Growth är den kompletta Vexmera-upplevelsen; Scale ger mer kapacitet, fler användare och avancerad kontroll.</p></section>
+        <section class="panel table-panel"><div class="panel-title"><span>BETA-FEEDBACK</span> Hjälp oss forma Vexmera</div><div class="two"><label>Betyg<select id="feedbackScore"><option value="5">5 — Mycket bra</option><option value="4">4 — Bra</option><option value="3">3 — Okej</option><option value="2">2 — Svagt</option><option value="1">1 — Dåligt</option></select></label><label>Område<select id="feedbackCategory"><option value="general">Allmänt</option><option value="core">Core</option><option value="data">Data</option><option value="campaigns">Kampanjer</option><option value="billing">Fakturering</option><option value="bug">Fel</option></select></label></div><label>Vad kan bli bättre?<textarea id="feedbackMessage"></textarea></label><button id="sendFeedback" class="ghost">Skicka beta-feedback</button><span id="feedbackState" class="fineprint"></span></section>
       </section>
 
-      <section id="profile" class="view"><section class="panel profile-panel full-profile"><div class="panel-title"><span>PROFILE</span> Permanent företagsminne</div><div class="two"><label>Företagsnamn<input id="name" value="Nordic Peak" /></label><label>Bransch<input id="industry" value="Outdoor retail" /></label></div><div class="two"><label>Marknad<input id="market" value="Sweden" /></label><label>Webbplats<input id="website" type="url" placeholder="https://example.com" /></label></div><label>Målgrupp<textarea id="audience">Vuxna 25–45 i Sverige som gillar friluftsliv men vill ha enkel, pålitlig utrustning.</textarea></label><label>Erbjudande<textarea id="offer">Premium friluftsutrustning med snabb svensk leverans och tydliga guider.</textarea></label><label>Varumärkesröst<input id="voice" value="trygg, kunnig, jordnära, premium" /></label><div class="profile-state" id="profileState">Profilen sparas i Vexmera-workspacet.</div></section></section>
+      <section id="profile" class="view"><section class="panel profile-panel full-profile"><div class="panel-title"><span>VARUMÄRKE</span> Permanent företagsminne</div><div class="two"><label>Företagsnamn<input id="name" value="Nordic Peak" /></label><label>Bransch<input id="industry" value="Friluftshandel" /></label></div><div class="two"><label>Marknad<input id="market" value="Sverige" /></label><label>Webbplats<input id="website" type="url" placeholder="https://example.com" /></label></div><label>Målgrupp<textarea id="audience">Vuxna 25–45 i Sverige som gillar friluftsliv men vill ha enkel, pålitlig utrustning.</textarea></label><label>Erbjudande<textarea id="offer">Premium friluftsutrustning med snabb svensk leverans och tydliga guider.</textarea></label><label>Varumärkesröst<input id="voice" value="trygg, kunnig, jordnära, premium" /></label><div class="profile-state" id="profileState">Profilen sparas i Vexmera-workspacet.</div></section></section>
 
       <section id="aiOutputSection" class="panel output-panel hidden"><div class="output-head"><div class="panel-title"><span>VEXMERA</span> Resultat</div><div class="output-actions"><span id="modelBadge"></span><button class="ghost hidden" id="sendApproval">Skicka till Queue</button><button class="ghost" id="copyOutput">Kopiera</button></div></div><div id="output" class="output"><p>Vexmera väntar på ditt uppdrag.</p></div></section>
-      <section class="panel activity-panel"><div class="output-head"><div class="panel-title"><span>ACTIVITY</span> Senaste AI-körningar</div><button class="ghost" id="refreshRuns">Uppdatera</button></div><div id="runs" class="runs"><p class="muted">Ingen aktivitet laddad ännu.</p></div></section>
+      <section class="panel activity-panel"><div class="output-head"><div class="panel-title"><span>AKTIVITET</span> Senaste AI-körningar</div><button class="ghost" id="refreshRuns">Uppdatera</button></div><div id="runs" class="runs"><p class="muted">Ingen aktivitet laddad ännu.</p></div></section>
     </main>
   </div>
-  <section id="resetModal" class="modal-shell hidden" aria-modal="true" role="dialog"><div class="modal-card"><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Reset password</h2><label>New password<input id="resetPassword" type="password" minlength="8" /></label><button id="confirmReset" class="primary">Save new password</button><p id="resetState" class="fineprint"></p></div></section>
+  <section id="resetModal" class="modal-shell hidden" aria-modal="true" role="dialog"><div class="modal-card"><p class="eyebrow">KONTOÅTERSTÄLLNING</p><h2>Återställ lösenord</h2><label>Nytt lösenord<input id="resetPassword" type="password" minlength="8" autocomplete="new-password" /></label><button id="confirmReset" class="primary">Spara nytt lösenord</button><p id="resetState" class="fineprint"></p></div></section>
   <script src="/static/app.js"></script>
+  <script src="/static/app-polish.js?v=1"></script>
 </body>
 </html>
