@@ -95,6 +95,8 @@ The redirect URI must exactly match the callback URL registered in Google Cloud.
 
 A configured developer token does not prove that Google has granted the required API access level or that the Ads account is linked to the manager account. Treat Basic Access approval and manager linking as separate external checks.
 
+The customer-facing Google Analytics tag is separate from the connector API. In the authenticated web application, analytics storage defaults to denied and the Google Analytics script is loaded only after explicit opt-in consent. Google Signals and ad-personalization signals remain disabled.
+
 ## Meta Ads
 
 OAuth connection requires:
@@ -175,7 +177,7 @@ After any environment change, redeploy Vercel and inspect:
 - whether the private-beta execution posture is safe
 - whether Stripe catalog/webhook variables are present
 - whether Google/Meta OAuth and SMTP minimum configuration are present
-- which privacy controls are implemented
+- which privacy controls are implemented, including connector disconnect, synchronized-history deletion and full account deletion
 
 Both endpoints are designed not to expose secret values.
 
@@ -188,12 +190,14 @@ Important limitations:
 
 ## Privacy controls in the private beta
 
-The authenticated Connect view now separates two different operations:
+The authenticated application separates several distinct privacy operations:
 
 1. **Disconnect Google/Meta** — removes locally stored connector credentials, clears connector/account identifiers, stops future sync access and attempts provider-side revocation where supported. Previously synchronized reporting history remains.
 2. **Delete synchronized marketing history** — a separate owner/admin-only destructive action with typed confirmation. It removes synchronized campaign metrics, Google/Meta/Analytics KPI rows and related anomaly records while preserving manually entered KPI rows and connector credentials.
+3. **Delete Vexmera account** — a guarded full account-deletion flow that first previews blockers, requires current-password re-authentication and the exact confirmation phrase `DELETE MY ACCOUNT`, blocks deletion while an owned workspace has other members or an active Stripe subscription, best-effort revokes Google/Meta tokens for solo-owned workspaces, deletes the local account and solo-owned workspace data, and removes memberships from workspaces owned by other users.
+4. **Analytics consent** — optional Google Analytics storage defaults to denied. The tag is loaded only after opt-in, settings can be reopened later, and first-party `_ga` cookies are best-effort cleared when consent is denied or withdrawn.
 
-Neither operation is a complete account deletion or complete personal-data erasure process. Full account deletion, final retention periods and formal data-rights procedures remain launch work.
+Account deletion does not promise deletion of third-party billing/compliance records that processors may need to retain for accounting, disputes, fraud prevention, security or legal obligations. Final retention periods, processor disclosures and formal public privacy wording still require legal review before external pilot onboarding.
 
 ## Current recommended order
 
@@ -203,7 +207,7 @@ Neither operation is a complete account deletion or complete personal-data erasu
 4. Google/Meta read-only OAuth.
 5. Run `scripts/preflight.py` and confirm private-beta execution locks are SAFE.
 6. Reconcile and verify the Stripe test catalog, then run a full test-mode Checkout/webhook/Portal flow.
-7. Complete authenticated browser QA including connector disconnect and synchronized-history deletion controls.
+7. Complete authenticated browser QA including connector disconnect, synchronized-history deletion, account deletion and analytics-consent controls.
 8. Finalize legal entity details, privacy/terms, retention/subprocessor disclosures, VAT/tax treatment and canonical domain.
 9. Stripe live billing only after the preceding launch blockers are resolved.
 10. External ad-account execution only in a later, explicitly reviewed production phase.
