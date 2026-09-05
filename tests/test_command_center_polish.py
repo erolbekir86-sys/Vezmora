@@ -65,3 +65,12 @@ def test_connected_accounts_have_a_truthful_disconnect_ui():
     assert 'Koppla från' in POLISH_JS
     assert '/api/connectors/${encodeURIComponent(provider)}/disconnect' in POLISH_JS
     assert 'Redan synkad rapporthistorik behålls' in POLISH_JS
+
+
+def test_synced_history_deletion_ui_requires_explicit_confirmation():
+    assert 'data-vex-delete-history' in POLISH_JS
+    assert 'Radera synkad historik' in POLISH_JS
+    assert "typed !== 'RADERA'" in POLISH_JS
+    assert '/api/privacy/synced-marketing-history' in POLISH_JS
+    assert 'Manuellt inmatade KPI:er behålls' in POLISH_JS
+    assert 'DELETE_SYNCED_HISTORY' in POLISH_JS
