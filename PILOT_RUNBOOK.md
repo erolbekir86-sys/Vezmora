@@ -2,6 +2,8 @@
 
 This runbook standardizes onboarding for the first five pilot companies. It is intentionally conservative: Vexmera should analyze and recommend, not autonomously change live advertising.
 
+Use `PILOT_SESSION_TEMPLATE.md` for each company so the five sessions can be compared consistently without collecting secrets.
+
 ## Before inviting a pilot
 
 - Production deployment is healthy.
@@ -47,6 +49,8 @@ For each pilot, record:
 - confusing labels or screens;
 - errors encountered;
 - whether the customer would use the product again without assistance.
+
+Record these in `PILOT_SESSION_TEMPLATE.md` rather than free-form notes where possible. Do not paste credentials, OAuth tokens, developer tokens, API keys, authorization headers, payment information, or raw provider payloads containing secrets into pilot notes.
 
 ## Exit criteria for the five-company pilot
 
