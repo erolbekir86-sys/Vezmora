@@ -8,30 +8,36 @@ from fastapi import HTTPException
 
 from .store import get_workspace_settings, usage_summary
 
+# Customer-facing plan limits are kept in one place so the app, pricing copy,
+# and backend enforcement can stay aligned. Prices are displayed in the UI;
+# Stripe Price IDs remain configured through environment variables.
 PLANS: dict[str, dict[str, Any]] = {
     "starter": {
         "label": "Starter",
+        "monthly_price_sek": 1_499,
         "ai_runs": 100,
         "jobs": 300,
-        "team_members": 2,
+        "team_members": 1,
         "campaign_rows": 10_000,
         "positioning": "For solo operators and small local businesses",
     },
     "growth": {
         "label": "Growth",
+        "monthly_price_sek": 2_999,
         "ai_runs": 1_000,
         "jobs": 5_000,
-        "team_members": 10,
+        "team_members": 3,
         "campaign_rows": 250_000,
-        "positioning": "For teams running multiple paid and organic channels",
+        "positioning": "For growing teams running multiple marketing channels",
     },
     "scale": {
         "label": "Scale",
+        "monthly_price_sek": 5_999,
         "ai_runs": 10_000,
         "jobs": 50_000,
-        "team_members": 100,
+        "team_members": 10,
         "campaign_rows": 2_000_000,
-        "positioning": "For agencies, multi-brand teams and higher-volume operations",
+        "positioning": "For larger teams, agencies and higher-volume operations",
     },
 }
 
