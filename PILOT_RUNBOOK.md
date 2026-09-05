@@ -7,6 +7,8 @@ Use `PILOT_SESSION_TEMPLATE.md` for each company so the five sessions can be com
 ## Before inviting a pilot
 
 - Production deployment is healthy.
+- The public marketing page loads at `https://vexmera.com/` and the authenticated product shell loads at `https://vexmera.com/app`.
+- Pilot invitations and onboarding instructions point customers to `https://vexmera.com/app`, not the marketing root.
 - `VEZMORA_EXECUTION_ENABLED=false`.
 - `VEZMORA_AUTOPILOT_EXECUTION_ENABLED=false`.
 - Google/Meta connectors required by the pilot are configured.
@@ -15,7 +17,7 @@ Use `PILOT_SESSION_TEMPLATE.md` for each company so the five sessions can be com
 
 ## Pilot onboarding flow
 
-1. Create or invite the customer to a workspace.
+1. Open `https://vexmera.com/app` and create or invite the customer to a workspace.
 2. Complete Brand Memory / onboarding with company, market, audience, offer, goal and marketing problem.
 3. Connect only the data sources the customer actually uses.
 4. Save the relevant Google Analytics property, Google Ads customer ID or Meta Ad Account ID.
@@ -28,8 +30,11 @@ Use `PILOT_SESSION_TEMPLATE.md` for each company so the five sessions can be com
 7. Generate Core/Pulse recommendations only after the available data state is understood.
 8. Record one concrete, evidence-backed recommended next action for the customer.
 
+Existing password-reset, invite and billing-return links that arrive at the root domain are intentionally forwarded into `/app`. Do not rewrite or manually alter their query parameters during a pilot session.
+
 ## What counts as a successful pilot session
 
+- Customer can reach the authenticated product from the onboarding instructions without founder navigation help.
 - Customer can understand what Vexmera connected to.
 - At least one real data source syncs when data exists.
 - Empty accounts are described as empty, not broken.
