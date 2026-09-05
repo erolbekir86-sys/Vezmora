@@ -49,7 +49,8 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     assert snapshot["privacy_controls"] == {
         "connector_disconnect": True,
         "scoped_synced_history_deletion": True,
-        "full_account_deletion": False,
+        "account_deletion_backend": True,
+        "full_account_deletion": True,
     }
 
 
@@ -161,6 +162,8 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["meta_oauth_configured"] is True
     assert payload["smtp_minimum_configured"] is True
     assert payload["production_transport_safe"] is True
+    assert payload["privacy_controls"]["account_deletion_backend"] is True
+    assert payload["privacy_controls"]["full_account_deletion"] is True
 
     rendered = response.text
     for secret in values.values():
