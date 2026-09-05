@@ -6,7 +6,7 @@
 
   const founderStylesheet = document.createElement('link');
   founderStylesheet.rel = 'stylesheet';
-  founderStylesheet.href = '/static/landing-founder.css?v=1';
+  founderStylesheet.href = '/static/landing-founder.css?v=2';
   document.head.appendChild(founderStylesheet);
 
   const root = document.documentElement;
@@ -18,7 +18,7 @@
     en: {
       'nav.product':'Product','nav.how':'How it works','nav.features':'Features','nav.pricing':'Pricing','nav.login':'Log in','nav.start':'Get started',
       'hero.eyebrow':'AI-DRIVEN MARKETING INTELLIGENCE','hero.title1':'Understand your marketing.','hero.title2':'Know exactly what to do next.','hero.lead':'Vexmera brings your marketing data together, analyzes what actually drives results and turns complex information into clear decisions.','hero.cta':'Try Vexmera →','hero.demo':'See how it works','hero.proof1':'Built for small and growing companies','hero.proof2':'Clear recommendations','hero.proof3':'Control before automation',
-      'dash.overview':'Overview','dash.settings':'Settings','dash.queue':'Queue','dash.connect':'Connect','dash.demo':'DEMO DATA','dash.overviewUpper':'OVERVIEW','dash.morning':'Good morning.','dash.summary':'Here is what is happening in your marketing.','dash.days':'days','dash.revenue':'Revenue','dash.leads':'Leads','dash.recommends':'CORE RECOMMENDS','dash.recTitle':'Move 15% more budget to the campaign with the highest profitability.','dash.recBody':'Google Search is performing 31% above the account’s average ROAS over the last 14 days.','dash.effect':'Estimated impact','dash.viewAnalysis':'View analysis','dash.performance':'Performance trend','dash.days30':'30 days',
+      'dash.overview':'Overview','dash.settings':'Settings','dash.queue':'Queue','dash.rivals':'Rivals','dash.connect':'Connect','dash.insights':'Insights','dash.demo':'DEMO DATA','dash.overviewUpper':'OVERVIEW','dash.morning':'Good morning.','dash.summary':'Here is what is happening in your marketing.','dash.days':'days','dash.revenue':'Revenue','dash.leads':'Leads','dash.recommends':'CORE RECOMMENDS','dash.recTitle':'Move 15% more budget to the campaign with the highest profitability.','dash.recBody':'Google Search is performing 31% above the account’s average ROAS over the last 14 days.','dash.effect':'Estimated impact','dash.viewAnalysis':'View analysis','dash.performance':'Performance trend','dash.days30':'30 days','dash.approvals':'Pending approvals','dash.approvalCount':'2 waiting for review','dash.sources':'Connected sources','dash.sourceCount':'Google + Meta',
       'float.opportunities':'3 opportunities found','float.priority':'Prioritized by business impact','float.synced':'Synced and analyzed',
       'trust.oneTitle':'Built for growing companies','trust.oneBody':'Powerful without becoming overwhelming.','trust.twoTitle':'Clear recommendations','trust.twoBody':'Concrete decisions, not just more data.','trust.threeTitle':'You stay in control','trust.threeBody':'Vexmera recommends. You decide.',
       'problem.eyebrow':'ONE PLACE. ONE LANGUAGE. BETTER DECISIONS.','problem.title':'Marketing should not require five dashboards.','problem.body':'The data already exists. The problem is that it is scattered. Vexmera brings the signals together and makes them understandable.','problem.output':'Prioritized intelligence',
@@ -30,7 +30,7 @@
       'workflow.title':'Automation without losing control.','workflow.body':'Vexmera can help all the way from opportunity to action, but you decide how far automation is allowed to go.','workflow.opportunity':'Opportunity','workflow.detected':'Signal detected','workflow.recommendation':'Recommendation','workflow.prioritized':'Prioritized action','workflow.approval':'Approval','workflow.human':'Human decision','workflow.action':'Action','workflow.logged':'Tracked activity','workflow.control1':'Human approval','workflow.control2':'Budget limits','workflow.control3':'Activity log','workflow.control4':'Pause anytime',
       'integrations.eyebrow':'INTEGRATIONS','integrations.title':'Vexmera works with the tools you already use.','integrations.connected':'Available','integrations.soon':'Coming soon',
       'outcomes.eyebrow':'WHAT VEXMERA IMPROVES','outcomes.title':'Less analysis work. Clearer priorities.','outcomes.body':'We do not use invented customer quotes or results. Vexmera should earn trust through a clear product and real case studies when they exist.','outcomes.one':'Less time spent on analysis','outcomes.two':'Better budget decisions','outcomes.three':'Faster problem detection','outcomes.four':'Clearer next steps',
-      'founder.eyebrow':'WHY VEXMERA EXISTS','founder.title':'Built to turn more data into better decisions.','founder.lead':'Vexmera started from a simple problem: businesses have access to more marketing data than ever, but it is still difficult to know what actually deserves attention next.','founder.quote':'“The goal is not to give companies another dashboard. The goal is to make the path from signal to action clearer.”','founder.name':'Erol','founder.role':'Founder, Vexmera','founder.placeholder':'Founder portrait','founder.placeholderNote':'Final portrait added after image approval',
+      'founder.eyebrow':'WHY VEXMERA EXISTS','founder.title':'Built to turn more data into better decisions.','founder.lead':'Vexmera started from a simple problem: businesses have access to more marketing data than ever, but it is still difficult to know what actually deserves attention next.','founder.quote':'“The goal is not to give companies another dashboard. The goal is to make the path from signal to action clearer.”','founder.name':'Erol Bekir','founder.role':'Founder, Vexmera','founder.placeholder':'Founder portrait','founder.placeholderNote':'Final portrait added after image approval',
       'pricing.eyebrow':'PRICING','pricing.title':'A plan for every stage of growth.','pricing.body':'Clear pricing. No unnecessary complexity.','pricing.monthly':'Monthly','pricing.yearly':'Yearly','pricing.save':'2 months included','pricing.starterFor':'FOR SMALLER COMPANIES','pricing.starterBody':'For companies that want to bring their data together and understand marketing better.','pricing.growthFor':'FOR GROWING COMPANIES','pricing.growthBody':'The complete Vexmera experience for companies that want to grow smarter.','pricing.scaleFor':'FOR TEAMS & SCALE','pricing.scaleBody':'More capacity, more users and advanced controlled automation.','pricing.perMonth':'/ month','pricing.googleMeta':'Google + Meta','pricing.dashboard':'Dashboard & KPIs','pricing.basicInsights':'Basic AI insights','pricing.oneUser':'1 user','pricing.chooseStarter':'Choose Starter','pricing.popular':'MOST POPULAR','pricing.everythingStarter':'Everything in Starter','pricing.advancedInsights':'Advanced AI insights','pricing.competitors':'Competitor monitoring','pricing.threeUsers':'3 users','pricing.prioritySupport':'Priority support','pricing.chooseGrowth':'Choose Growth','pricing.everythingGrowth':'Everything in Growth','pricing.advancedWorkflows':'Advanced workflows','pricing.tenUsers':'10 users','pricing.onboarding':'Personal onboarding','pricing.premiumSupport':'Premium support','pricing.chooseScale':'Choose Scale','pricing.note':'Prices exclude VAT. The annual plan equals 10 months of payment for 12 months of usage.',
       'security.eyebrow':'SECURITY & CONTROL','security.title':'Your data. Your control.','security.body':'Vexmera is built to help you make decisions without taking control away from you.','security.permissions':'Permission controls','security.approvals':'Approval system','security.audit':'Activity log','security.encrypted':'Encrypted communication','security.rules':'Clear automation rules',
       'faq.title':'Frequently asked questions.','faq.q1':'What is Vexmera?','faq.a1':'Vexmera is an AI-powered marketing platform that helps companies bring data together, understand performance and prioritize what to do next.','faq.q2':'Do I need to be a marketing expert?','faq.a2':'No. Vexmera is built to make complex marketing data understandable and actionable.','faq.q3':'Can Vexmera change my campaigns automatically?','faq.a3':'Automation should happen within clear rules and control levels. You choose how much Vexmera is allowed to do and when human approval is required.','faq.q4':'Which platforms are supported?','faq.a4':'Google Ads and Meta Ads are the focus in the current beta. More integrations are being built step by step.','faq.q5':'Can I change language and theme?','faq.a5':'Yes. Vexmera is built with Swedish and English from the start, plus light, dark and system-based theme handling.','faq.q6':'How is my data protected?','faq.a6':'Vexmera uses permission controls, clear approval flows and the principle of never inventing live data that is not connected.',
@@ -57,6 +57,7 @@
     const sidebar = document.querySelector('.dash-sidebar');
     const autopilot = Array.from(sidebar?.querySelectorAll('.dash-nav') || []).find((item) => item.textContent.trim().includes('Autopilot'));
     const spacer = sidebar?.querySelector('.dash-spacer');
+
     if (sidebar && autopilot && !sidebar.querySelector('[data-real-nav="queue"]')) {
       const queue = document.createElement('div');
       queue.className = 'dash-nav product-real';
@@ -64,13 +65,32 @@
       queue.innerHTML = '<b></b><span data-i18n="dash.queue">Queue</span><small>Approvals</small>';
       sidebar.insertBefore(queue, autopilot);
     }
+
+    if (sidebar && autopilot && !sidebar.querySelector('[data-real-nav="rivals"]')) {
+      const rivals = document.createElement('div');
+      rivals.className = 'dash-nav product-real';
+      rivals.dataset.realNav = 'rivals';
+      rivals.innerHTML = '<b></b><span data-i18n="dash.rivals">Rivals</span><small>Watch</small>';
+      autopilot.insertAdjacentElement('afterend', rivals);
+    }
+
     if (sidebar && spacer && !sidebar.querySelector('[data-real-nav="connect"]')) {
       const connect = document.createElement('div');
       connect.className = 'dash-nav product-real muted';
       connect.dataset.realNav = 'connect';
       connect.innerHTML = '<b></b><span data-i18n="dash.connect">Connect</span><small>Data</small>';
-      sidebar.insertBefore(connect, spacer.nextSibling);
+      spacer.insertAdjacentElement('afterend', connect);
     }
+
+    const connect = sidebar?.querySelector('[data-real-nav="connect"]');
+    if (sidebar && connect && !sidebar.querySelector('[data-real-nav="insights"]')) {
+      const insights = document.createElement('div');
+      insights.className = 'dash-nav product-real muted';
+      insights.dataset.realNav = 'insights';
+      insights.innerHTML = '<b></b><span data-i18n="dash.insights">Insights</span><small>Reports</small>';
+      connect.insertAdjacentElement('afterend', insights);
+    }
+
     const dashTop = document.querySelector('.dash-top');
     if (dashTop && !dashTop.querySelector('.demo-data-pill')) {
       const demo = document.createElement('span');
@@ -78,6 +98,25 @@
       demo.dataset.i18n = 'dash.demo';
       demo.textContent = 'DEMO DATA';
       dashTop.appendChild(demo);
+    }
+
+    const dashMain = document.querySelector('.dash-main');
+    const dashGrid = dashMain?.querySelector('.dash-grid');
+    if (dashMain && dashGrid && !dashMain.querySelector('.dash-status-row')) {
+      const statusRow = document.createElement('div');
+      statusRow.className = 'dash-status-row';
+      statusRow.innerHTML = `
+        <div class="dash-status-card">
+          <div class="dash-status-icon">✓</div>
+          <div><span data-i18n="dash.approvals">VÄNTANDE GODKÄNNANDEN</span><strong data-i18n="dash.approvalCount">2 väntar på granskning</strong></div>
+          <small>Queue</small>
+        </div>
+        <div class="dash-status-card">
+          <div class="dash-status-icon">↔</div>
+          <div><span data-i18n="dash.sources">ANSLUTNA KÄLLOR</span><strong data-i18n="dash.sourceCount">Google + Meta</strong></div>
+          <small>Live sync</small>
+        </div>`;
+      dashGrid.insertAdjacentElement('afterend', statusRow);
     }
   }
 
@@ -89,7 +128,7 @@
     section.id = 'founder';
     section.innerHTML = `
       <div class="founder-card reveal">
-        <div class="founder-portrait" role="img" aria-label="Founder portrait placeholder">
+        <div class="founder-portrait" role="img" aria-label="Erol Bekir, grundare av Vexmera">
           <div class="founder-placeholder-label"><span data-i18n="founder.placeholder">Grundarporträtt</span><small data-i18n="founder.placeholderNote">Slutlig bild läggs in efter bildgodkännande</small></div>
         </div>
         <div class="founder-copy">
@@ -97,7 +136,7 @@
           <h2 data-i18n="founder.title">Byggt för att göra mer data till bättre beslut.</h2>
           <p class="founder-lead" data-i18n="founder.lead">Vexmera började i ett enkelt problem: företag har tillgång till mer marknadsföringsdata än någonsin, men det är fortfarande svårt att veta vad som faktiskt förtjänar uppmärksamhet härnäst.</p>
           <p class="founder-quote" data-i18n="founder.quote">“Målet är inte att ge företag ännu en dashboard. Målet är att göra vägen från signal till handling tydligare.”</p>
-          <div class="founder-meta"><span class="founder-meta-mark">V</span><div><strong data-i18n="founder.name">Erol</strong><small data-i18n="founder.role">Grundare, Vexmera</small></div></div>
+          <div class="founder-meta"><span class="founder-meta-mark">V</span><div><strong data-i18n="founder.name">Erol Bekir</strong><small data-i18n="founder.role">Grundare, Vexmera</small></div></div>
         </div>
       </div>`;
     pricing.parentNode.insertBefore(section, pricing);
