@@ -93,7 +93,7 @@ The operation:
 9. returns only deleted record counts and safe status flags;
 10. is covered by regression tests for confirmation, deletion scope, manual-KPI retention and role enforcement.
 
-This control should be described precisely as deletion of **synchronized marketing/reporting history**. It is not a complete workspace, account, or privacy-rights erasure mechanism.
+This control should be described precisely as deletion of **synchronized marketing/reporting history**. It is not the same operation as deleting a Vexmera account.
 
 ### Data not deleted by synchronized-history deletion
 
@@ -110,7 +110,68 @@ The synchronized-history deletion endpoint does not claim to delete:
 - manually entered KPI data
 - connector credentials
 
-Broader account-deletion, retention and data-subject-request procedures must therefore be finalized separately before Vexmera makes any claim of complete account or personal-data deletion.
+These categories are intentionally outside the scoped reporting-history control. Broader deletion is handled by the separate account-deletion flow described below.
+
+## Full self-service account deletion
+
+Vexmera implements a guarded full account-deletion flow with a preview at `GET /api/privacy/account-deletion-preview` and irreversible deletion at `DELETE /api/privacy/account`.
+
+Before deletion, the authenticated customer UI shows blockers and deletion scope. The final request requires both the current account password and the exact confirmation phrase `DELETE MY ACCOUNT`.
+
+Deletion is blocked when:
+
+- an owned workspace still has another member; or
+- an owned workspace has an attached Stripe subscription whose state is not treated as inactive.
+
+When deletion is allowed, Vexmera:
+
+1. re-authenticates the current password;
+2. re-checks blockers immediately before local deletion;
+3. best-effort revokes Google and Meta OAuth tokens for solo-owned workspaces;
+4. deletes solo-owned workspaces and their database-cascaded workspace data;
+5. removes the user's memberships from workspaces owned by other users while preserving those shared business workspaces;
+6. deletes the user account and password credentials;
+7. removes sessions through account deletion and clears the active session cookie;
+8. removes pending invitations for the account email;
+9. removes queued application email addressed to the account email;
+10. returns only safe deletion counts and revocation status.
+
+Third-party billing or compliance records are **not** represented as guaranteed deleted. Stripe and other processors may retain records where required for accounting, fraud prevention, dispute handling, security or legal obligations. Vexmera's public privacy documentation must describe this distinction accurately.
+
+## Website analytics consent
+
+The authenticated Vexmera web application uses a privacy-first Google Analytics consent flow.
+
+Current behavior:
+
+- Google Analytics is not embedded directly in the initial HTML;
+- `analytics_storage`, `ad_storage`, `ad_user_data`, and `ad_personalization` default to `denied`;
+- the Google Analytics script is loaded only after an explicit `granted` analytics choice;
+- Google Signals is disabled;
+- ad-personalization signals are disabled;
+- customers can reopen Cookieinställningar and change the analytics choice later;
+- when analytics is denied or consent is withdrawn, Vexmera updates consent to denied and performs best-effort removal of first-party `_ga` cookies visible to the application origin.
+
+The consent implementation is covered by regression tests that verify no direct pre-consent Google Analytics tag is shipped in the authenticated HTML and that the consent JavaScript remains syntax-checked in CI.
+
+This technical consent mechanism does not replace the need for final public cookie/privacy wording and legal review.
+
+## Retention and external processors still requiring final policy decisions
+
+The codebase now has customer controls for connector credential deletion, synchronized-history deletion and full account deletion, but **production retention periods are not yet finalized** for every retained category.
+
+Before external pilot onboarding, Vexmera should document and legally review at least:
+
+- default retention for account and workspace data while an account remains active;
+- retention of AI run history and generated outputs;
+- retention of competitor snapshots and beta feedback;
+- operational/security log retention;
+- email-delivery/outbox retention;
+- backups and database recovery retention where applicable;
+- processor-specific retention that Vexmera cannot directly erase on demand;
+- the final list and roles of hosting, database, AI, billing, email, analytics and advertising-platform providers.
+
+No public claim should state a concrete retention period until the production policy has been intentionally selected and matched to actual infrastructure behavior.
 
 ## Private beta operating rule
 
