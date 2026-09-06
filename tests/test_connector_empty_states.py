@@ -64,6 +64,22 @@ def test_http_error_status_is_not_reframed_as_healthy_empty_state():
     assert "warnings" not in guarded
 
 
+def test_explicit_ok_false_is_not_reframed_as_healthy_empty_state():
+    result = {"ok": False, "campaign_rows": 0, "ads_rows": 0}
+
+    guarded = _with_empty_state_warning("Google Ads", result, 7)
+
+    assert "warnings" not in guarded
+
+
+def test_explicit_success_false_is_not_reframed_as_healthy_empty_state():
+    result = {"success": False, "campaign_rows": 0, "ads_rows": 0}
+
+    guarded = _with_empty_state_warning("Meta Ads", result, 7)
+
+    assert "warnings" not in guarded
+
+
 def test_existing_scalar_provider_warning_is_preserved():
     result = {"campaign_rows": 0, "ads_rows": 0, "warnings": "Partial attribution data"}
 
