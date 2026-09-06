@@ -38,5 +38,8 @@ jobs:
           node --check static/account-privacy-ui.js
           node --check static/analytics-consent.js
           node --check static/landing.js
+          node --check static/founder-photo-fix.js
+          node --check static/landing-ux.js
+          node --check static/landing-refine.js
       - name: Test
         run: pytest -q
