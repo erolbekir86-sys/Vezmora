@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from typing import Awaitable, Callable
 
 from . import connectors as _connectors
 
@@ -12,6 +12,14 @@ _original_sync_google: Syncer = _connectors.sync_google
 _original_sync_meta: Syncer = _connectors.sync_meta
 
 
+def _row_count(result: dict[str, object], key: str) -> int:
+    """Return a safe non-negative row count for provider sync metadata."""
+    try:
+        return max(0, int(result.get(key) or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def _with_empty_state_warning(provider_label: str, result: dict[str, object], days: int) -> dict[str, object]:
     """Make successful zero-row syncs explicit without turning them into failures."""
     warnings = result.get("warnings")
@@ -19,12 +27,11 @@ def _with_empty_state_warning(provider_label: str, result: dict[str, object], da
         warnings = []
         result["warnings"] = warnings
 
-    try:
-        campaign_rows = int(result.get("campaign_rows") or 0)
-    except (TypeError, ValueError):
-        campaign_rows = 0
+    campaign_rows = _row_count(result, "campaign_rows")
+    ads_rows = _row_count(result, "ads_rows")
+    has_provider_rows = campaign_rows > 0 or ads_rows > 0
 
-    if campaign_rows == 0 and not any("no campaign data" in str(w).lower() for w in warnings):
+    if not has_provider_rows and not any("no campaign data" in str(w).lower() for w in warnings):
         warnings.append(
             f"No campaign data found for {provider_label} in the selected {days}-day period. "
             "The connection can still be healthy; the account may have no campaigns or no activity in this period."
