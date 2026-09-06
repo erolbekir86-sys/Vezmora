@@ -62,6 +62,14 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
         "account_deletion_backend": True,
         "full_account_deletion": True,
     }
+    assert snapshot["pilot_readiness"]["configuration_ready"] is False
+    assert snapshot["pilot_readiness"]["configuration_blockers"] == [
+        "remote_database_configured",
+        "stripe_sandbox_ready",
+        "google_oauth_configured",
+        "meta_oauth_configured",
+        "transactional_email_configured",
+    ]
 
 
 def test_beta_readiness_prefers_postgres_intent_over_turso_compat_alias(monkeypatch):
@@ -94,6 +102,7 @@ def test_beta_readiness_detects_unsafe_execution_flags(monkeypatch):
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["external_execution_enabled"] is True
     assert snapshot["private_beta_execution_safe"] is False
+    assert "execution_locked" in snapshot["pilot_readiness"]["configuration_blockers"]
 
 
 def test_beta_readiness_treats_dev_token_exposure_as_unsafe(monkeypatch):
@@ -119,6 +128,7 @@ def test_beta_readiness_detects_insecure_production_transport(monkeypatch):
         "secure_cookie_explicitly_disabled": True,
         "safe": False,
     }
+    assert "production_transport_safe" in snapshot["pilot_readiness"]["configuration_blockers"]
 
 
 def test_beta_readiness_accepts_secure_production_transport(monkeypatch):
@@ -162,6 +172,38 @@ def test_beta_readiness_detects_live_key_or_wrong_sandbox_catalog(monkeypatch):
     assert snapshot["stripe_sandbox_ready"] is False
 
 
+def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://private-placeholder")
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    for name, value in beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client-private")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret-private")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.test/google")
+    monkeypatch.setenv("META_APP_ID", "meta-app-private")
+    monkeypatch.setenv("META_APP_SECRET", "meta-secret-private")
+    monkeypatch.setenv("META_REDIRECT_URI", "https://example.test/meta")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.test")
+    monkeypatch.setenv("SMTP_FROM", "sender@example.test")
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+    pilot = snapshot["pilot_readiness"]
+    assert pilot["configuration_ready"] is True
+    assert pilot["configuration_blockers"] == []
+    assert pilot["checks"]["execution_locked"] is True
+    assert pilot["manual_gates"] == [
+        "final_authenticated_browser_qa",
+        "privacy_terms_legal_review",
+        "google_ads_external_approval_and_manager_link_if_required",
+        "fresh_stripe_sandbox_end_to_end_test",
+    ]
+
+
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
     values = {
@@ -203,6 +245,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["production_transport_safe"] is True
     assert payload["privacy_controls"]["account_deletion_backend"] is True
     assert payload["privacy_controls"]["full_account_deletion"] is True
+    assert payload["pilot_readiness"]["configuration_ready"] is True
 
     rendered = response.text
     for secret in values.values():
