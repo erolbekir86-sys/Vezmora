@@ -206,10 +206,13 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
 
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
+    # Keep the endpoint test startup-safe: setting the legacy TURSO_DATABASE_URL
+    # alias to a fake PostgreSQL URL makes the application attempt a real remote
+    # Turso connection during TestClient lifespan. The pure snapshot tests above
+    # already cover the Postgres-over-Turso intent and Turso URL non-disclosure.
     values = {
         "VEZMORA_APP_URL": "https://example.test",
         "DATABASE_URL": "postgresql://database-private",
-        "TURSO_DATABASE_URL": "postgresql://compat-private",
         "STRIPE_SECRET_KEY": "sk_test_private",
         "STRIPE_WEBHOOK_SECRET": "whsec_private",
         "GOOGLE_CLIENT_ID": "google-client-private",
@@ -232,7 +235,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     payload = response.json()
     assert payload["database"]["backend_intent"] == "postgres"
     assert payload["database"]["database_url_configured"] is True
-    assert payload["database"]["turso_url_configured"] is True
+    assert payload["database"]["turso_url_configured"] is False
     assert payload["stripe_catalog_env_configured"] is True
     assert payload["stripe_catalog_matches_verified_sandbox"] is True
     assert payload["stripe_webhook_env_configured"] is True
