@@ -86,17 +86,87 @@ def _stripe_catalog_matches_verified_sandbox() -> bool:
     return all((os.getenv(name) or "").strip() == expected for name, expected in VERIFIED_STRIPE_SANDBOX_PRICES.items())
 
 
+def _pilot_readiness_snapshot(
+    *,
+    private_beta_execution_safe: bool,
+    production_transport_safe: bool,
+    remote_database_configured: bool,
+    stripe_sandbox_ready: bool,
+    google_oauth_configured: bool,
+    meta_oauth_configured: bool,
+    smtp_minimum_configured: bool,
+) -> dict[str, object]:
+    """Summarize configuration-only blockers for the five-company pilot.
+
+    This deliberately does not claim third-party approvals, successful live account
+    linking, legal sign-off, or browser QA. Those remain explicit manual gates.
+    """
+    checks = {
+        "execution_locked": private_beta_execution_safe,
+        "production_transport_safe": production_transport_safe,
+        "remote_database_configured": remote_database_configured,
+        "stripe_sandbox_ready": stripe_sandbox_ready,
+        "google_oauth_configured": google_oauth_configured,
+        "meta_oauth_configured": meta_oauth_configured,
+        "transactional_email_configured": smtp_minimum_configured,
+    }
+    blockers = [name for name, ready in checks.items() if not ready]
+    return {
+        "configuration_ready": not blockers,
+        "checks": checks,
+        "configuration_blockers": blockers,
+        "manual_gates": [
+            "final_authenticated_browser_qa",
+            "privacy_terms_legal_review",
+            "google_ads_external_approval_and_manager_link_if_required",
+            "fresh_stripe_sandbox_end_to_end_test",
+        ],
+    }
+
+
 def beta_safety_snapshot() -> dict[str, object]:
     execution_enabled = _enabled("VEZMORA_EXECUTION_ENABLED")
     autopilot_execution_enabled = _enabled("VEZMORA_AUTOPILOT_EXECUTION_ENABLED")
     meta_execution_scope_enabled = _enabled("VEZMORA_ENABLE_META_EXECUTION_SCOPE")
     dev_show_tokens_enabled = _enabled("VEZMORA_DEV_SHOW_TOKENS")
+    private_beta_execution_safe = not (
+        execution_enabled
+        or autopilot_execution_enabled
+        or meta_execution_scope_enabled
+        or dev_show_tokens_enabled
+    )
     transport = _transport_snapshot()
     database = _database_snapshot()
     stripe_key_mode = _stripe_key_mode()
     stripe_catalog_configured = _all_configured(*VERIFIED_STRIPE_SANDBOX_PRICES.keys())
     stripe_catalog_matches = _stripe_catalog_matches_verified_sandbox()
     stripe_webhook_configured = _configured("STRIPE_WEBHOOK_SECRET")
+    stripe_sandbox_ready = (
+        stripe_key_mode == "test"
+        and stripe_catalog_matches
+        and stripe_webhook_configured
+    )
+    google_oauth_configured = _all_configured(
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_REDIRECT_URI",
+    )
+    meta_oauth_configured = _all_configured(
+        "META_APP_ID",
+        "META_APP_SECRET",
+        "META_REDIRECT_URI",
+    )
+    smtp_minimum_configured = _all_configured("SMTP_HOST", "SMTP_FROM")
+
+    pilot_readiness = _pilot_readiness_snapshot(
+        private_beta_execution_safe=private_beta_execution_safe,
+        production_transport_safe=bool(transport["safe"]),
+        remote_database_configured=bool(database["remote_database_configured"]),
+        stripe_sandbox_ready=stripe_sandbox_ready,
+        google_oauth_configured=google_oauth_configured,
+        meta_oauth_configured=meta_oauth_configured,
+        smtp_minimum_configured=smtp_minimum_configured,
+    )
 
     return {
         "ok": True,
@@ -106,12 +176,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "autopilot_execution_enabled": autopilot_execution_enabled,
         "meta_execution_scope_enabled": meta_execution_scope_enabled,
         "dev_show_tokens_enabled": dev_show_tokens_enabled,
-        "private_beta_execution_safe": not (
-            execution_enabled
-            or autopilot_execution_enabled
-            or meta_execution_scope_enabled
-            or dev_show_tokens_enabled
-        ),
+        "private_beta_execution_safe": private_beta_execution_safe,
         "production_transport_safe": bool(transport["safe"]),
         "transport": transport,
         "database": database,
@@ -119,34 +184,24 @@ def beta_safety_snapshot() -> dict[str, object]:
         "stripe_catalog_env_configured": stripe_catalog_configured,
         "stripe_catalog_matches_verified_sandbox": stripe_catalog_matches,
         "stripe_webhook_env_configured": stripe_webhook_configured,
-        "stripe_sandbox_ready": (
-            stripe_key_mode == "test"
-            and stripe_catalog_matches
-            and stripe_webhook_configured
-        ),
-        "google_oauth_configured": _all_configured(
-            "GOOGLE_CLIENT_ID",
-            "GOOGLE_CLIENT_SECRET",
-            "GOOGLE_REDIRECT_URI",
-        ),
+        "stripe_sandbox_ready": stripe_sandbox_ready,
+        "google_oauth_configured": google_oauth_configured,
         "google_ads_developer_token_configured": _configured("GOOGLE_ADS_DEVELOPER_TOKEN"),
         "google_ads_login_customer_id_configured": _configured("GOOGLE_ADS_LOGIN_CUSTOMER_ID"),
-        "meta_oauth_configured": _all_configured(
-            "META_APP_ID",
-            "META_APP_SECRET",
-            "META_REDIRECT_URI",
-        ),
-        "smtp_minimum_configured": _all_configured("SMTP_HOST", "SMTP_FROM"),
+        "meta_oauth_configured": meta_oauth_configured,
+        "smtp_minimum_configured": smtp_minimum_configured,
         "privacy_controls": {
             "connector_disconnect": True,
             "scoped_synced_history_deletion": True,
             "account_deletion_backend": True,
             "full_account_deletion": True,
         },
+        "pilot_readiness": pilot_readiness,
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
+            "Pilot readiness is configuration-only; manual gates remain required before external onboarding.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
