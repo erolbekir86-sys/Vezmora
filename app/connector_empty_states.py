@@ -24,6 +24,8 @@ def _is_error_result(result: dict[str, object]) -> bool:
     """Avoid presenting a provider failure as a healthy empty account."""
     if result.get("error"):
         return True
+    if result.get("ok") is False or result.get("success") is False:
+        return True
     try:
         status = int(result.get("status") or 0)
     except (TypeError, ValueError):
