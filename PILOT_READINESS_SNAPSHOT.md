@@ -7,12 +7,15 @@ This file is a non-secret operational snapshot for the five-company private beta
 ## Verified healthy
 
 - GitHub repository is reachable, writable through the connected GitHub integration, and the default branch is `main`.
-- Latest observed `main` commit is `6e758cb68a8058fb334dca7f65c7eb1bb139cd80` (`Test empty-state failure discrimination`).
+- Latest observed `main` commit is `f9d3d24ada978be66b78031230e92378ac57728e` (`Test landing reveal fail-open guard`).
 - GitHub reports the Vercel status for that commit as `success`, confirming the GitHub -> Vercel deployment path completed for the current `main` revision.
 - The Python package identifies the product as `vexmera` version `0.6.1`.
-- CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment and beta readiness.
+- CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment, beta readiness and public frontend asset smoke coverage.
+- Public frontend smoke coverage verifies that `/` and `/app` return content and that referenced local JavaScript/CSS assets are present and non-empty.
+- Frontend JavaScript syntax checks cover the landing-page scripts used by the deployed marketing page.
+- Landing-page reveal effects now fail open: content is visible by default, enhanced reveal behavior is enabled only when JavaScript initializes, and frontend errors remove the reveal lock so a script failure cannot leave the page visually blank. Regression coverage protects this behavior.
 - Connector empty-state handling was hardened on 2026-09-06 so successful zero-row accounts are distinguished from provider failures and HTTP errors. Existing provider warnings are preserved instead of being replaced by reassuring empty-state copy.
-- Regression coverage now includes campaign/ad row combinations, malformed row counts, provider errors, HTTP failures and warning preservation for connector empty-state classification.
+- Regression coverage includes campaign/ad row combinations, malformed row counts, provider errors, HTTP failures and warning preservation for connector empty-state classification.
 - The pilot runbook explicitly requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
 - Production database intent is confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback.
 - Database readiness diagnostics were hardened on 2026-09-06 to report backend intent and configuration booleans without exposing connection strings; tests cover PostgreSQL priority, legacy Turso identification and secret non-disclosure.
@@ -22,7 +25,7 @@ This file is a non-secret operational snapshot for the five-company private beta
 
 ### 1. Direct Vercel connector visibility
 
-Rechecked 2026-09-06: the connected Vercel integration currently returns zero teams. Direct project listing, production runtime logs, deployment inspection and toolbar feedback therefore remain unavailable through this connection.
+Rechecked 2026-09-06 after the latest successful deployment: the connected Vercel integration still returns zero teams. Direct project listing, production runtime logs, deployment inspection and toolbar feedback therefore remain unavailable through this connection.
 
 This does not indicate a broken deployment: GitHub reports the current `main` commit's Vercel status as successful. Treat this specifically as a ChatGPT/Vercel connector visibility or OAuth-scope issue, not as evidence that the Vexmera project is missing.
 
@@ -36,7 +39,7 @@ Keep all advertising behavior read-only/recommendation-only until Basic Access a
 
 ### 3. Live connector verification
 
-Automated coverage now distinguishes legitimate empty accounts from provider failures without exposing secrets, but a real deployed walkthrough is still required for Google Ads and Meta. Verify that successful empty accounts show a clear empty state and provider/API failures show actionable, sanitized diagnostics.
+Automated coverage distinguishes legitimate empty accounts from provider failures without exposing secrets, but a real deployed walkthrough is still required for Google Ads and Meta. Verify that successful empty accounts show a clear empty state and provider/API failures show actionable, sanitized diagnostics.
 
 ### 4. Stripe sandbox deployment reconciliation
 
@@ -50,7 +53,7 @@ Before inviting external pilot companies, finalize the Privacy Policy and Beta T
 
 ### 6. Final deployed browser QA
 
-Perform one authenticated browser pass on the actual deployed Command Center before the first pilot. Confirm onboarding, connector empty states, connector failure states, disconnect flows, account privacy controls and recommendation-only behavior in the real deployment.
+Perform one authenticated browser pass on the actual deployed Command Center before the first pilot. Confirm onboarding, connector empty states, connector failure states, disconnect flows, account privacy controls and recommendation-only behavior in the real deployment. Also confirm the public marketing page and `/app` render correctly in a real browser after the landing reveal fail-open hardening.
 
 ## Pilot safety gate
 
