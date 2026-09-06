@@ -15,13 +15,20 @@ def test_storage_backend_reports_real_turso(monkeypatch):
 
 
 def test_storage_backend_reports_postgres_compat_url(monkeypatch):
-    monkeypatch.setenv("TURSO_DATABASE_URL", "postgresql://user:secret@example.invalid/db")
+    database_url = "postgresql://user:secret@example.invalid/db"
+    monkeypatch.setenv("TURSO_DATABASE_URL", database_url)
     payload = runtime_health_payload()
+    rendered = repr(payload)
+
     assert storage_backend() == "postgres"
     assert payload["storage_backend"] == "postgres"
     assert payload["data_path"] == "remote"
-    assert "example.invalid" not in repr(payload)
-    assert "secret" not in repr(payload)
+    # Assert that the configured credential-bearing URL is not reflected in
+    # diagnostics without accidentally matching safe field names such as
+    # ``oauth_secret_configured``.
+    assert database_url not in rendered
+    assert "user:secret@example.invalid" not in rendered
+    assert "example.invalid" not in rendered
 
 
 def test_storage_backend_accepts_legacy_postgres_scheme(monkeypatch):
