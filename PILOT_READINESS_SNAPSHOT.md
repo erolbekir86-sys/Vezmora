@@ -6,47 +6,37 @@ This file is a non-secret operational snapshot for the five-company private beta
 
 ## Verified healthy
 
-- GitHub repository is reachable and the default branch is `main`.
-- Latest observed GitHub Actions run for `Vexmera CI` completed successfully on commit `a82ae16e4e40d98b654db39deb765b738cfbdadd` (`Guard deployment-wide frontend cache busting`) on 2026-09-05.
+- GitHub repository is reachable, writable through the connected GitHub integration, and the default branch is `main`.
+- Latest observed `main` commit is `241b0c5df7b586e6b0d073f03f32902e8dc3f47f` (`Align pilot runbook with readiness diagnostics`).
+- GitHub reports the Vercel status for that commit as `success`, confirming the GitHub -> Vercel deployment path completed for the current `main` revision.
 - The Python package identifies the product as `vexmera` version `0.6.1`.
 - CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment and beta readiness.
 - The pilot runbook explicitly requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
-- Production database intent is confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback. Seeing PostgreSQL in production is therefore expected and is not itself a deployment blocker.
-
-## Diagnostic follow-up
-
-`app.store.storage_backend()` currently reports any configured `TURSO_DATABASE_URL` as `turso`. The Vercel bootstrap intentionally copies a Postgres URL into that variable while installing `app.postgres_compat`, so `/health/runtime` can label an active PostgreSQL backend as `turso`. This is a diagnostics-only mismatch, not evidence that the application is using the wrong database. Track and fix the reporting separately without changing database credentials or deployment configuration.
+- Production database intent is confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback.
+- Database readiness diagnostics were hardened on 2026-09-06 to report backend intent and configuration booleans without exposing connection strings; tests cover PostgreSQL priority, legacy Turso identification and secret non-disclosure.
+- Five-company pilot readiness diagnostics now distinguish configuration blockers from manual launch gates, preventing a configuration-only pass from being mistaken for external-pilot approval.
 
 ## Current blockers requiring manual or external resolution
 
-### 1. Vercel project visibility mismatch
+### 1. Direct Vercel connector visibility
 
-Rechecked 2026-09-06: the connected Vercel account exposes the team `Vezmora`, but that team still returns zero projects through the Vercel connection.
+Rechecked 2026-09-06: the connected Vercel integration currently returns zero teams. Direct project listing, production runtime logs, deployment inspection and toolbar feedback therefore remain unavailable through this connection.
 
-This conflicts with `DEPLOY_CHECKLIST.md`, which records earlier successful Vercel deployment work. Treat this as an account/team visibility or connection-scope issue until proven otherwise. Do not change domains, DNS, secrets, credentials or permissions to troubleshoot it.
+This does not indicate a broken deployment: GitHub reports the current `main` commit's Vercel status as successful. Treat this specifically as a ChatGPT/Vercel connector visibility or OAuth-scope issue, not as evidence that the Vexmera project is missing.
 
-Manual check: in Vercel, confirm which account/team owns the active Vexmera deployment and that the connected Vercel integration has access to that project.
+Manual action only if direct Vercel inspection is needed: reconnect/authorize the Vercel integration with access to the team/project that owns Vexmera. Do not change domains, DNS, secrets, credentials, project permissions or production settings as part of this check.
 
 ### 2. Google Ads manager link and API approval
 
-`DEPLOY_CHECKLIST.md` still records two external prerequisites:
+`DEPLOY_CHECKLIST.md` records external prerequisites around the Google Ads manager link and Google Ads API access. Keep all advertising behavior read-only/recommendation-only until those prerequisites are independently confirmed.
 
-- accept the pending manager-account link request for Google Ads account `638-343-6270`;
-- receive Google Ads API Basic Access approval.
-
-Do not enable ad execution while these remain unresolved. After linking is active, configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` only if required and verify read-only campaign sync first.
+Do not enable external ad execution, campaign changes, budget changes or bid changes as part of pilot preparation.
 
 ### 3. Stripe sandbox deployment reconciliation
 
-The application and test catalog are prepared, but deployment reconciliation remains incomplete in `DEPLOY_CHECKLIST.md`:
+Application code and readiness diagnostics are prepared, but final sandbox reconciliation remains an external/manual gate where deployment configuration or account-level Stripe state is involved. Required checks include matching the deployed test catalog, signed webhook behavior, Checkout/trial flow and Customer Portal behavior.
 
-- confirm the Vercel Stripe price variables reference the verified test prices;
-- confirm the configured Stripe secret key belongs to the same test account;
-- create/reconcile the test webhook endpoint;
-- verify `stripe_sandbox_ready=true`;
-- run an end-to-end sandbox Checkout, trial, signed webhook and Customer Portal test.
-
-These steps involve deployment secrets or external account configuration and therefore require manual handling.
+Do not change Stripe keys, Price IDs, billing settings or payment configuration autonomously.
 
 ### 4. Legal/pilot sign-off
 
@@ -60,7 +50,9 @@ Perform one authenticated browser pass on the actual deployed Command Center bef
 
 Do not start the five-company external pilot until all of the following are true:
 
-- the active Vercel project is visible/confirmed and production health can be inspected;
+- the active production deployment is confirmed and health can be inspected;
+- `/health/beta-readiness` reports `private_beta_execution_safe=true`;
+- `pilot_readiness.configuration_ready=true` with no configuration blockers;
 - external execution remains disabled;
 - required pilot connectors pass read-only sync checks;
 - Stripe sandbox readiness passes if billing is included in the pilot;
@@ -69,10 +61,10 @@ Do not start the five-company external pilot until all of the following are true
 
 ## Next safe autonomous work
 
-Once Vercel project visibility is restored, the next low-risk automated checks should be:
+When direct Vercel visibility becomes available, the next low-risk checks are:
 
-1. inspect production runtime errors and health diagnostics;
-2. compare the active deployment commit with GitHub `main`;
-3. verify no execution-safety regressions are present;
+1. inspect production runtime errors and non-secret health diagnostics;
+2. confirm the active deployment revision matches GitHub `main`;
+3. verify execution-safety diagnostics remain safe;
 4. inspect unresolved Vercel toolbar feedback;
 5. update this snapshot only when evidence changes.
