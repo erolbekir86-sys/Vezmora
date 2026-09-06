@@ -7,7 +7,7 @@ This file is a non-secret operational snapshot for the five-company private beta
 ## Verified healthy
 
 - GitHub repository is reachable, writable through the connected GitHub integration, and the default branch is `main`.
-- Latest observed `main` commit is `f9d3d24ada978be66b78031230e92378ac57728e` (`Test landing reveal fail-open guard`).
+- Latest observed `main` commit is `43d0a36058d2fc263a83cde070875a3dc48df7a9` (`Refresh pilot snapshot after frontend fail-open hardening`).
 - GitHub reports the Vercel status for that commit as `success`, confirming the GitHub -> Vercel deployment path completed for the current `main` revision.
 - The Python package identifies the product as `vexmera` version `0.6.1`.
 - CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment, beta readiness and public frontend asset smoke coverage.
@@ -25,11 +25,11 @@ This file is a non-secret operational snapshot for the five-company private beta
 
 ### 1. Direct Vercel connector visibility
 
-Rechecked 2026-09-06 after the latest successful deployment: the connected Vercel integration still returns zero teams. Direct project listing, production runtime logs, deployment inspection and toolbar feedback therefore remain unavailable through this connection.
+Rechecked 2026-09-06 after the latest successful deployment: the connected Vercel integration still returns zero teams. A direct deployment-list request against the known Vexmera scope also returns HTTP 403 with Vercel's explicit diagnosis that the current connection is not authorized for the `vezmora` scope and must be re-authenticated to that scope or use a connection with access to it.
 
-This does not indicate a broken deployment: GitHub reports the current `main` commit's Vercel status as successful. Treat this specifically as a ChatGPT/Vercel connector visibility or OAuth-scope issue, not as evidence that the Vexmera project is missing.
+This is stronger evidence than the earlier zero-team symptom alone: the Vexmera team scope is still recognized by Vercel, but the current connector session cannot access it. GitHub simultaneously reports the current `main` commit's Vercel status as successful, so this remains an integration authorization problem rather than evidence that the project or deployment was deleted.
 
-Manual action only if direct Vercel inspection is needed: reconnect/authorize the Vercel integration with access to the team/project that owns Vexmera. Do not change domains, DNS, secrets, credentials, project permissions or production settings as part of this check.
+Manual action only if direct Vercel inspection is needed: reconnect/authorize the Vercel integration with access to the existing `vezmora` team/project. Do not change domains, DNS, secrets, credentials, project permissions or production settings as part of this check.
 
 ### 2. Google Ads API approval
 
