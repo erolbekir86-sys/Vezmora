@@ -22,6 +22,22 @@ def test_non_empty_sync_does_not_get_empty_state_warning():
     assert guarded["warnings"] == []
 
 
+def test_ads_rows_prevent_false_empty_state_warning():
+    result = {"campaign_rows": 0, "ads_rows": 3, "warnings": []}
+
+    guarded = _with_empty_state_warning("Meta Ads", result, 7)
+
+    assert guarded["warnings"] == []
+
+
+def test_malformed_row_counts_are_treated_as_empty_safely():
+    result = {"campaign_rows": "unknown", "ads_rows": None, "warnings": []}
+
+    guarded = _with_empty_state_warning("Google Ads", result, 30)
+
+    assert len(guarded["warnings"]) == 1
+
+
 def test_empty_state_warning_is_idempotent():
     result = {"campaign_rows": 0, "warnings": []}
 
