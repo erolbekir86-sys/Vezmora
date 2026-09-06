@@ -17,6 +17,7 @@ def _clear(monkeypatch):
             "TURSO_DATABASE_URL",
             "TURSO_AUTH_TOKEN",
             "GOOGLE_ADS_DEVELOPER_TOKEN",
+            "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
             "VEZMORA_SERVERLESS",
             "VEZMORA_COOKIE_SECURE",
             "VERCEL",
@@ -62,6 +63,7 @@ def test_preflight_detects_accidentally_enabled_execution_and_dev_tokens(monkeyp
         "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
         "VEZMORA_DEV_SHOW_TOKENS",
     ]
+    assert "execution_locked" in report["pilot_readiness"]["configuration_blockers"]
 
 
 def test_preflight_rejects_insecure_production_transport(monkeypatch):
@@ -77,6 +79,7 @@ def test_preflight_rejects_insecure_production_transport(monkeypatch):
         "VEZMORA_APP_URL must use https in production",
         "VEZMORA_COOKIE_SECURE must not be disabled in production",
     ]
+    assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
 
 
 def test_preflight_allows_secure_production_transport(monkeypatch):
@@ -96,16 +99,27 @@ def test_preflight_reports_optional_service_readiness_without_secret_values(monk
     for name in preflight.CORE_REQUIRED:
         monkeypatch.setenv(name, f"secret-{name}")
     monkeypatch.setenv("DATABASE_URL", "postgresql://private-connection")
-    for name in preflight.BILLING + preflight.SMTP + preflight.GOOGLE_OAUTH + preflight.META_OAUTH:
+    for name in preflight.SMTP + preflight.GOOGLE_OAUTH + preflight.META_OAUTH:
         monkeypatch.setenv(name, f"secret-{name}")
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    for name, value in preflight.VERIFIED_STRIPE_SANDBOX_PRICES.items():
+        monkeypatch.setenv(name, value)
     monkeypatch.setenv("GOOGLE_ADS_DEVELOPER_TOKEN", "secret-developer-token")
+    monkeypatch.setenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID", "1234567890")
 
     report = preflight.build_report()
     assert report["billing_ready"] is True
+    assert report["stripe_key_mode"] == "test"
+    assert report["stripe_catalog_matches_verified_sandbox"] is True
+    assert report["stripe_sandbox_ready"] is True
     assert report["smtp_ready"] is True
     assert report["google_oauth_ready"] is True
     assert report["google_ads_developer_token_ready"] is True
+    assert report["google_ads_login_customer_id_ready"] is True
     assert report["meta_oauth_ready"] is True
+    assert report["pilot_readiness"]["configuration_ready"] is True
+    assert report["pilot_readiness"]["configuration_blockers"] == []
 
     preflight.print_report(report)
     output = capsys.readouterr().out
@@ -113,3 +127,25 @@ def test_preflight_reports_optional_service_readiness_without_secret_values(monk
     assert "postgresql://" not in output
     assert "private-beta execution locks: SAFE" in output
     assert "production transport: SAFE" in output
+    assert "Stripe sandbox: READY" in output
+    assert "pilot configuration: READY" in output
+
+
+def test_preflight_does_not_treat_merely_present_live_stripe_config_as_sandbox_ready(monkeypatch):
+    _clear(monkeypatch)
+    for name in preflight.CORE_REQUIRED:
+        monkeypatch.setenv(name, "configured")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://private-connection")
+    for name in preflight.SMTP + preflight.GOOGLE_OAUTH + preflight.META_OAUTH:
+        monkeypatch.setenv(name, "configured")
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    for name, value in preflight.VERIFIED_STRIPE_SANDBOX_PRICES.items():
+        monkeypatch.setenv(name, value)
+
+    report = preflight.build_report()
+    assert report["billing_ready"] is True
+    assert report["stripe_key_mode"] == "live"
+    assert report["stripe_sandbox_ready"] is False
+    assert report["pilot_readiness"]["configuration_ready"] is False
+    assert "stripe_sandbox_ready" in report["pilot_readiness"]["configuration_blockers"]
