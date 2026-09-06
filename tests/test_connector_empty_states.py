@@ -45,3 +45,29 @@ def test_empty_state_warning_is_idempotent():
     _with_empty_state_warning("Meta Ads", result, 90)
 
     assert len(result["warnings"]) == 1
+
+
+def test_error_result_is_not_reframed_as_healthy_empty_state():
+    result = {"error": "Provider unavailable", "status": 503}
+
+    guarded = _with_empty_state_warning("Google Ads", result, 7)
+
+    assert guarded is result
+    assert "warnings" not in guarded
+
+
+def test_http_error_status_is_not_reframed_as_healthy_empty_state():
+    result = {"status": "429", "campaign_rows": 0, "ads_rows": 0}
+
+    guarded = _with_empty_state_warning("Meta Ads", result, 7)
+
+    assert "warnings" not in guarded
+
+
+def test_existing_scalar_provider_warning_is_preserved():
+    result = {"campaign_rows": 0, "ads_rows": 0, "warnings": "Partial attribution data"}
+
+    guarded = _with_empty_state_warning("Meta Ads", result, 30)
+
+    assert guarded["warnings"][0] == "Partial attribution data"
+    assert any("No campaign data found" in warning for warning in guarded["warnings"])
