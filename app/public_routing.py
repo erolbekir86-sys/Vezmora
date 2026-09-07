@@ -98,6 +98,7 @@ def install_public_routing(app: FastAPI) -> None:
             '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg" fetchpriority="high" />\n'
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-icon-premium.css" />\n'
             '  <script src="/static/founder-photo-fix.js" defer></script>\n'
             '  <script src="/static/landing-runtime-safe.js" defer></script>\n'
             '  <script src="/static/landing-refine.js" defer></script>'
@@ -105,10 +106,13 @@ def install_public_routing(app: FastAPI) -> None:
         html = _inject_before_head_end(html, seo)
         # Load the visual premium layer after landing.js so it cannot be
         # overwritten by the landing script's dynamically appended CSS layers.
+        # The icon pass runs last and uses bounded retries so late-injected
+        # conversion cards receive the same icon system without a permanent observer.
         html = html.replace(
             '<script src="/static/landing.js" defer></script>',
             '<script src="/static/landing.js" defer></script>\n'
-            '  <script src="/static/landing-premium.js" defer></script>',
+            '  <script src="/static/landing-premium.js" defer></script>\n'
+            '  <script src="/static/landing-icon-premium.js" defer></script>',
             1,
         )
         html = _version_static_assets(html)
