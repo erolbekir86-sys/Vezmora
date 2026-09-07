@@ -103,6 +103,14 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/landing-refine.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
+        # Load the visual premium layer after landing.js so it cannot be
+        # overwritten by the landing script's dynamically appended CSS layers.
+        html = html.replace(
+            '<script src="/static/landing.js" defer></script>',
+            '<script src="/static/landing.js" defer></script>\n'
+            '  <script src="/static/landing-premium.js" defer></script>',
+            1,
+        )
         html = _version_static_assets(html)
         return HTMLResponse(html, headers=NO_STORE_HEADERS)
 
