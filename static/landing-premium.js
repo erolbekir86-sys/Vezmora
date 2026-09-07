@@ -3,18 +3,23 @@
 
   const build = window.__VEXMERA_BUILD__ || 'local';
 
-  // Vexmera's brand-first experience is dark. Apply it once for visitors who
-  // have not yet seen the new default, then keep respecting any later choice.
+  // Vexmera's brand-first experience is dark. Apply it once only when there is
+  // no valid saved preference, then keep respecting the visitor's explicit choice.
   function installDarkDefault() {
     try {
       const rolloutKey = 'vexmera-dark-default-v1';
       if (localStorage.getItem(rolloutKey) === '1') return;
-      localStorage.setItem('vexmera-theme', 'dark');
+
+      const savedTheme = localStorage.getItem('vexmera-theme');
+      const hasExplicitTheme = savedTheme === 'light' || savedTheme === 'dark';
+      const theme = hasExplicitTheme ? savedTheme : 'dark';
+
+      if (!hasExplicitTheme) localStorage.setItem('vexmera-theme', theme);
       localStorage.setItem(rolloutKey, '1');
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.documentElement.style.colorScheme = 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
       const themeColor = document.querySelector('meta[name="theme-color"]');
-      if (themeColor) themeColor.setAttribute('content', '#0f1319');
+      if (themeColor) themeColor.setAttribute('content', theme === 'dark' ? '#0f1319' : '#f7f3ec');
     } catch (_) {
       document.documentElement.setAttribute('data-theme', 'dark');
       document.documentElement.style.colorScheme = 'dark';
