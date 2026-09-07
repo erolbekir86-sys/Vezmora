@@ -108,6 +108,13 @@ def install_public_routing(app: FastAPI) -> None:
 
     async def product_shell() -> HTMLResponse:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
+        # The original app polish helper observes the whole dynamic product DOM.
+        # Use the stability-first one-shot helper in production so parallel app
+        # bootstrap updates cannot create a mutation storm and freeze the tab.
+        html = html.replace(
+            '<script src="/static/app-polish.js?v=1"></script>',
+            '<script src="/static/app-polish-safe.js"></script>',
+        )
         html = _inject_before_head_end(
             html,
             f'  <meta name="robots" content="noindex,nofollow" />\n'
