@@ -85,7 +85,7 @@ def install_public_routing(app: FastAPI) -> None:
             '    html.vexmera-reveal-js .reveal:not(.in-view){opacity:0!important;transform:translateY(18px)!important;filter:blur(2px)!important}\n'
             '    html.vexmera-reveal-js .reveal.in-view{opacity:1!important;transform:none!important;filter:none!important}\n'
             '  </style>\n'
-            '  <script>document.documentElement.classList.add("vexmera-reveal-js");'
+            '  <script>document.documentElement.classList.remove("vexmera-reveal-js");'
             'addEventListener("error",function(e){if(e.target&&e.target.tagName==="SCRIPT")document.documentElement.classList.remove("vexmera-reveal-js")},true);'
             'addEventListener("unhandledrejection",function(){document.documentElement.classList.remove("vexmera-reveal-js")});'
             f'window.__VEXMERA_BUILD__="{BUILD_ID}";</script>\n'
