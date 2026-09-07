@@ -321,7 +321,7 @@
 
   window.addEventListener('scroll',() => header?.classList.toggle('scrolled',window.scrollY>18),{passive:true});
 
-  if (!prefersReducedMotion.matches && window.matchMedia('(pointer:fine)').matches) {
+  if (false &&!prefersReducedMotion.matches && window.matchMedia('(pointer:fine)').matches) {
     let targetX=window.innerWidth/2,targetY=window.innerHeight/2,currentX=targetX,currentY=targetY;
     window.addEventListener('pointermove',(event) => { targetX=event.clientX; targetY=event.clientY; },{passive:true});
     const follow = () => {
