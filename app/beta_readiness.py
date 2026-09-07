@@ -90,6 +90,7 @@ def _pilot_readiness_snapshot(
     *,
     private_beta_execution_safe: bool,
     production_transport_safe: bool,
+    core_internal_secrets_configured: bool,
     remote_database_configured: bool,
     stripe_sandbox_ready: bool,
     google_oauth_configured: bool,
@@ -106,6 +107,7 @@ def _pilot_readiness_snapshot(
     checks = {
         "execution_locked": private_beta_execution_safe,
         "production_transport_safe": production_transport_safe,
+        "core_internal_secrets_configured": core_internal_secrets_configured,
         "remote_database_configured": remote_database_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
@@ -142,6 +144,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         or dev_show_tokens_enabled
     )
     transport = _transport_snapshot()
+    core_internal_secrets_configured = _all_configured("VEZMORA_SECRET_KEY", "CRON_SECRET")
     database = _database_snapshot()
     stripe_key_mode = _stripe_key_mode()
     stripe_catalog_configured = _all_configured(*VERIFIED_STRIPE_SANDBOX_PRICES.keys())
@@ -169,6 +172,7 @@ def beta_safety_snapshot() -> dict[str, object]:
     pilot_readiness = _pilot_readiness_snapshot(
         private_beta_execution_safe=private_beta_execution_safe,
         production_transport_safe=bool(transport["safe"]),
+        core_internal_secrets_configured=core_internal_secrets_configured,
         remote_database_configured=bool(database["remote_database_configured"]),
         stripe_sandbox_ready=stripe_sandbox_ready,
         google_oauth_configured=google_oauth_configured,
@@ -187,6 +191,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "dev_show_tokens_enabled": dev_show_tokens_enabled,
         "private_beta_execution_safe": private_beta_execution_safe,
         "production_transport_safe": bool(transport["safe"]),
+        "core_internal_secrets_configured": core_internal_secrets_configured,
         "transport": transport,
         "database": database,
         "stripe_key_mode": stripe_key_mode,
@@ -208,6 +213,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "pilot_readiness": pilot_readiness,
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
+            "Core internal-secret readiness requires both OAuth-token encryption and maintenance-endpoint secrets, but never returns either value.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
