@@ -3,6 +3,26 @@
 
   const build = window.__VEXMERA_BUILD__ || 'local';
 
+  // Vexmera's brand-first experience is dark. Apply it once for visitors who
+  // have not yet seen the new default, then keep respecting any later choice.
+  function installDarkDefault() {
+    try {
+      const rolloutKey = 'vexmera-dark-default-v1';
+      if (localStorage.getItem(rolloutKey) === '1') return;
+      localStorage.setItem('vexmera-theme', 'dark');
+      localStorage.setItem(rolloutKey, '1');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+      if (themeColor) themeColor.setAttribute('content', '#0f1319');
+    } catch (_) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
+    }
+  }
+
+  installDarkDefault();
+
   const addStylesheet = (href, marker) => {
     if (document.querySelector(`link[${marker}]`)) return;
     const link = document.createElement('link');
