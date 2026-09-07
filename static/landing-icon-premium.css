@@ -1,0 +1,184 @@
+/* Vexmera premium icon system
+   Purpose: richer, clearer iconography with a restrained dark-first SaaS feel. */
+
+:root{
+  --vex-icon-gold:#d5ae72;
+  --vex-icon-teal:#79b7aa;
+  --vex-icon-blue:#83a8d7;
+  --vex-icon-amber:#d69c62;
+  --vex-icon-violet:#9f9bd6;
+  --vex-icon-coral:#d98978;
+}
+
+.trust-icon,
+.value-card>.icon-box,
+.premium-outcome-icon,
+.beta-proof-icon,
+.module-letter.ux-symbol,
+.integration-card .source-logo.ux-source{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 auto!important;
+  overflow:hidden!important;
+  color:var(--icon-accent,var(--vex-icon-gold))!important;
+  border:1px solid color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 31%,rgba(255,255,255,.08))!important;
+  background:
+    radial-gradient(circle at 30% 22%,color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 18%,transparent),transparent 52%),
+    linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.025))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 10px 28px rgba(0,0,0,.18),
+    0 0 0 1px rgba(255,255,255,.015)!important;
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+
+.trust-icon::after,
+.value-card>.icon-box::after,
+.premium-outcome-icon::after,
+.beta-proof-icon::after,
+.module-letter.ux-symbol::after,
+.integration-card .source-logo.ux-source::after{
+  content:"";
+  position:absolute;
+  width:70%;
+  height:70%;
+  left:-28%;
+  top:-35%;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 26%,transparent);
+  filter:blur(13px);
+  opacity:.45;
+  pointer-events:none;
+}
+
+.trust-icon{width:48px!important;height:48px!important;border-radius:15px!important}
+.value-card>.icon-box{width:56px!important;height:56px!important;border-radius:18px!important;margin-bottom:22px!important}
+.premium-outcome-icon{width:54px!important;height:54px!important;border-radius:17px!important;margin-bottom:20px!important}
+.beta-proof-icon{width:50px!important;height:50px!important;border-radius:16px!important;margin-bottom:17px!important}
+.module-letter.ux-symbol{width:48px!important;height:48px!important;border-radius:15px!important}
+.integration-card .source-logo.ux-source{width:50px!important;height:50px!important;border-radius:16px!important}
+
+.vex-premium-icon{
+  position:relative;
+  z-index:2;
+  width:25px;
+  height:25px;
+  display:block;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.75;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 2px 8px color-mix(in srgb,currentColor 22%,transparent));
+}
+.value-card>.icon-box .vex-premium-icon,
+.premium-outcome-icon .vex-premium-icon{width:28px;height:28px}
+.module-letter.ux-symbol .vex-premium-icon,
+.integration-card .source-logo.ux-source .vex-premium-icon{width:24px;height:24px}
+
+/* Section-specific accent logic: restrained, not rainbow. */
+.trust-strip article:nth-child(1) .trust-icon{--icon-accent:var(--vex-icon-teal)}
+.trust-strip article:nth-child(2) .trust-icon{--icon-accent:var(--vex-icon-gold)}
+.trust-strip article:nth-child(3) .trust-icon{--icon-accent:var(--vex-icon-blue)}
+
+.value-card:nth-child(1)>.icon-box{--icon-accent:var(--vex-icon-teal)}
+.value-card:nth-child(2)>.icon-box{--icon-accent:var(--vex-icon-amber)}
+.value-card:nth-child(3)>.icon-box{--icon-accent:var(--vex-icon-blue)}
+
+.outcome-grid article:nth-child(1) .premium-outcome-icon{--icon-accent:var(--vex-icon-blue)}
+.outcome-grid article:nth-child(2) .premium-outcome-icon{--icon-accent:var(--vex-icon-gold)}
+.outcome-grid article:nth-child(3) .premium-outcome-icon{--icon-accent:var(--vex-icon-coral)}
+.outcome-grid article:nth-child(4) .premium-outcome-icon{--icon-accent:var(--vex-icon-teal)}
+
+.beta-proof-card:nth-child(1) .beta-proof-icon{--icon-accent:var(--vex-icon-gold)}
+.beta-proof-card:nth-child(2) .beta-proof-icon{--icon-accent:var(--vex-icon-blue)}
+.beta-proof-card:nth-child(3) .beta-proof-icon{--icon-accent:var(--vex-icon-teal)}
+
+.modules-section .module-card:nth-child(1) .module-letter{--icon-accent:var(--vex-icon-gold)}
+.modules-section .module-card:nth-child(2) .module-letter{--icon-accent:var(--vex-icon-blue)}
+.modules-section .module-card:nth-child(3) .module-letter{--icon-accent:var(--vex-icon-amber)}
+.modules-section .module-card:nth-child(4) .module-letter{--icon-accent:var(--vex-icon-teal)}
+
+.integration-card:nth-child(1) .source-logo{--icon-accent:#d7ad67}
+.integration-card:nth-child(2) .source-logo{--icon-accent:#7ea4df}
+.integration-card:nth-child(3) .source-logo{--icon-accent:#d69260}
+.integration-card:nth-child(4) .source-logo{--icon-accent:#89a4c5}
+.integration-card:nth-child(5) .source-logo{--icon-accent:#a2a8b0}
+.integration-card:nth-child(6) .source-logo{--icon-accent:#7eb19a}
+
+/* Security ticks become proper control/security symbols. */
+.security-grid span{
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  font-size:0!important;
+}
+.security-grid span b{font-size:13px!important;line-height:1.35!important}
+.security-grid span::before{
+  content:"";
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  border-radius:9px;
+  border:1px solid rgba(125,176,159,.24);
+  background:
+    center/16px 16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2379b7aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 19 6v5c0 4.4-2.8 7.6-7 9-4.2-1.4-7-4.6-7-9V6l7-3Z'/%3E%3Cpath d='m8.5 12 2.2 2.2 4.8-5'/%3E%3C/svg%3E"),
+    rgba(121,183,170,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* Existing inline checkmarks become compact premium tokens. */
+.hero-proof i,
+.check-list li::before{
+  border-color:rgba(121,183,170,.28)!important;
+  background:rgba(121,183,170,.10)!important;
+  color:#8ec7b9!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+/* Dashboard navigation keeps iconography consistent but quieter. */
+.dash-nav .vex-premium-icon{width:14px;height:14px;color:currentColor;filter:none}
+.dash-nav .ux-icon{opacity:.92}
+
+@media (hover:hover){
+  .trust-strip article:hover .trust-icon,
+  .value-card:hover>.icon-box,
+  .outcome-grid article:hover .premium-outcome-icon,
+  .beta-proof-card:hover .beta-proof-icon,
+  .module-card:hover .module-letter.ux-symbol,
+  .integration-card:hover .source-logo.ux-source{
+    transform:translateY(-2px) scale(1.025)!important;
+    border-color:color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 50%,rgba(255,255,255,.10))!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.13),
+      0 14px 32px rgba(0,0,0,.22),
+      0 0 24px color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 10%,transparent)!important;
+  }
+}
+
+html[data-theme="light"] .trust-icon,
+html[data-theme="light"] .value-card>.icon-box,
+html[data-theme="light"] .premium-outcome-icon,
+html[data-theme="light"] .beta-proof-icon,
+html[data-theme="light"] .module-letter.ux-symbol,
+html[data-theme="light"] .integration-card .source-logo.ux-source{
+  background:
+    radial-gradient(circle at 30% 22%,color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 15%,transparent),transparent 52%),
+    linear-gradient(150deg,rgba(255,255,255,.92),rgba(246,241,233,.88))!important;
+  border-color:color-mix(in srgb,var(--icon-accent,var(--vex-icon-gold)) 25%,rgba(93,76,54,.15))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 10px 26px rgba(54,42,27,.08)!important;
+}
+
+@media (max-width:900px){
+  .trust-icon{width:44px!important;height:44px!important;border-radius:14px!important}
+  .value-card>.icon-box{width:52px!important;height:52px!important;border-radius:16px!important}
+  .premium-outcome-icon{width:50px!important;height:50px!important;border-radius:16px!important}
+  .vex-premium-icon{width:24px;height:24px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .trust-icon,.value-card>.icon-box,.premium-outcome-icon,.beta-proof-icon,.module-letter.ux-symbol,.integration-card .source-logo.ux-source{transition:none!important;transform:none!important}
+}
