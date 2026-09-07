@@ -99,7 +99,7 @@ def install_public_routing(app: FastAPI) -> None:
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
             '  <script src="/static/founder-photo-fix.js" defer></script>\n'
-            '  <script src="/static/landing-ux.js" defer></script>\n'
+            '  <script src="/static/landing-runtime-safe.js" defer></script>\n'
             '  <script src="/static/landing-refine.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
