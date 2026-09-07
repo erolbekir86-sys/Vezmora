@@ -219,11 +219,19 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
         "production_observability_verified",
         "final_authenticated_browser_qa",
         "privacy_terms_legal_review",
+        "public_pricing_backend_and_stripe_sandbox_reconciled",
         "google_ads_external_approval_and_manager_link_if_required",
         "google_ads_live_read_only_sync_verified",
         "meta_ads_live_read_only_sync_verified",
         "fresh_stripe_sandbox_end_to_end_test",
     ]
+
+
+def test_pricing_reconciliation_remains_an_explicit_pilot_gate(monkeypatch):
+    _clear(monkeypatch)
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert "public_pricing_backend_and_stripe_sandbox_reconciled" in snapshot["pilot_readiness"]["manual_gates"]
+    assert any("public pricing" in note.lower() and "sandbox" in note.lower() for note in snapshot["notes"])
 
 
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
