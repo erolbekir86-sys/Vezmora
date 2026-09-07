@@ -91,7 +91,7 @@
 .outcome-grid article:nth-child(1) .premium-outcome-icon{--icon-accent:var(--vex-icon-blue)}
 .outcome-grid article:nth-child(2) .premium-outcome-icon{--icon-accent:var(--vex-icon-gold)}
 .outcome-grid article:nth-child(3) .premium-outcome-icon{--icon-accent:var(--vex-icon-coral)}
-.outcome-grid article:nth-child(4) .premium-outcome-icon{--icon-accent:var(--vex-icon-teal)}
+.outcome-grid article:nth-child(4) .premium-outcome-icon{--icon-accent:var(--vex-icon-gold)}
 
 .beta-proof-card:nth-child(1) .beta-proof-icon{--icon-accent:var(--vex-icon-gold)}
 .beta-proof-card:nth-child(2) .beta-proof-icon{--icon-accent:var(--vex-icon-blue)}
