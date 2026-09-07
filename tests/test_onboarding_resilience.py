@@ -82,3 +82,57 @@ def test_invalid_timezone_cannot_complete_onboarding(tmp_path, monkeypatch):
         company = client.get(f"/api/company?workspace_id={workspace_id}")
         assert company.status_code == 200
         assert company.json() is None
+
+
+def test_failed_completion_preserves_existing_partial_profile(tmp_path, monkeypatch):
+    """A validation error must not erase the pilot user's already-entered answers."""
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "onboarding-preserve-partial.db")
+    store.init_db()
+
+    with TestClient(app) as client:
+        workspace_id = _register(client, "preserve-partial@example.com")
+        partial = _profile()
+        partial["growth_target"] = "Keep this answer after a failed submit"
+
+        saved = client.put(f"/api/onboarding?workspace_id={workspace_id}", json=partial)
+        assert saved.status_code == 200
+
+        failed = client.post(
+            f"/api/onboarding/complete?workspace_id={workspace_id}",
+            json=_profile(timezone="Not/A_Real_Timezone"),
+        )
+        assert failed.status_code == 400
+
+        restored = client.get(f"/api/onboarding?workspace_id={workspace_id}")
+        assert restored.status_code == 200
+        state = restored.json()
+        assert state["completed"] is False
+        assert state["data"]["company_name"] == "Pilot Bakery"
+        assert state["data"]["growth_target"] == "Keep this answer after a failed submit"
+
+
+def test_autosave_after_completion_does_not_reopen_onboarding(tmp_path, monkeypatch):
+    """A late autosave must not send a completed pilot customer back into onboarding."""
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "onboarding-completed-autosave.db")
+    store.init_db()
+
+    with TestClient(app) as client:
+        workspace_id = _register(client, "completed-autosave@example.com")
+        completed = client.post(
+            f"/api/onboarding/complete?workspace_id={workspace_id}",
+            json=_profile(),
+        )
+        assert completed.status_code == 200
+        assert completed.json()["completed"] is True
+
+        updated = _profile()
+        updated["growth_target"] = "Updated after completion"
+        autosave = client.put(f"/api/onboarding?workspace_id={workspace_id}", json=updated)
+        assert autosave.status_code == 200
+
+        restored = client.get(f"/api/onboarding?workspace_id={workspace_id}")
+        assert restored.status_code == 200
+        state = restored.json()
+        assert state["completed"] is True
+        assert state["completed_at"]
+        assert state["data"]["growth_target"] == "Updated after completion"
