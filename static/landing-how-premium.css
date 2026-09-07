@@ -1,0 +1,211 @@
+/* Vexmera: premium step-by-step treatment for "Så fungerar det".
+   Keeps the process calm, centered and visually consistent with the premium icon cards. */
+
+.how-section .steps-line,
+.how-section .step-number,
+.how-section .step-visual{
+  display:none!important;
+}
+
+.how-section .steps{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:64px!important;
+  align-items:stretch!important;
+  overflow:visible!important;
+}
+
+.how-section .steps .step{
+  --how-accent:#d5ae72;
+  position:relative!important;
+  overflow:visible!important;
+  min-height:350px!important;
+  padding:148px 30px 38px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  text-align:center!important;
+  border-radius:32px!important;
+  border:1px solid rgba(213,174,114,.16)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(213,174,114,.055),transparent 36%),
+    linear-gradient(160deg,rgba(26,32,41,.94),rgba(16,21,28,.96))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    0 18px 48px rgba(0,0,0,.22)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+
+.how-section .steps .step:nth-child(2){--how-accent:#caa66a}
+.how-section .steps .step:nth-child(3){--how-accent:#d8b777}
+
+/* Replace the old top line / side glyph with one centered premium icon tile. */
+.how-section .steps .step::before{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:36px!important;
+  right:auto!important;
+  width:86px!important;
+  height:86px!important;
+  transform:translateX(-50%)!important;
+  border-radius:24px!important;
+  border:1px solid color-mix(in srgb,var(--how-accent) 36%,rgba(255,255,255,.06))!important;
+  background:
+    center/44px 44px no-repeat var(--how-icon),
+    radial-gradient(circle at 28% 20%,color-mix(in srgb,var(--how-accent) 19%,transparent),transparent 52%),
+    linear-gradient(145deg,rgba(39,47,58,.98),rgba(17,22,29,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 16px 36px rgba(0,0,0,.30),
+    0 0 30px color-mix(in srgb,var(--how-accent) 8%,transparent)!important;
+  opacity:1!important;
+  pointer-events:none!important;
+}
+
+.how-section .steps .step:nth-child(1){
+  --how-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23d5ae72' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='24' r='5'/%3E%3Ccircle cx='36' cy='14' r='5'/%3E%3Ccircle cx='36' cy='34' r='5'/%3E%3Cpath d='M17 22l14-6M17 26l14 6'/%3E%3Ccircle cx='24' cy='24' r='3.2' fill='%23d5ae72' stroke='none'/%3E%3C/svg%3E");
+}
+.how-section .steps .step:nth-child(2){
+  --how-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23d5ae72' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='24' cy='24' r='10'/%3E%3Cpath d='M24 7v5M24 36v5M7 24h5M36 24h5'/%3E%3Cpath d='M17 17l3.6 3.6M31 17l-3.6 3.6M17 31l3.6-3.6M31 31l-3.6-3.6'/%3E%3Cpath d='M24 17l2.1 4.9L31 24l-4.9 2.1L24 31l-2.1-4.9L17 24l4.9-2.1L24 17Z' fill='%23d5ae72' stroke='none'/%3E%3C/svg%3E");
+}
+.how-section .steps .step:nth-child(3){
+  --how-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23d5ae72' stroke-width='2.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='24' cy='24' r='15'/%3E%3Cpath d='M18 30L31 17M23 17h8v8'/%3E%3Cpath d='M15 33h18' opacity='.55'/%3E%3C/svg%3E");
+}
+
+/* Remove every legacy side marker from the cards. */
+.how-section .steps .step::after{
+  content:none!important;
+  display:none!important;
+}
+
+.how-section .steps .step h3{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  max-width:18ch!important;
+  margin:0 auto 14px!important;
+  text-align:center!important;
+  font-size:clamp(23px,1.7vw,28px)!important;
+  line-height:1.12!important;
+  letter-spacing:-.025em!important;
+}
+
+.how-section .steps .step>p{
+  position:relative!important;
+  z-index:2!important;
+  max-width:31ch!important;
+  margin:0 auto!important;
+  text-align:center!important;
+  color:#b8c0cb!important;
+  font-size:16px!important;
+  line-height:1.62!important;
+  text-wrap:pretty!important;
+}
+
+/* One clear directional connector between cards. */
+.how-section .steps .step:not(:last-child)>p::after{
+  content:"→"!important;
+  position:absolute!important;
+  top:50%!important;
+  right:-58px!important;
+  left:auto!important;
+  bottom:auto!important;
+  width:38px!important;
+  height:38px!important;
+  display:grid!important;
+  place-items:center!important;
+  transform:translateY(-50%)!important;
+  border-radius:999px!important;
+  color:#d5ae72!important;
+  background:rgba(20,25,32,.94)!important;
+  border:1px solid rgba(213,174,114,.28)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)!important;
+  font-size:23px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  filter:none!important;
+  animation:howFlowX 3.2s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+
+@keyframes howFlowX{
+  0%,100%{translate:-2px 0;opacity:.72}
+  50%{translate:3px 0;opacity:1}
+}
+@keyframes howFlowY{
+  0%,100%{translate:0 -2px;opacity:.72}
+  50%{translate:0 3px;opacity:1}
+}
+
+html[data-theme="light"] .how-section .steps .step{
+  border-color:rgba(120,91,54,.13)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(184,139,73,.05),transparent 36%),
+    linear-gradient(160deg,rgba(255,255,255,.94),rgba(247,242,234,.96))!important;
+  box-shadow:0 18px 48px rgba(55,42,26,.08),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+html[data-theme="light"] .how-section .steps .step>p{color:#5e6670!important}
+html[data-theme="light"] .how-section .steps .step:not(:last-child)>p::after{
+  background:rgba(252,248,241,.96)!important;
+  border-color:rgba(184,139,73,.24)!important;
+  box-shadow:0 10px 24px rgba(55,42,26,.08),inset 0 1px 0 rgba(255,255,255,.9)!important;
+}
+
+@media (hover:hover){
+  .how-section .steps .step:hover{
+    transform:translateY(-4px)!important;
+    border-color:rgba(213,174,114,.28)!important;
+    box-shadow:0 24px 62px rgba(0,0,0,.29),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  }
+  .how-section .steps .step:hover::before{
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.12),
+      0 18px 40px rgba(0,0,0,.34),
+      0 0 34px color-mix(in srgb,var(--how-accent) 12%,transparent)!important;
+  }
+}
+
+@media (max-width:900px){
+  .how-section .steps{
+    grid-template-columns:1fr!important;
+    gap:62px!important;
+  }
+  .how-section .steps .step{
+    min-height:0!important;
+    padding:142px 28px 38px!important;
+    border-radius:30px!important;
+  }
+  .how-section .steps .step::before{
+    top:32px!important;
+    width:82px!important;
+    height:82px!important;
+    border-radius:23px!important;
+    background-size:42px 42px,auto,auto!important;
+  }
+  .how-section .steps .step h3{
+    max-width:17ch!important;
+    font-size:26px!important;
+  }
+  .how-section .steps .step>p{
+    max-width:30ch!important;
+    font-size:16px!important;
+  }
+  .how-section .steps .step:not(:last-child)>p::after{
+    content:"↓"!important;
+    left:50%!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:-52px!important;
+    transform:translateX(-50%)!important;
+    animation:howFlowY 3.2s ease-in-out infinite!important;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .how-section .steps .step:not(:last-child)>p::after{animation:none!important}
+  .how-section .steps .step:hover{transform:none!important}
+}
