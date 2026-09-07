@@ -17,6 +17,11 @@ def _asset_path(url: str) -> str:
     return url.split('?', 1)[0]
 
 
+def _dynamic_assets_from(loader_name: str) -> set[str]:
+    loader = (_ROOT / 'static' / loader_name).read_text(encoding='utf-8')
+    return set(_DYNAMIC_ASSET_RE.findall(loader))
+
+
 def test_public_frontend_shells_and_local_assets_are_non_empty():
     """Catch deployments where HTML renders but a critical local asset is missing/empty.
 
@@ -36,20 +41,24 @@ def test_public_frontend_shells_and_local_assets_are_non_empty():
         asset_urls = set(_STATIC_ASSET_RE.findall(landing.text))
         asset_urls.update(_STATIC_ASSET_RE.findall(product.text))
 
-        # The premium landing loader injects additional assets at runtime. Those
-        # references do not appear in the server-rendered HTML, so include them in
-        # the packaging smoke test explicitly to prevent a "200 but blank/broken"
-        # deployment when a dynamically loaded file is missing.
-        premium_loader = (_ROOT / 'static' / 'landing-premium.js').read_text(encoding='utf-8')
-        asset_urls.update(_DYNAMIC_ASSET_RE.findall(premium_loader))
+        # Runtime loaders inject additional assets that never appear in the
+        # server-rendered HTML. Include both the marketing and authenticated-app
+        # loaders so CI catches missing packaged files before a deploy reaches users.
+        asset_urls.update(_dynamic_assets_from('landing-premium.js'))
+        asset_urls.update(_dynamic_assets_from('app-polish-safe.js'))
 
-        # A blank-page regression is especially likely if the main JS/CSS shells
-        # stop being referenced or stop being packaged. Keep these explicit gates.
+        normalized = {_asset_path(url) for url in asset_urls}
+
+        # A blank-page or broken-shell regression is especially likely if these
+        # entrypoints or their dynamically loaded companion assets disappear.
         assert any('/static/landing.js' in url for url in asset_urls)
         assert any('/static/app.js' in url for url in asset_urls)
-        assert '/static/landing-premium.js' in {_asset_path(url) for url in asset_urls}
-        assert '/static/landing-conversion.js' in {_asset_path(url) for url in asset_urls}
-        assert '/static/landing-ai-workflow.css' in {_asset_path(url) for url in asset_urls}
+        assert '/static/landing-premium.js' in normalized
+        assert '/static/landing-conversion.js' in normalized
+        assert '/static/landing-ai-workflow.css' in normalized
+        assert '/static/app-polish-safe.js' in normalized
+        assert '/static/app-modern.css' in normalized
+        assert '/static/auth-contrast.css' in normalized
         assert any(url.endswith('.css') or '.css?' in url for url in asset_urls)
 
         for url in sorted(asset_urls):
