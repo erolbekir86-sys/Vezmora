@@ -93,6 +93,7 @@ def _pilot_readiness_snapshot(
     remote_database_configured: bool,
     stripe_sandbox_ready: bool,
     google_oauth_configured: bool,
+    google_ads_api_configured: bool,
     meta_oauth_configured: bool,
     smtp_minimum_configured: bool,
 ) -> dict[str, object]:
@@ -108,6 +109,7 @@ def _pilot_readiness_snapshot(
         "remote_database_configured": remote_database_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
+        "google_ads_api_configured": google_ads_api_configured,
         "meta_oauth_configured": meta_oauth_configured,
         "transactional_email_configured": smtp_minimum_configured,
     }
@@ -155,6 +157,8 @@ def beta_safety_snapshot() -> dict[str, object]:
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_REDIRECT_URI",
     )
+    google_ads_developer_token_configured = _configured("GOOGLE_ADS_DEVELOPER_TOKEN")
+    google_ads_login_customer_id_configured = _configured("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
     meta_oauth_configured = _all_configured(
         "META_APP_ID",
         "META_APP_SECRET",
@@ -168,6 +172,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         remote_database_configured=bool(database["remote_database_configured"]),
         stripe_sandbox_ready=stripe_sandbox_ready,
         google_oauth_configured=google_oauth_configured,
+        google_ads_api_configured=google_ads_developer_token_configured,
         meta_oauth_configured=meta_oauth_configured,
         smtp_minimum_configured=smtp_minimum_configured,
     )
@@ -190,8 +195,8 @@ def beta_safety_snapshot() -> dict[str, object]:
         "stripe_webhook_env_configured": stripe_webhook_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
-        "google_ads_developer_token_configured": _configured("GOOGLE_ADS_DEVELOPER_TOKEN"),
-        "google_ads_login_customer_id_configured": _configured("GOOGLE_ADS_LOGIN_CUSTOMER_ID"),
+        "google_ads_developer_token_configured": google_ads_developer_token_configured,
+        "google_ads_login_customer_id_configured": google_ads_login_customer_id_configured,
         "meta_oauth_configured": meta_oauth_configured,
         "smtp_minimum_configured": smtp_minimum_configured,
         "privacy_controls": {
@@ -206,6 +211,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
+            "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
