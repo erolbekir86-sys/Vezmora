@@ -53,6 +53,8 @@
   addStylesheet(`/static/landing-ai-recommendation.css?build=${encodeURIComponent(build)}`, 'data-vexmera-ai-recommendation');
   addStylesheet(`/static/landing-ai-approval.css?build=${encodeURIComponent(build)}`, 'data-vexmera-ai-approval');
   addStylesheet(`/static/landing-ai-action.css?build=${encodeURIComponent(build)}`, 'data-vexmera-ai-action');
+  addStylesheet(`/static/landing-workflow-premium.css?build=${encodeURIComponent(build)}`, 'data-vexmera-workflow-premium');
+  addScript(`/static/landing-workflow-premium.js?build=${encodeURIComponent(build)}`, 'data-vexmera-workflow-premium-script');
   addScript(`/static/landing-conversion.js?build=${encodeURIComponent(build)}`, 'data-vexmera-conversion-script');
 
   const icons = {
