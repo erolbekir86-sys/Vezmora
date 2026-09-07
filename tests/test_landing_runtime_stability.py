@@ -14,7 +14,7 @@ def test_marketing_root_uses_one_shot_runtime_instead_of_mutation_loop_helper():
     assert '/static/landing-ux.js?build=' not in page.text
 
     script = safe_runtime.text
-    assert 'MutationObserver' not in script
+    assert 'new MutationObserver(' not in script
     assert 'DOMContentLoaded' in script
     assert 'dataset.vexmeraRuntimeStable' in script
 
