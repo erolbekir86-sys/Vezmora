@@ -90,7 +90,6 @@ def _pilot_readiness_snapshot(
     *,
     private_beta_execution_safe: bool,
     production_transport_safe: bool,
-    core_internal_secrets_configured: bool,
     remote_database_configured: bool,
     stripe_sandbox_ready: bool,
     google_oauth_configured: bool,
@@ -107,7 +106,6 @@ def _pilot_readiness_snapshot(
     checks = {
         "execution_locked": private_beta_execution_safe,
         "production_transport_safe": production_transport_safe,
-        "core_internal_secrets_configured": core_internal_secrets_configured,
         "remote_database_configured": remote_database_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
@@ -172,7 +170,6 @@ def beta_safety_snapshot() -> dict[str, object]:
     pilot_readiness = _pilot_readiness_snapshot(
         private_beta_execution_safe=private_beta_execution_safe,
         production_transport_safe=bool(transport["safe"]),
-        core_internal_secrets_configured=core_internal_secrets_configured,
         remote_database_configured=bool(database["remote_database_configured"]),
         stripe_sandbox_ready=stripe_sandbox_ready,
         google_oauth_configured=google_oauth_configured,
@@ -213,7 +210,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "pilot_readiness": pilot_readiness,
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
-            "Core internal-secret readiness requires both OAuth-token encryption and maintenance-endpoint secrets, but never returns either value.",
+            "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
