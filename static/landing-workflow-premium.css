@@ -1,0 +1,239 @@
+/* Vexmera Autopilot premium cards
+   A centered, content-rich workflow that stays calm and dark-first. */
+
+.workflow-section .workflow{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr) 44px minmax(0,1fr) 44px minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+  overflow:visible!important;
+}
+
+.workflow-section .workflow-node{
+  --wf-accent:#d5ae72;
+  position:relative!important;
+  min-height:292px!important;
+  padding:34px 24px 30px!important;
+  border-radius:28px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  text-align:center!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  border:1px solid rgba(213,174,114,.16)!important;
+  background:#141a22!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.045),
+    0 18px 48px rgba(0,0,0,.24)!important;
+}
+.workflow-section .workflow-node:nth-of-type(2){--wf-accent:#caa66a}
+.workflow-section .workflow-node:nth-of-type(3){--wf-accent:#dec08d}
+.workflow-section .workflow-node:nth-of-type(4){--wf-accent:#d7ad67}
+
+/* Existing AI photo layer stays atmospheric rather than becoming the focal point. */
+html[data-theme="dark"] .workflow-section .workflow-node::before{
+  opacity:.17!important;
+  filter:saturate(.82) contrast(1.03) brightness(.70)!important;
+}
+html[data-theme="dark"] .workflow-section .workflow-node::after{
+  background:
+    linear-gradient(180deg,rgba(10,14,20,.34) 0%,rgba(10,14,20,.62) 48%,rgba(10,14,20,.92) 100%),
+    radial-gradient(circle at 50% 5%,color-mix(in srgb,var(--wf-accent) 10%,transparent),transparent 42%)!important;
+}
+
+.workflow-section .workflow-node>span:first-child{display:none!important}
+
+.workflow-premium-icon{
+  position:relative!important;
+  z-index:3!important;
+  width:76px!important;
+  height:76px!important;
+  min-width:76px!important;
+  min-height:76px!important;
+  margin:0 auto 24px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:22px!important;
+  color:var(--wf-accent)!important;
+  border:1px solid color-mix(in srgb,var(--wf-accent) 38%,rgba(255,255,255,.06))!important;
+  background:
+    radial-gradient(circle at 28% 20%,color-mix(in srgb,var(--wf-accent) 20%,transparent),transparent 54%),
+    linear-gradient(145deg,rgba(40,48,59,.98),rgba(18,23,30,.98))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.11),
+    0 15px 34px rgba(0,0,0,.30),
+    0 0 28px color-mix(in srgb,var(--wf-accent) 8%,transparent)!important;
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+.workflow-premium-icon svg{
+  width:38px!important;
+  height:38px!important;
+  display:block!important;
+  fill:none!important;
+  stroke:currentColor!important;
+  stroke-width:1.8!important;
+  stroke-linecap:round!important;
+  stroke-linejoin:round!important;
+  filter:drop-shadow(0 3px 10px color-mix(in srgb,var(--wf-accent) 18%,transparent))!important;
+}
+
+.workflow-section .workflow-node strong{
+  position:relative!important;
+  z-index:3!important;
+  display:block!important;
+  width:100%!important;
+  max-width:18ch!important;
+  margin:0 auto 12px!important;
+  color:#f7f4ed!important;
+  font-size:22px!important;
+  line-height:1.14!important;
+  letter-spacing:-.025em!important;
+  text-align:center!important;
+  text-shadow:none!important;
+}
+.workflow-section .workflow-node small{
+  position:relative!important;
+  z-index:3!important;
+  display:block!important;
+  width:100%!important;
+  max-width:27ch!important;
+  margin:0 auto!important;
+  color:#b9c1cc!important;
+  font-size:15px!important;
+  line-height:1.58!important;
+  text-align:center!important;
+  text-shadow:none!important;
+  text-wrap:pretty!important;
+}
+
+/* Premium direction cues between the four cards. */
+.workflow-section .workflow>i{
+  position:relative!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  min-height:42px!important;
+  display:grid!important;
+  place-items:center!important;
+  margin:0!important;
+  border-radius:999px!important;
+  color:#d5ae72!important;
+  background:rgba(20,25,32,.94)!important;
+  border:1px solid rgba(213,174,114,.27)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)!important;
+  font-size:0!important;
+  overflow:visible!important;
+  z-index:4!important;
+}
+.workflow-section .workflow>i::before{
+  content:"→"!important;
+  display:block!important;
+  font-size:24px!important;
+  line-height:1!important;
+  font-weight:500!important;
+  animation:vexWorkflowPremiumX 3.1s ease-in-out infinite!important;
+}
+
+@keyframes vexWorkflowPremiumX{
+  0%,100%{translate:-2px 0;opacity:.72}
+  50%{translate:3px 0;opacity:1}
+}
+@keyframes vexWorkflowPremiumY{
+  0%,100%{translate:0 -2px;opacity:.72}
+  50%{translate:0 3px;opacity:1}
+}
+
+@media (hover:hover){
+  .workflow-section .workflow-node:hover{
+    transform:translateY(-4px)!important;
+    border-color:rgba(213,174,114,.29)!important;
+    box-shadow:0 24px 62px rgba(0,0,0,.31),inset 0 1px 0 rgba(255,255,255,.055)!important;
+  }
+  .workflow-section .workflow-node:hover .workflow-premium-icon{
+    transform:translateY(-2px) scale(1.025)!important;
+    border-color:color-mix(in srgb,var(--wf-accent) 52%,rgba(255,255,255,.08))!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.13),
+      0 18px 40px rgba(0,0,0,.34),
+      0 0 32px color-mix(in srgb,var(--wf-accent) 12%,transparent)!important;
+  }
+}
+
+html[data-theme="light"] .workflow-section .workflow-node{
+  background:#f8f4ed!important;
+  border-color:rgba(123,94,56,.14)!important;
+  box-shadow:0 16px 42px rgba(52,40,25,.08),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+html[data-theme="light"] .workflow-section .workflow-node::before{opacity:.10!important;filter:saturate(.72) contrast(1.01) brightness(1.08)!important}
+html[data-theme="light"] .workflow-section .workflow-node::after{
+  background:linear-gradient(180deg,rgba(255,255,255,.60),rgba(248,244,237,.82) 58%,rgba(248,244,237,.96))!important;
+}
+html[data-theme="light"] .workflow-section .workflow-node strong{color:#1c2128!important}
+html[data-theme="light"] .workflow-section .workflow-node small{color:#5d6671!important}
+html[data-theme="light"] .workflow-premium-icon{
+  background:
+    radial-gradient(circle at 28% 20%,color-mix(in srgb,var(--wf-accent) 15%,transparent),transparent 54%),
+    linear-gradient(145deg,rgba(255,255,255,.96),rgba(244,239,231,.95))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 13px 30px rgba(55,42,26,.09)!important;
+}
+html[data-theme="light"] .workflow-section .workflow>i{
+  background:rgba(252,248,241,.97)!important;
+  border-color:rgba(184,139,73,.24)!important;
+  box-shadow:0 9px 24px rgba(55,42,26,.08),inset 0 1px 0 rgba(255,255,255,.92)!important;
+}
+
+@media (max-width:1050px) and (min-width:901px){
+  .workflow-section .workflow{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:26px!important;
+  }
+  .workflow-section .workflow>i{display:none!important}
+  .workflow-section .workflow-node{min-height:270px!important}
+}
+
+@media (max-width:900px){
+  .workflow-section .workflow{
+    grid-template-columns:1fr!important;
+    gap:58px!important;
+  }
+  .workflow-section .workflow-node{
+    min-height:0!important;
+    padding:30px 26px 32px!important;
+    border-radius:28px!important;
+  }
+  .workflow-premium-icon{
+    width:72px!important;
+    height:72px!important;
+    min-width:72px!important;
+    min-height:72px!important;
+    margin-bottom:22px!important;
+    border-radius:21px!important;
+  }
+  .workflow-premium-icon svg{width:36px!important;height:36px!important}
+  .workflow-section .workflow-node strong{font-size:24px!important;max-width:18ch!important}
+  .workflow-section .workflow-node small{font-size:16px!important;max-width:29ch!important;line-height:1.55!important}
+  .workflow-section .workflow>i{
+    position:absolute!important;
+    left:50%!important;
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    min-height:40px!important;
+    transform:translateX(-50%)!important;
+  }
+  .workflow-section .workflow>i:nth-of-type(1){top:calc(25% - 20px)!important}
+  .workflow-section .workflow>i:nth-of-type(2){top:calc(50% - 20px)!important}
+  .workflow-section .workflow>i:nth-of-type(3){top:calc(75% - 20px)!important}
+  .workflow-section .workflow>i::before{content:"↓"!important;animation:vexWorkflowPremiumY 3.1s ease-in-out infinite!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .workflow-section .workflow>i::before{animation:none!important}
+  .workflow-section .workflow-node,.workflow-premium-icon{transition:none!important;transform:none!important}
+}
