@@ -12,8 +12,18 @@
     document.head.appendChild(link);
   };
 
+  const addScript = (src, marker) => {
+    if (document.querySelector(`script[${marker}]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    script.setAttribute(marker, 'true');
+    document.head.appendChild(script);
+  };
+
   addStylesheet(`/static/landing-premium.css?build=${encodeURIComponent(build)}`, 'data-vexmera-premium');
   addStylesheet(`/static/landing-mobile-final.css?build=${encodeURIComponent(build)}`, 'data-vexmera-mobile-final');
+  addScript(`/static/landing-conversion.js?build=${encodeURIComponent(build)}`, 'data-vexmera-conversion-script');
 
   const icons = {
     simple: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
