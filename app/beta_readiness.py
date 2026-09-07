@@ -99,7 +99,8 @@ def _pilot_readiness_snapshot(
     """Summarize configuration-only blockers for the five-company pilot.
 
     This deliberately does not claim third-party approvals, successful live account
-    linking, legal sign-off, or browser QA. Those remain explicit manual gates.
+    linking, legal sign-off, production observability, or browser QA. Those remain
+    explicit manual gates even when configuration_ready is true.
     """
     checks = {
         "execution_locked": private_beta_execution_safe,
@@ -116,9 +117,12 @@ def _pilot_readiness_snapshot(
         "checks": checks,
         "configuration_blockers": blockers,
         "manual_gates": [
+            "production_observability_verified",
             "final_authenticated_browser_qa",
             "privacy_terms_legal_review",
             "google_ads_external_approval_and_manager_link_if_required",
+            "google_ads_live_read_only_sync_verified",
+            "meta_ads_live_read_only_sync_verified",
             "fresh_stripe_sandbox_end_to_end_test",
         ],
     }
@@ -201,7 +205,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Configuration booleans do not prove third-party approval or account access.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
-            "Pilot readiness is configuration-only; manual gates remain required before external onboarding.",
+            "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
