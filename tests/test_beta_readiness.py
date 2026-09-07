@@ -28,6 +28,7 @@ def _clear(monkeypatch):
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_REDIRECT_URI",
         "GOOGLE_ADS_DEVELOPER_TOKEN",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
         "META_APP_ID",
         "META_APP_SECRET",
         "META_REDIRECT_URI",
@@ -56,6 +57,8 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     assert snapshot["stripe_key_mode"] == "missing"
     assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
     assert snapshot["stripe_sandbox_ready"] is False
+    assert snapshot["google_ads_developer_token_configured"] is False
+    assert snapshot["google_ads_login_customer_id_configured"] is False
     assert snapshot["privacy_controls"] == {
         "connector_disconnect": True,
         "scoped_synced_history_deletion": True,
@@ -67,6 +70,7 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
         "remote_database_configured",
         "stripe_sandbox_ready",
         "google_oauth_configured",
+        "google_ads_api_configured",
         "meta_oauth_configured",
         "transactional_email_configured",
     ]
@@ -172,6 +176,19 @@ def test_beta_readiness_detects_live_key_or_wrong_sandbox_catalog(monkeypatch):
     assert snapshot["stripe_sandbox_ready"] is False
 
 
+def test_beta_readiness_marks_google_ads_api_config_incomplete_without_developer_token(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client-private")
+    monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret-private")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.test/google")
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["google_oauth_configured"] is True
+    assert snapshot["google_ads_developer_token_configured"] is False
+    assert snapshot["pilot_readiness"]["checks"]["google_ads_api_configured"] is False
+    assert "google_ads_api_configured" in snapshot["pilot_readiness"]["configuration_blockers"]
+
+
 def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(monkeypatch):
     _clear(monkeypatch)
     monkeypatch.setenv("VERCEL", "1")
@@ -185,6 +202,7 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client-private")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret-private")
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.test/google")
+    monkeypatch.setenv("GOOGLE_ADS_DEVELOPER_TOKEN", "google-ads-private")
     monkeypatch.setenv("META_APP_ID", "meta-app-private")
     monkeypatch.setenv("META_APP_SECRET", "meta-secret-private")
     monkeypatch.setenv("META_REDIRECT_URI", "https://example.test/meta")
@@ -196,6 +214,7 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     assert pilot["configuration_ready"] is True
     assert pilot["configuration_blockers"] == []
     assert pilot["checks"]["execution_locked"] is True
+    assert pilot["checks"]["google_ads_api_configured"] is True
     assert pilot["manual_gates"] == [
         "production_observability_verified",
         "final_authenticated_browser_qa",
@@ -209,10 +228,6 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
 
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
-    # Keep the endpoint test startup-safe: setting the legacy TURSO_DATABASE_URL
-    # alias to a fake PostgreSQL URL makes the application attempt a real remote
-    # Turso connection during TestClient lifespan. The pure snapshot tests above
-    # already cover the Postgres-over-Turso intent and Turso URL non-disclosure.
     values = {
         "VEZMORA_APP_URL": "https://example.test",
         "DATABASE_URL": "postgresql://database-private",
@@ -222,6 +237,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         "GOOGLE_CLIENT_SECRET": "google-secret-private",
         "GOOGLE_REDIRECT_URI": "https://example.test/google",
         "GOOGLE_ADS_DEVELOPER_TOKEN": "google-ads-private",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID": "1234567890",
         "META_APP_ID": "meta-app-private",
         "META_APP_SECRET": "meta-secret-private",
         "META_REDIRECT_URI": "https://example.test/meta",
@@ -246,6 +262,8 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["stripe_sandbox_ready"] is True
     assert payload["google_oauth_configured"] is True
     assert payload["google_ads_developer_token_configured"] is True
+    assert payload["google_ads_login_customer_id_configured"] is True
+    assert payload["pilot_readiness"]["checks"]["google_ads_api_configured"] is True
     assert payload["meta_oauth_configured"] is True
     assert payload["smtp_minimum_configured"] is True
     assert payload["production_transport_safe"] is True
