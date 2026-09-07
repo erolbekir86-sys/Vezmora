@@ -18,6 +18,15 @@ BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
 _STATIC_ASSET_RE = re.compile(r'(?P<prefix>(?:src|href)=["\'])(?P<url>/static/[^"\']+)')
 
 
+NO_STORE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    "CDN-Cache-Control": "no-store",
+    "Vercel-CDN-Cache-Control": "no-store",
+}
+
+
 def _inject_before_head_end(html: str, fragment: str) -> str:
     if fragment.strip() in html:
         return html
@@ -81,13 +90,10 @@ def install_public_routing(app: FastAPI) -> None:
             f'  <meta property="og:url" content="{CANONICAL_ORIGIN}/" />\n'
             '  <meta name="twitter:card" content="summary_large_image" />\n'
             '  <style id="landing-reveal-failsafe">\n'
+            '    html,body{visibility:visible!important;opacity:1!important}\n'
             '    .reveal{opacity:1!important;transform:none!important;filter:none!important}\n'
-            '    html.vexmera-reveal-js .reveal:not(.in-view){opacity:0!important;transform:translateY(18px)!important;filter:blur(2px)!important}\n'
-            '    html.vexmera-reveal-js .reveal.in-view{opacity:1!important;transform:none!important;filter:none!important}\n'
             '  </style>\n'
             '  <script>document.documentElement.classList.remove("vexmera-reveal-js");'
-            'addEventListener("error",function(e){if(e.target&&e.target.tagName==="SCRIPT")document.documentElement.classList.remove("vexmera-reveal-js")},true);'
-            'addEventListener("unhandledrejection",function(){document.documentElement.classList.remove("vexmera-reveal-js")});'
             f'window.__VEXMERA_BUILD__="{BUILD_ID}";</script>\n'
             '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg" fetchpriority="high" />\n'
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
@@ -98,10 +104,7 @@ def install_public_routing(app: FastAPI) -> None:
         )
         html = _inject_before_head_end(html, seo)
         html = _version_static_assets(html)
-        return HTMLResponse(
-            html,
-            headers={"Cache-Control": "no-cache, max-age=0, must-revalidate"},
-        )
+        return HTMLResponse(html, headers=NO_STORE_HEADERS)
 
     async def product_shell() -> HTMLResponse:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
@@ -114,7 +117,7 @@ def install_public_routing(app: FastAPI) -> None:
         return HTMLResponse(
             html,
             headers={
-                "Cache-Control": "no-store",
+                **NO_STORE_HEADERS,
                 "X-Robots-Tag": "noindex, nofollow",
             },
         )
