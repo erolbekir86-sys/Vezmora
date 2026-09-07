@@ -197,9 +197,12 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     assert pilot["configuration_blockers"] == []
     assert pilot["checks"]["execution_locked"] is True
     assert pilot["manual_gates"] == [
+        "production_observability_verified",
         "final_authenticated_browser_qa",
         "privacy_terms_legal_review",
         "google_ads_external_approval_and_manager_link_if_required",
+        "google_ads_live_read_only_sync_verified",
+        "meta_ads_live_read_only_sync_verified",
         "fresh_stripe_sandbox_end_to_end_test",
     ]
 
