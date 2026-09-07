@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -8,6 +9,8 @@ from app.main import app
 
 
 _STATIC_ASSET_RE = re.compile(r'(?:src|href)=["\'](/static/[^"\']+)["\']')
+_DYNAMIC_ASSET_RE = re.compile(r'/static/[A-Za-z0-9._/-]+\.(?:css|js)')
+_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _asset_path(url: str) -> str:
@@ -33,10 +36,20 @@ def test_public_frontend_shells_and_local_assets_are_non_empty():
         asset_urls = set(_STATIC_ASSET_RE.findall(landing.text))
         asset_urls.update(_STATIC_ASSET_RE.findall(product.text))
 
+        # The premium landing loader injects additional assets at runtime. Those
+        # references do not appear in the server-rendered HTML, so include them in
+        # the packaging smoke test explicitly to prevent a "200 but blank/broken"
+        # deployment when a dynamically loaded file is missing.
+        premium_loader = (_ROOT / 'static' / 'landing-premium.js').read_text(encoding='utf-8')
+        asset_urls.update(_DYNAMIC_ASSET_RE.findall(premium_loader))
+
         # A blank-page regression is especially likely if the main JS/CSS shells
         # stop being referenced or stop being packaged. Keep these explicit gates.
         assert any('/static/landing.js' in url for url in asset_urls)
         assert any('/static/app.js' in url for url in asset_urls)
+        assert '/static/landing-premium.js' in {_asset_path(url) for url in asset_urls}
+        assert '/static/landing-conversion.js' in {_asset_path(url) for url in asset_urls}
+        assert '/static/landing-ai-workflow.css' in {_asset_path(url) for url in asset_urls}
         assert any(url.endswith('.css') or '.css?' in url for url in asset_urls)
 
         for url in sorted(asset_urls):
