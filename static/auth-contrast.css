@@ -1,0 +1,159 @@
+/* Vexmera auth contrast fix
+   Keeps the login/register experience dark and readable regardless of the
+   saved in-app light/dark preference. Presentation only. */
+
+.auth-screen{
+  min-height:100svh;
+  min-height:100dvh;
+  width:100%;
+  box-sizing:border-box;
+  background:
+    radial-gradient(circle at 50% -8%,rgba(199,165,108,.10),transparent 34%),
+    radial-gradient(circle at 8% 92%,rgba(91,112,139,.05),transparent 30%),
+    #0a0e14!important;
+  color:#f3f6f9!important;
+}
+
+.auth-card{
+  color:#f3f6f9!important;
+  border-color:#2d3744!important;
+  background:
+    linear-gradient(155deg,rgba(18,24,33,.985),rgba(10,14,20,.995))!important;
+  box-shadow:
+    0 34px 90px rgba(0,0,0,.44),
+    inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+
+/* Brand and hero copy */
+.auth-screen .sigil{
+  color:#c7a56c!important;
+}
+.auth-screen .brand strong{
+  color:#d8b77f!important;
+  opacity:1!important;
+  text-shadow:0 0 24px rgba(199,165,108,.08);
+}
+.auth-screen .brand span:not(.beta-brand-badge){
+  color:#aeb8c5!important;
+  opacity:1!important;
+}
+.auth-screen .beta-brand-badge{
+  color:#d4b276!important;
+  border-color:rgba(199,165,108,.38)!important;
+  background:rgba(199,165,108,.075)!important;
+  opacity:1!important;
+}
+.auth-screen .eyebrow{
+  color:#c7a56c!important;
+  opacity:1!important;
+}
+.auth-card h1{
+  color:#f0d7aa!important;
+  opacity:1!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.02);
+}
+.auth-card .lead{
+  color:#c7ced8!important;
+  opacity:1!important;
+  font-size:15px!important;
+  line-height:1.65!important;
+}
+
+/* Tabs */
+.auth-tabs{
+  border:1px solid #303a47!important;
+  background:#0a0f16!important;
+}
+.auth-tabs button{
+  color:#9fa9b7!important;
+  opacity:1!important;
+}
+.auth-tabs button.active{
+  color:#f3f6f9!important;
+  background:#171e28!important;
+  box-shadow:inset 0 0 0 1px #34404f!important;
+}
+.auth-tabs button:hover{
+  color:#d8b77f!important;
+}
+
+/* Labels and fields */
+.auth-form label{
+  color:#d7dde5!important;
+  opacity:1!important;
+  font-size:15px!important;
+  font-weight:600!important;
+}
+.auth-form input,
+.auth-form textarea,
+.auth-form select{
+  min-height:52px;
+  color:#f3f6f9!important;
+  background:#121821!important;
+  border:1px solid #364252!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.018)!important;
+}
+.auth-form input::placeholder,
+.auth-form textarea::placeholder{
+  color:#7f8b9a!important;
+  opacity:1!important;
+}
+.auth-form input:hover,
+.auth-form textarea:hover,
+.auth-form select:hover{
+  border-color:#4a586b!important;
+}
+.auth-form input:focus,
+.auth-form textarea:focus,
+.auth-form select:focus{
+  color:#fff!important;
+  background:#151c26!important;
+  border-color:#c7a56c!important;
+  box-shadow:0 0 0 3px rgba(199,165,108,.13)!important;
+}
+
+/* Primary action and secondary link */
+.auth-card .primary{
+  min-height:52px;
+  color:#fffaf2!important;
+  background:linear-gradient(180deg,#bd965e,#91682f)!important;
+  border-color:rgba(211,177,122,.45)!important;
+  box-shadow:0 12px 28px rgba(128,90,42,.24)!important;
+}
+.auth-card .primary:hover{
+  background:linear-gradient(180deg,#c9a56d,#9b7138)!important;
+  box-shadow:0 16px 34px rgba(128,90,42,.31)!important;
+}
+.auth-card .text-button,
+#forgotPassword{
+  color:#d0ae75!important;
+  opacity:1!important;
+  font-weight:600!important;
+}
+.auth-card .text-button:hover,
+#forgotPassword:hover{
+  color:#e4c58d!important;
+}
+.auth-card .error-text{
+  color:#ff9ca4!important;
+}
+
+/* Never let a saved light theme wash out the auth screen. */
+html[data-vex-theme="light"] .auth-screen{
+  background:
+    radial-gradient(circle at 50% -8%,rgba(199,165,108,.10),transparent 34%),
+    radial-gradient(circle at 8% 92%,rgba(91,112,139,.05),transparent 30%),
+    #0a0e14!important;
+}
+html[data-vex-theme="light"] .auth-card{
+  color:#f3f6f9!important;
+  background:linear-gradient(155deg,#121821,#0a0e14)!important;
+  border-color:#2d3744!important;
+}
+
+@media (max-width:620px){
+  .auth-screen{padding:22px 14px!important}
+  .auth-card{padding:30px 24px!important;border-radius:22px!important}
+  .auth-card h1{font-size:clamp(34px,11vw,48px)!important;line-height:1.03!important}
+  .auth-card .lead{font-size:15px!important}
+}

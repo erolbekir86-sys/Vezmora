@@ -13,6 +13,15 @@
   modernCss.dataset.vexmeraModernUi = '1';
   if (!document.querySelector('link[data-vexmera-modern-ui]')) document.head.appendChild(modernCss);
 
+  // Keep the auth experience consistently dark and high-contrast, even if the
+  // user's saved in-app theme is light. This sheet is intentionally loaded
+  // after the general modernization layer so auth-specific contrast wins.
+  const authCss = document.createElement('link');
+  authCss.rel = 'stylesheet';
+  authCss.href = `/static/auth-contrast.css${window.__VEXMERA_BUILD__ ? `?build=${encodeURIComponent(window.__VEXMERA_BUILD__)}` : ''}`;
+  authCss.dataset.vexmeraAuthContrast = '1';
+  if (!document.querySelector('link[data-vexmera-auth-contrast]')) document.head.appendChild(authCss);
+
   const THEME_KEY = 'vexmera-theme';
   const themeColor = document.querySelector('meta[name="theme-color"]');
 
