@@ -74,13 +74,13 @@ Run the automated suite:
 pytest -q
 ```
 
-Validate shipped frontend JavaScript:
+Validate every shipped frontend JavaScript file, matching CI:
 
 ```bash
-node --check static/app.js
-node --check static/app-polish.js
-node --check static/landing.js
+find static -type f -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
 ```
+
+The test suite also verifies server-rendered frontend shells, runtime-loaded assets and local `/static/...` references so missing or empty frontend files fail before deployment.
 
 Run deployment preflight:
 
@@ -96,13 +96,16 @@ python scripts/verify_stripe_catalog.py
 
 ## Key operational documents
 
-- `DEPLOY_CHECKLIST.md` — current verified launch state and blockers.
+- `LAUNCH_GAP_PLAN.md` — shortest safe path to the five-company private beta.
+- `PILOT_READINESS_SNAPSHOT.md` — current non-secret readiness evidence and blockers.
+- `FIVE_COMPANY_PILOT_RUNBOOK.md` — controlled workflow for the first five pilot companies.
+- `PILOT_COMPANY_EVIDENCE_TEMPLATE.md` — safe per-company verification template without storing secrets.
+- `DEPLOY_CHECKLIST.md` — deployment checks and launch blockers.
 - `PRODUCTION_ENVIRONMENT.md` — environment configuration runbook.
 - `STRIPE_SANDBOX_CATALOG.md` — verified test-mode Vexmera products/prices.
-- `PILOT_RUNBOOK.md` — controlled private-beta pilot workflow.
 - `PRIVACY_POLICY_DRAFT.md` — privacy draft requiring final legal/entity details and review.
 - `BETA_TERMS_DRAFT.md` — beta terms draft requiring final legal/entity details and review.
 
 ## Routing note
 
-The authenticated product shell intentionally remains at `/`. The public marketing page is currently shipped separately at `/static/landing.html`. Do not change that routing casually; it should be migrated only as part of an explicit production routing plan.
+The public marketing site is served at `/`. The authenticated product shell is served at `/app`. The source marketing page also exists as `/static/landing.html`, but production routing is controlled by `app/public_routing.py`. Keep route changes explicit and covered by frontend smoke tests because both `/` and `/app` are launch-critical.
