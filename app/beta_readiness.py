@@ -100,8 +100,9 @@ def _pilot_readiness_snapshot(
     """Summarize configuration-only blockers for the five-company pilot.
 
     This deliberately does not claim third-party approvals, successful live account
-    linking, legal sign-off, production observability, or browser QA. Those remain
-    explicit manual gates even when configuration_ready is true.
+    linking, legal sign-off, production observability, browser QA, or commercial
+    pricing reconciliation. Those remain explicit manual gates even when
+    configuration_ready is true.
     """
     checks = {
         "execution_locked": private_beta_execution_safe,
@@ -122,6 +123,7 @@ def _pilot_readiness_snapshot(
             "production_observability_verified",
             "final_authenticated_browser_qa",
             "privacy_terms_legal_review",
+            "public_pricing_backend_and_stripe_sandbox_reconciled",
             "google_ads_external_approval_and_manager_link_if_required",
             "google_ads_live_read_only_sync_verified",
             "meta_ads_live_read_only_sync_verified",
@@ -213,6 +215,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
+            "The verified Stripe sandbox catalog may lag public pricing changes; public pricing, backend plan definitions, tests and sandbox products/prices must be reconciled before pilot Checkout testing.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
             "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
