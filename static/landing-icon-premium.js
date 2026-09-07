@@ -10,10 +10,10 @@
     simple: SVG('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><path d="m14.5 16.5 1.8 1.8 3.2-3.8"/>'),
     fast: SVG('<path d="M4 7h7M2 12h9M5 17h6"/><path d="m12 6 6 6-6 6"/><path d="M18 7.5 22 12l-4 4.5"/>'),
     smart: SVG('<path d="M9 18h6M10 21h4"/><path d="M8.2 14.8A6 6 0 1 1 15.8 14.8c-.9.8-1.35 1.5-1.55 2.2h-4.5c-.2-.7-.65-1.4-1.55-2.2Z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><path d="m9.8 9.4 1.4-1.6M14.2 9.4l-1.4-1.6M10 10h4"/>'),
-    time: SVG('<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/><path d="m17.8 4.2.8 2.4 2.4.8-2.4.8-.8 2.4-.8-2.4-2.4-.8 2.4-.8.8-2.4Z"/>'),
-    budget: SVG('<path d="M4 19V12M9 19V8M14 19v-5M19 19V5"/><path d="M2 21h20"/><circle cx="17" cy="8" r="3.5"/><path d="M17 6.5v3M15.9 7.2h1.7M16.4 9.5h1.7"/>'),
-    detect: SVG('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4V2M20 12h2M12 20v2M4 12H2"/><path d="m14.3 9.7 4.2-4.2"/><path d="M18.5 5.5v3h-3"/>'),
-    next: SVG('<circle cx="12" cy="12" r="8"/><path d="m10 15 5-5"/><path d="M11.5 10H15v3.5"/><path d="M8 16l1.5-4.5L14 10"/>'),
+    time: SVG('<circle cx="11.5" cy="12" r="7.5"/><path d="M11.5 7.5V12l3.1 1.8"/><path d="M4.8 5.4 3.4 4M18.2 5.1 20 3.6"/><path d="M18.5 15.5h2.7M19.85 14.15v2.7"/>'),
+    budget: SVG('<path d="M4 19V13M9 19V9M14 19v-5M3 21h13"/><path d="m4.5 11 4-3 4 2 4.2-5"/><path d="M14.8 5H17v2.2"/><circle cx="18.5" cy="16.5" r="3.2"/><path d="M18.5 14.7v3.6M17.3 15.4h1.8M17.9 17.7h1.8"/>'),
+    detect: SVG('<circle cx="11.5" cy="12" r="7.5"/><circle cx="11.5" cy="12" r="3.2"/><path d="M11.5 4.5V2.5M19 12h2M11.5 19.5v2M4 12H2"/><path d="m13.8 9.7 4.6-4.6"/><path d="M17.2 5.1h2.2v2.2"/><circle cx="18.6" cy="18" r="1.5" fill="currentColor" stroke="none"/>'),
+    next: SVG('<circle cx="12" cy="12" r="8"/><path d="M8.5 15.5 15.5 8.5"/><path d="M11.7 8.5h3.8v3.8"/><path d="M7.4 9.2 5.7 7.5M16.6 14.8l1.7 1.7"/>'),
     demo: SVG('<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="15" r="2"/>'),
     betaControl: SVG('<path d="M12 3 20 6v5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/>'),
     channels: SVG('<circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="18" cy="17" r="2.2"/><path d="m8.2 11 7.6-3M8.2 13l7.6 3"/>'),
@@ -31,6 +31,21 @@
     settings: SVG('<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3.1a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3.1h4.8l.3-3.1a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/>')
   };
 
+  const outcomeCopy = {
+    sv: [
+      'Vexmera samlar signalerna och lyfter det viktigaste, så att du slipper fastna i dashboards.',
+      'Se tydligare var pengarna gör mest nytta och vad som bör justeras.',
+      'Upptäck negativa förändringar tidigt innan de hinner bli kostsamma.',
+      'Få prioriterade rekommendationer som gör nästa beslut enklare.'
+    ],
+    en: [
+      'Vexmera brings the signals together and surfaces what matters, so you spend less time inside dashboards.',
+      'See more clearly where spend creates value and what should be adjusted.',
+      'Catch negative changes early before they become costly.',
+      'Get prioritized recommendations that make the next decision easier.'
+    ]
+  };
+
   function setIcon(el, name) {
     if (!el || !icons[name]) return;
     el.innerHTML = icons[name];
@@ -46,7 +61,22 @@
   }
 
   function upgradeOutcomes() {
-    document.querySelectorAll('.premium-outcome-icon').forEach((el, i) => setIcon(el, ['time','budget','detect','next'][i] || 'next'));
+    const cards = [...document.querySelectorAll('.outcome-grid article')];
+    const language = (document.documentElement.lang || 'sv').toLowerCase().startsWith('en') ? 'en' : 'sv';
+    cards.forEach((card, i) => {
+      const icon = card.querySelector('.premium-outcome-icon');
+      if (icon) setIcon(icon, ['time','budget','detect','next'][i] || 'next');
+
+      let copy = card.querySelector(':scope > .outcome-support-copy');
+      if (!copy) {
+        copy = document.createElement('p');
+        copy.className = 'outcome-support-copy';
+        const title = card.querySelector('h3');
+        if (title) title.insertAdjacentElement('afterend', copy);
+        else card.appendChild(copy);
+      }
+      copy.textContent = outcomeCopy[language][i] || outcomeCopy[language][3];
+    });
   }
 
   function upgradeBeta() {
@@ -120,6 +150,12 @@
     };
     tick();
   }
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('[data-lang-toggle],#footerLanguage,.language-toggle')) return;
+    window.setTimeout(run, 80);
+    window.setTimeout(run, 260);
+  }, { passive:true });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', settle, { once:true });
   else settle();
