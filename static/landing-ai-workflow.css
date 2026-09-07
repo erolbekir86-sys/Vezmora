@@ -18,3 +18,153 @@ html[data-theme="light"] .workflow-section .workflow>i{color:rgba(91,103,119,.62
 @media (hover:hover){.workflow-section .workflow-node:hover::before{transform:scale(1.06)!important;}html[data-theme="light"] .workflow-section .workflow-node:hover::before{opacity:.21!important;}html[data-theme="dark"] .workflow-section .workflow-node:hover::before{opacity:.30!important;}}
 @media (max-width:900px){.workflow-section .workflow-node{min-height:180px!important;padding:22px 18px!important;border-radius:22px!important;}.workflow-section .workflow-node strong{font-size:20px!important;}.workflow-section .workflow-node small{font-size:14px!important;}html[data-theme="light"] .workflow-section .workflow-node::before{opacity:.17!important;}html[data-theme="dark"] .workflow-section .workflow-node::before{opacity:.24!important;}}
 @media (prefers-reduced-motion:reduce){.workflow-section .workflow-node::before{transition:none!important;transform:none!important;}}
+
+/* =========================================================
+   PROCESS FLOW ARROWS
+   Only where direction is meaningful:
+   1) channel data -> Vexmera
+   2) signal -> explanation -> next step
+   3) connect -> analyse -> act
+   4) opportunity -> recommendation -> approval -> action
+   ========================================================= */
+:root{
+  --vex-flow-gold:rgba(184,139,73,.86);
+  --vex-flow-gold-soft:rgba(184,139,73,.34);
+  --vex-flow-dark:rgba(207,171,111,.82);
+  --vex-flow-light:rgba(137,101,51,.72);
+}
+
+@keyframes vexFlowNudgeY{0%,100%{transform:translateY(-2px);opacity:.70}50%{transform:translateY(3px);opacity:1}}
+@keyframes vexFlowNudgeX{0%,100%{transform:translateX(-2px);opacity:.70}50%{transform:translateX(3px);opacity:1}}
+
+/* 1. Google / Meta / Analytics -> Vexmera.
+   Keep the existing convergence lines, add one clear direction cue into the hub. */
+.section-problem .data-convergence .flow-lines{position:relative!important;overflow:visible!important;}
+.section-problem .data-convergence .flow-lines::after{
+  content:"↓"!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  z-index:5!important;
+  display:grid!important;
+  place-items:center!important;
+  width:34px!important;
+  height:34px!important;
+  border-radius:999px!important;
+  transform:translate(-50%,-50%)!important;
+  color:var(--vex-flow-gold)!important;
+  background:color-mix(in srgb,var(--surface,#fff) 84%,transparent)!important;
+  border:1px solid color-mix(in srgb,var(--gold,#b88b49) 35%,transparent)!important;
+  box-shadow:0 9px 24px rgba(48,36,20,.09)!important;
+  font-size:24px!important;
+  line-height:1!important;
+  font-style:normal!important;
+  font-weight:600!important;
+  pointer-events:none!important;
+  animation:vexFlowNudgeY 3.2s ease-in-out infinite!important;
+}
+html[data-theme="dark"] .section-problem .data-convergence .flow-lines::after{
+  color:var(--vex-flow-dark)!important;
+  background:rgba(18,24,32,.84)!important;
+  border-color:rgba(207,171,111,.25)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.24)!important;
+}
+
+/* 2. Signal -> explanation -> next step. */
+.conversion-decision-flow .conversion-flow-arrow{
+  display:grid!important;
+  place-items:center!important;
+  min-width:34px!important;
+  min-height:34px!important;
+  color:var(--vex-flow-gold)!important;
+  font-size:0!important;
+  opacity:1!important;
+  transform:none!important;
+  animation:none!important;
+}
+.conversion-decision-flow .conversion-flow-arrow::before{
+  content:"→";
+  display:block;
+  font-size:28px;
+  line-height:1;
+  font-weight:500;
+  filter:drop-shadow(0 3px 10px rgba(113,79,34,.12));
+  animation:vexFlowNudgeX 3.2s ease-in-out infinite;
+}
+html[data-theme="dark"] .conversion-decision-flow .conversion-flow-arrow{color:var(--vex-flow-dark)!important;}
+
+/* 3. Koppla -> Analysera -> Agera.
+   Use the final paragraph as a safe anchor so existing card decoration remains intact. */
+.how-section .steps .step{position:relative!important;overflow:visible!important;}
+.how-section .steps .step:not(:last-child)>p::after{
+  content:"→";
+  position:absolute;
+  right:-42px;
+  top:50%;
+  z-index:8;
+  transform:translateY(-50%);
+  color:var(--vex-flow-gold);
+  font-size:28px;
+  line-height:1;
+  font-weight:500;
+  filter:drop-shadow(0 3px 10px rgba(113,79,34,.12));
+  pointer-events:none;
+  animation:vexFlowNudgeX 3.2s ease-in-out infinite;
+}
+html[data-theme="dark"] .how-section .steps .step:not(:last-child)>p::after{color:var(--vex-flow-dark);}
+
+/* 4. Möjlighet -> Rekommendation -> Godkännande -> Åtgärd.
+   Replace the raw arrow glyph with the same visual language as the product flow. */
+.workflow-section .workflow>i{
+  display:grid!important;
+  place-items:center!important;
+  min-width:34px!important;
+  min-height:34px!important;
+  margin:0!important;
+  color:var(--vex-flow-gold)!important;
+  font-size:0!important;
+  line-height:1!important;
+  opacity:1!important;
+  font-style:normal!important;
+  overflow:visible!important;
+}
+.workflow-section .workflow>i::before{
+  content:"→";
+  display:block;
+  font-size:28px;
+  line-height:1;
+  font-weight:500;
+  animation:vexFlowNudgeX 3.2s ease-in-out infinite;
+}
+html[data-theme="dark"] .workflow-section .workflow>i{color:var(--vex-flow-dark)!important;}
+
+/* Mobile: every sequential process reads top-to-bottom. */
+@media (max-width:900px){
+  .section-problem .data-convergence .flow-lines{min-height:44px!important;display:grid!important;place-items:center!important;}
+  .section-problem .data-convergence .flow-lines::after{position:relative!important;left:auto!important;top:auto!important;transform:none!important;animation:vexFlowNudgeY 3.2s ease-in-out infinite!important;}
+
+  .conversion-decision-flow .conversion-flow-arrow{height:42px!important;margin:2px 0!important;}
+  .conversion-decision-flow .conversion-flow-arrow::before{content:"↓";animation:vexFlowNudgeY 3.2s ease-in-out infinite;}
+
+  .how-section .steps{gap:48px!important;}
+  .how-section .steps .step:not(:last-child)>p::after{
+    content:"↓";
+    right:auto;
+    left:50%;
+    top:auto;
+    bottom:-41px;
+    transform:translateX(-50%);
+    animation:vexFlowNudgeY 3.2s ease-in-out infinite;
+  }
+
+  .workflow-section .workflow{gap:10px!important;}
+  .workflow-section .workflow>i{height:42px!important;margin:2px 0!important;}
+  .workflow-section .workflow>i::before{content:"↓";animation:vexFlowNudgeY 3.2s ease-in-out infinite;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .section-problem .data-convergence .flow-lines::after,
+  .conversion-decision-flow .conversion-flow-arrow::before,
+  .how-section .steps .step:not(:last-child)>p::after,
+  .workflow-section .workflow>i::before{animation:none!important;}
+}
