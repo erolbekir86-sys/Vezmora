@@ -99,9 +99,16 @@ def install_public_routing(app: FastAPI) -> None:
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-icon-premium.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art-data.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art-decision.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art-how.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art-workflow.css" />\n'
+            '  <link rel="stylesheet" href="/static/landing-section-art-security.css" />\n'
             '  <script src="/static/founder-photo-fix.js" defer></script>\n'
             '  <script src="/static/landing-runtime-safe.js" defer></script>\n'
-            '  <script src="/static/landing-refine.js" defer></script>'
+            '  <script src="/static/landing-refine.js" defer></script>\n'
+            '  <script src="/static/landing-section-art.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
         # Load the visual premium layer after landing.js so it cannot be
