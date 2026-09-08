@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from types import SimpleNamespace
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app import store
@@ -25,6 +26,20 @@ def test_cron_requires_secret(tmp_path, monkeypatch):
         payload = response.json()
         assert payload["ok"] is True
         assert payload["jobs_processed"] == 0
+
+
+def test_checkout_is_blocked_while_public_and_backend_pricing_differ(tmp_path, monkeypatch):
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "stripe-guard.db")
+    store.init_db()
+    _, workspace_id = store.create_user("guard@example.com", "salt", "hash", "Stripe guard")
+    monkeypatch.setattr(stripe_billing, "CHECKOUT_PRICING_RECONCILED", False)
+
+    with pytest.raises(Exception) as exc_info:
+        stripe_billing.create_checkout(workspace_id, "guard@example.com", "starter")
+
+    exc = exc_info.value
+    assert getattr(exc, "status_code", None) == 503
+    assert "pricing" in str(getattr(exc, "detail", "")).lower()
 
 
 def test_checkout_has_beta_trial_and_configured_test_price(tmp_path, monkeypatch):
@@ -54,6 +69,7 @@ def test_checkout_has_beta_trial_and_configured_test_price(tmp_path, monkeypatch
             return {"id": "evt_test", "type": "noop", "data": {"object": {}}}
 
     monkeypatch.setitem(sys.modules, "stripe", SimpleNamespace(StripeClient=FakeStripeClient))
+    monkeypatch.setattr(stripe_billing, "CHECKOUT_PRICING_RECONCILED", True)
     monkeypatch.setenv("STRIPE_SECRET_KEY", "test-only-placeholder")
     monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_test_starter")
     monkeypatch.setenv("VEZMORA_TRIAL_DAYS", "14")
