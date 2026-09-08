@@ -18,9 +18,9 @@ def build_preflight_snapshot() -> dict[str, Any]:
 
     The existing beta-readiness endpoint is intentionally configuration-only and
     keeps commercial pricing reconciliation as a manual gate. This operator view
-    also treats the code-level Checkout pricing gate as an active blocker so a
-    pilot cannot be mistaken for billing-ready while Checkout is deliberately
-    disabled.
+    also treats the code-level Checkout pricing gate and missing internal security
+    secrets as active blockers so a pilot cannot be mistaken for ready while
+    billing is deliberately disabled or token/maintenance protections are absent.
 
     `ok` means only that machine-checkable configuration blockers are clear. It is
     deliberately not a claim that the five-company pilot is approved or ready:
@@ -33,6 +33,13 @@ def build_preflight_snapshot() -> dict[str, Any]:
 
     if not CHECKOUT_PRICING_RECONCILED and "checkout_pricing_reconciliation" not in blockers:
         blockers.append("checkout_pricing_reconciliation")
+
+    # Older beta-readiness snapshots did not include this field. Only an explicit
+    # False is treated as a blocker so the preflight stays backward-compatible
+    # with historical/fake snapshots while current runtime snapshots are stricter.
+    core_internal_secrets_configured = snapshot.get("core_internal_secrets_configured") is not False
+    if not core_internal_secrets_configured and "core_internal_secrets_configured" not in blockers:
+        blockers.append("core_internal_secrets_configured")
 
     configuration_ok = not blockers
     manual_verification_required = bool(manual_gates)
@@ -52,6 +59,7 @@ def build_preflight_snapshot() -> dict[str, Any]:
         "phase": snapshot.get("phase"),
         "private_beta_execution_safe": bool(snapshot.get("private_beta_execution_safe")),
         "production_transport_safe": bool(snapshot.get("production_transport_safe")),
+        "core_internal_secrets_configured": core_internal_secrets_configured,
         "configuration_ready": bool(pilot.get("configuration_ready")),
         "checkout_pricing_reconciled": bool(CHECKOUT_PRICING_RECONCILED),
         "blockers": blockers,
