@@ -20,6 +20,23 @@
     .hero-copy .hero-slogan{margin:14px 0 18px;font-family:Manrope,Inter,sans-serif;font-size:clamp(18px,1.6vw,22px);font-weight:700;line-height:1.4;color:var(--gold-dark)}
     html[data-theme="dark"] .hero-copy .hero-slogan{color:#d5ae72}
     html[lang="sv"] .hero-slogan-en,html[lang="en"] .hero-slogan-sv{display:none}
+
+    /* Equal process visual stages and larger, legible graphics. */
+    #hur .steps .step{display:flex!important;flex-direction:column!important}
+    #hur .steps .step .step-visual{height:160px!important;min-height:160px!important;flex:0 0 160px!important;width:100%!important;margin:0 0 24px!important;box-sizing:border-box!important}
+    #hur .steps .step h3{min-height:2.4em!important;line-height:1.2!important;margin:0 0 12px!important}
+    #hur .connect-visual .source-pill{width:44px!important;height:44px!important;flex:0 0 44px!important;font-size:18px!important;border-radius:12px!important}
+    #hur .connect-visual .source-pill.meta{font-size:27px!important}
+    #hur .connect-visual .line{width:clamp(12px,2vw,28px)!important;background:rgba(213,174,114,.5)!important}
+    #hur .connect-visual .v-node{width:68px!important;height:68px!important;flex:0 0 68px!important;background:linear-gradient(145deg,#252d38,#10151c)!important;color:#d5ae72!important;border:1px solid rgba(213,174,114,.55)!important;border-radius:17px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.2)!important}
+    #hur .v-node svg{width:48px;height:48px;display:block}
+    #hur .analysis-tile{width:96px;height:96px;display:grid;place-items:center;border-radius:22px;border:1px solid rgba(213,174,114,.45);color:#d5ae72;background:linear-gradient(145deg,#252d38,#10151c);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.18)}
+    #hur .analysis-tile svg{width:72px;height:72px;display:block}
+    #hur .action-visual>div{width:calc(100% - 24px)!important;max-width:300px!important;box-sizing:border-box!important;padding:18px!important;border-radius:14px!important;border:1px solid rgba(213,174,114,.38)!important}
+    #hur .action-visual small{font-size:12px!important;font-weight:700!important;line-height:1.3!important}
+    #hur .action-visual strong{font-size:clamp(20px,1.8vw,24px)!important;line-height:1.2!important;margin:8px 0!important}
+    #hur .action-visual span{font-size:14px!important;line-height:1.4!important}
+    @media(max-width:900px){#hur .steps .step h3{min-height:0!important}}
   </style>
 </head>
 <body>
@@ -179,8 +196,8 @@
       <div class="section-heading split-heading reveal"><div><div class="eyebrow" data-i18n="how.eyebrow">SÅ FUNGERAR DET</div><h2 data-i18n="how.title">Från data till beslut på tre steg.</h2></div><p data-i18n="how.body">Koppla dina kanaler och låt Vexmera bygga en tydligare bild av vad som fungerar.</p></div>
       <div class="steps-line" aria-hidden="true"><span></span></div>
       <div class="steps">
-        <article class="step reveal"><div class="step-number">1</div><div class="step-visual connect-visual"><div class="source-pill">G</div><div class="line"></div><div class="v-node">V</div><div class="line"></div><div class="source-pill meta">∞</div></div><h3 data-i18n="how.step1">Koppla dina kanaler</h3><p data-i18n="how.step1Body">Samla Google Ads och Meta Ads i en gemensam vy.</p></article>
-        <article class="step reveal reveal-delay"><div class="step-number">2</div><div class="step-visual brain-visual"><span>✦</span><i></i><i></i><i></i></div><h3 data-i18n="how.step2">Vexmera analyserar</h3><p data-i18n="how.step2Body">AI letar efter avvikelser, mönster och möjligheter med högst affärsvärde.</p></article>
+        <article class="step reveal"><div class="step-number">1</div><div class="step-visual connect-visual"><div class="source-pill">G</div><div class="line"></div><div class="v-node" aria-label="Vexmera"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 9.5 20.7 38h6.6L41 9.5h-7.9L24 29.4 14.9 9.5H7Z" fill="currentColor"/><path d="m28.6 9.5-4.7 10.2 4 8.6L37 9.5h-8.4Z" fill="currentColor" opacity=".42"/></svg></div><div class="line"></div><div class="source-pill meta">∞</div></div><h3 data-i18n="how.step1">Koppla dina kanaler</h3><p data-i18n="how.step1Body">Samla Google Ads och Meta Ads i en gemensam vy.</p></article>
+        <article class="step reveal reveal-delay"><div class="step-number">2</div><div class="step-visual brain-visual"><div class="analysis-tile" aria-label="Analys av resultat"><svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M12 12v36h26M20 39v-9m9 9V22m9 8V16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="43" cy="40" r="10" stroke="currentColor" stroke-width="3"/><path d="m50 47 8 8M38 41l4-4 4 2" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><h3 data-i18n="how.step2">Vexmera analyserar</h3><p data-i18n="how.step2Body">AI letar efter avvikelser, mönster och möjligheter med högst affärsvärde.</p></article>
         <article class="step reveal reveal-delay-2"><div class="step-number">3</div><div class="step-visual action-visual"><div><small data-i18n="how.priority">PRIORITET</small><strong data-i18n="how.action">Öka budget</strong><span data-i18n="how.impact">Förväntad effekt +18 %</span></div></div><h3 data-i18n="how.step3">Agera med tydlighet</h3><p data-i18n="how.step3Body">Få rekommendationer som är begripliga, prioriterade och möjliga att agera på.</p></article>
       </div>
     </section>
