@@ -66,6 +66,13 @@ def _with_empty_state_warning(provider_label: str, result: dict[str, object], da
         warnings = [str(raw_warnings)]
         result["warnings"] = warnings
 
+    if provider_label.lower() == "google ads" and _row_count(result, "analytics_rows") > 0:
+        if not any("generic clicks kpi" in str(w).lower() for w in warnings):
+            warnings.append(
+                "Google Analytics sessions currently use Vexmera's generic clicks KPI slot in this private beta. "
+                "Treat that Google Analytics value as sessions, not ad clicks, and do not combine it with paid-media click totals."
+            )
+
     campaign_rows = _row_count(result, "campaign_rows")
     ads_rows = _row_count(result, "ads_rows")
     has_provider_rows = campaign_rows > 0 or ads_rows > 0
