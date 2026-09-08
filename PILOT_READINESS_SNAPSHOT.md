@@ -7,9 +7,9 @@ This file is a non-secret operational snapshot for the five-company private beta
 ## Verified healthy
 
 - GitHub repository is reachable and writable through the connected GitHub integration; the default branch is `main`.
-- Latest observed `main` commit before this snapshot refresh is `dd9401c7b03722d0bb1de7ecd5d57ad29eecbdf8` (`Add GA metric semantics evidence to pilot template`).
-- GitHub Actions `Vexmera CI` run 414 for that commit completed successfully on 2026-09-08.
-- GitHub reports the Vercel deployment status for that commit as `success`, confirming the GitHub -> Vercel deployment path completed for the observed `main` revision.
+- Latest observed `main` commit for this refresh is `c5e89537e7db733bbb2af55e58f636b277722a0d` (`Use conservative pilot preflight in runbook`).
+- GitHub Actions `Vexmera CI` run 425 for that commit completed successfully on 2026-09-08.
+- GitHub reports the Vercel deployment status for that same commit as `success`, confirming the GitHub -> Vercel deployment path completed for the observed `main` revision.
 - The Python package identifies the product as `vexmera` version `0.6.1`.
 - CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment, beta readiness and public frontend asset smoke coverage.
 - Public frontend smoke coverage verifies that `/` and `/app` return content and that referenced local JavaScript/CSS assets are present and non-empty.
