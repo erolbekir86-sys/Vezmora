@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy | Vexmera</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #08090b; color: #f3f4f6; line-height: 1.65; }
+    main { max-width: 860px; margin: 0 auto; padding: 64px 24px 96px; }
+    h1 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.08; margin: 0 0 12px; }
+    h2 { margin-top: 40px; font-size: 1.25rem; }
+    p, li { color: #c8ccd2; }
+    a { color: #e4c781; }
+    .badge { display: inline-block; border: 1px solid #6f5c2d; background: #17130b; color: #e4c781; border-radius: 999px; padding: 5px 10px; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .notice { margin: 24px 0 32px; padding: 18px 20px; border: 1px solid #6f5c2d; border-radius: 14px; background: #12100b; }
+    .muted { color: #8f949c; }
+  </style>
+</head>
+<body>
+<main>
+  <span class="badge">Private beta draft</span>
+  <h1>Vexmera Privacy Policy</h1>
+  <p class="muted">Prepared for private-beta and OAuth review. Last updated 8 September 2026.</p>
+
+  <div class="notice">
+    <strong>Not ready for production publication.</strong>
+    <p>This page intentionally remains a draft until Vexmera's legal operator name, registration number, postal address, privacy contact channel, retention periods and verified processor details are completed and reviewed.</p>
+  </div>
+
+  <h2>1. Scope</h2>
+  <p>This notice describes how Vexmera handles personal data when business users create an account, connect supported marketing or analytics services, use AI-powered analysis, or participate in a private beta.</p>
+
+  <h2>2. What Vexmera does</h2>
+  <p>Vexmera is an AI-powered marketing platform intended to help businesses understand marketing performance, identify opportunities and receive recommendations. During the private beta, connected advertising and analytics integrations are intended to operate in read-only mode. Vexmera does not autonomously publish ads or change campaign budgets, bids or settings.</p>
+
+  <h2>3. Data Vexmera may process</h2>
+  <ul>
+    <li>Account, session, workspace, role and business-profile information.</li>
+    <li>Marketing and analytics data a user authorizes a connected provider to share, including campaign and performance metrics.</li>
+    <li>User instructions, relevant business context and generated AI analyses.</li>
+    <li>Product usage events, technical logs and error diagnostics.</li>
+    <li>Subscription and billing status required to operate the service.</li>
+  </ul>
+
+  <h2>4. Connected Google and Meta accounts</h2>
+  <p>When a user connects a supported Google or Meta service, authorization occurs through the provider's own authorization flow. Vexmera stores resulting connector credentials in encrypted form and uses them only for the access the user has authorized. Supported connections include product-level disconnect controls and are designed not to expose OAuth tokens, developer tokens, API keys or provider secrets in user-visible diagnostics.</p>
+
+  <h2>5. AI processing</h2>
+  <p>Vexmera may send relevant user instructions, business context and selected marketing data to an AI service provider in order to generate analyses and recommendations. The current engineering stack uses OpenAI API services. Final production wording must reflect the actual account configuration, applicable data terms, retention settings and transfer safeguards.</p>
+
+  <h2>6. Service providers</h2>
+  <p>The current technical stack includes or is configured to use Vercel, Neon, OpenAI, Stripe, an email-delivery provider, Google and Meta. This is an engineering inventory, not yet a final legally reviewed subprocessor list.</p>
+
+  <h2>7. Data controls</h2>
+  <p>Vexmera includes controls for disconnecting supported provider accounts, removing synchronized marketing/reporting history and guarded self-service account deletion. These controls are intentionally separated so that disconnecting an integration does not accidentally delete previously synchronized reporting data.</p>
+
+  <h2>8. Security</h2>
+  <p>Vexmera uses safeguards intended to protect data, including HTTPS, encrypted connector credential storage, secure session settings, access controls, human-approval controls for sensitive actions and protections designed to keep secrets out of user-visible diagnostics. No system can guarantee absolute security.</p>
+
+  <h2>9. User rights</h2>
+  <p>Depending on location, users may have rights to access, correct, delete, restrict or object to certain processing, request portability, withdraw consent where applicable, and complain to a data-protection authority.</p>
+
+  <h2>10. Information required before publication</h2>
+  <ul>
+    <li>Legal operator/entity name</li>
+    <li>Registration or organization number</li>
+    <li>Postal address</li>
+    <li>Verified privacy contact email or support channel</li>
+    <li>Confirmed retention periods</li>
+    <li>Verified processor/subprocessor roles and transfer safeguards</li>
+  </ul>
+
+  <p class="muted">This draft is derived from the implementation-focused privacy documentation maintained in the Vexmera repository and must receive legal review before external launch.</p>
+</main>
+</body>
+</html>
