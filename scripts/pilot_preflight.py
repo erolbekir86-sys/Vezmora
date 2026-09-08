@@ -34,11 +34,21 @@ def build_preflight_snapshot() -> dict[str, Any]:
     if not CHECKOUT_PRICING_RECONCILED and "checkout_pricing_reconciliation" not in blockers:
         blockers.append("checkout_pricing_reconciliation")
 
+    configuration_ok = not blockers
+    manual_verification_required = bool(manual_gates)
+    if not configuration_ok:
+        status = "configuration_blocked"
+    elif manual_verification_required:
+        status = "manual_verification_required"
+    else:
+        status = "configuration_clear"
+
     return {
-        "ok": not blockers,
+        "ok": configuration_ok,
         "ok_scope": "configuration_only",
+        "status": status,
         "pilot_ready": None,
-        "manual_verification_required": bool(manual_gates),
+        "manual_verification_required": manual_verification_required,
         "phase": snapshot.get("phase"),
         "private_beta_execution_safe": bool(snapshot.get("private_beta_execution_safe")),
         "production_transport_safe": bool(snapshot.get("production_transport_safe")),
