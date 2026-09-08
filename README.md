@@ -22,19 +22,21 @@ The customer-facing Command Center is Swedish-first. Core, Pulse, Launch and Aut
 - High-risk actions are not intended for autonomous execution in the private beta.
 - Google Ads and Meta Ads are described as private-beta integrations, not general-availability features.
 - Marketing-site metrics are illustrative demo data and are labelled accordingly.
-- Live Stripe billing must not be enabled until the sandbox catalog, webhooks, VAT/tax handling and legal terms have been verified.
+- Live Stripe billing must not be enabled until the public pricing model, backend plan model, Stripe sandbox catalog, webhooks, VAT/tax handling and legal terms have been reconciled and verified.
 
-## Plans
+## Plans and billing migration
 
-Customer-facing monthly pricing, excluding VAT:
+The public marketing site currently advertises these monthly prices, excluding VAT:
 
-| Plan | Price | Included users |
-| --- | ---: | ---: |
-| Starter | 1,499 SEK/month | 1 |
-| Growth | 2,999 SEK/month | 3 |
-| Scale | 5,999 SEK/month | 10 |
+| Plan | Public price |
+| --- | ---: |
+| Start | 995 SEK/month |
+| Growth | 1,495 SEK/month |
+| Pro | 2,995 SEK/month |
 
-The application supports a 14-day Stripe Checkout trial flow. The currently documented Stripe catalog is **test-mode only**; see `STRIPE_SANDBOX_CATALOG.md` and `PRODUCTION_ENVIRONMENT.md` before touching billing configuration.
+The backend and historical verified Stripe sandbox catalog still use the older **Starter / Growth / Scale** model. New Stripe Checkout sessions are intentionally blocked by the pricing-reconciliation safety guard until the public pricing, backend plan metadata, tests and Stripe sandbox catalog all describe the same model.
+
+Do not bypass that guard and do not treat the historical Starter / Growth / Scale Price IDs as the current pilot checkout catalog. See `STRIPE_SANDBOX_CATALOG.md`, `PILOT_RUNBOOK.md` and `PRODUCTION_ENVIRONMENT.md` before touching billing configuration.
 
 ## Tech stack
 
@@ -88,11 +90,7 @@ Run deployment preflight:
 python scripts/preflight.py
 ```
 
-When Stripe sandbox variables are configured, verify that all three Price IDs point to active monthly SEK prices with the expected Vexmera amounts:
-
-```bash
-python scripts/verify_stripe_catalog.py
-```
+`python scripts/verify_stripe_catalog.py` verifies the historical sandbox catalog described in `STRIPE_SANDBOX_CATALOG.md`. Do not use that result as evidence that the current public Start / Growth / Pro pricing is checkout-ready; pricing reconciliation must happen first.
 
 ## Key operational documents
 
@@ -102,7 +100,7 @@ python scripts/verify_stripe_catalog.py
 - `PILOT_COMPANY_EVIDENCE_TEMPLATE.md` — safe per-company verification template without storing secrets.
 - `DEPLOY_CHECKLIST.md` — deployment checks and launch blockers.
 - `PRODUCTION_ENVIRONMENT.md` — environment configuration runbook.
-- `STRIPE_SANDBOX_CATALOG.md` — verified test-mode Vexmera products/prices.
+- `STRIPE_SANDBOX_CATALOG.md` — historical verified test-mode catalog; not the current public pricing model.
 - `PRIVACY_POLICY_DRAFT.md` — privacy draft requiring final legal/entity details and review.
 - `BETA_TERMS_DRAFT.md` — beta terms draft requiring final legal/entity details and review.
 
