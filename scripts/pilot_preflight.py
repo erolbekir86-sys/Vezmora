@@ -14,33 +14,43 @@ from app.stripe_billing import CHECKOUT_PRICING_RECONCILED
 
 
 def build_preflight_snapshot() -> dict[str, Any]:
-    """Return a non-secret, conservative preflight summary for pilot operators.
+    """Return a non-secret, conservative configuration preflight for pilot operators.
 
     The existing beta-readiness endpoint is intentionally configuration-only and
     keeps commercial pricing reconciliation as a manual gate. This operator view
     also treats the code-level Checkout pricing gate as an active blocker so a
     pilot cannot be mistaken for billing-ready while Checkout is deliberately
     disabled.
+
+    `ok` means only that machine-checkable configuration blockers are clear. It is
+    deliberately not a claim that the five-company pilot is approved or ready:
+    several manual gates require external evidence that this script cannot verify.
     """
     snapshot = beta_safety_snapshot()
     pilot = dict(snapshot.get("pilot_readiness") or {})
     blockers = list(pilot.get("configuration_blockers") or [])
+    manual_gates = list(pilot.get("manual_gates") or [])
 
-    if not CHECKOUT_PRICING_RECONCILED:
+    if not CHECKOUT_PRICING_RECONCILED and "checkout_pricing_reconciliation" not in blockers:
         blockers.append("checkout_pricing_reconciliation")
 
     return {
         "ok": not blockers,
+        "ok_scope": "configuration_only",
+        "pilot_ready": None,
+        "manual_verification_required": bool(manual_gates),
         "phase": snapshot.get("phase"),
         "private_beta_execution_safe": bool(snapshot.get("private_beta_execution_safe")),
         "production_transport_safe": bool(snapshot.get("production_transport_safe")),
         "configuration_ready": bool(pilot.get("configuration_ready")),
         "checkout_pricing_reconciled": bool(CHECKOUT_PRICING_RECONCILED),
         "blockers": blockers,
-        "manual_gates": list(pilot.get("manual_gates") or []),
+        "manual_gates": manual_gates,
         "note": (
-            "Configuration preflight only. It does not prove legal approval, live connector access, "
-            "browser QA, production observability, or permission to execute external ad changes."
+            "Configuration preflight only. ok=true does not mean pilot-ready. Pilot readiness remains "
+            "undetermined until the listed manual gates have current evidence; this script does not prove "
+            "legal approval, live connector access, browser QA, production observability, or permission "
+            "to execute external ad changes."
         ),
     }
 

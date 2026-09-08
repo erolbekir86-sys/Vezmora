@@ -18,9 +18,32 @@ def test_pilot_preflight_surfaces_checkout_pricing_gate(monkeypatch):
 def test_pilot_preflight_does_not_duplicate_pricing_blocker(monkeypatch):
     monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", False)
 
+    original_snapshot = pilot_preflight.beta_safety_snapshot
+
+    def fake_snapshot():
+        snapshot = original_snapshot()
+        snapshot["pilot_readiness"] = dict(snapshot["pilot_readiness"])
+        snapshot["pilot_readiness"]["configuration_blockers"] = [
+            *snapshot["pilot_readiness"]["configuration_blockers"],
+            "checkout_pricing_reconciliation",
+        ]
+        return snapshot
+
+    monkeypatch.setattr(pilot_preflight, "beta_safety_snapshot", fake_snapshot)
     result = pilot_preflight.build_preflight_snapshot()
 
     assert result["blockers"].count("checkout_pricing_reconciliation") == 1
+
+
+def test_pilot_preflight_cannot_be_mistaken_for_pilot_approval(monkeypatch):
+    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+
+    result = pilot_preflight.build_preflight_snapshot()
+
+    assert result["ok_scope"] == "configuration_only"
+    assert result["pilot_ready"] is None
+    assert result["manual_verification_required"] is bool(result["manual_gates"])
+    assert "ok=true does not mean pilot-ready" in result["note"]
 
 
 def test_pilot_preflight_never_renders_secret_values(monkeypatch):
