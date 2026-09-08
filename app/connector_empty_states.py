@@ -33,6 +33,23 @@ def _is_error_result(result: dict[str, object]) -> bool:
     return status >= 400
 
 
+def _has_blocking_sync_warning(provider_label: str, warnings: list[object]) -> bool:
+    """Return true when warnings show a failed or incomplete provider sync.
+
+    Google sync intentionally reports some Ads API/configuration failures as warnings
+    so Analytics data can still be returned. When no campaign rows were produced, those
+    warnings must not be reframed as a benign empty account.
+    """
+    provider = provider_label.lower()
+    for warning in warnings:
+        text = str(warning).lower()
+        if "sync failed" in text:
+            return True
+        if provider == "google ads" and "google ads" in text and " is missing" in text:
+            return True
+    return False
+
+
 def _with_empty_state_warning(provider_label: str, result: dict[str, object], days: int) -> dict[str, object]:
     """Make successful zero-row syncs explicit without turning failures into empty states."""
     if _is_error_result(result):
@@ -51,6 +68,9 @@ def _with_empty_state_warning(provider_label: str, result: dict[str, object], da
     campaign_rows = _row_count(result, "campaign_rows")
     ads_rows = _row_count(result, "ads_rows")
     has_provider_rows = campaign_rows > 0 or ads_rows > 0
+
+    if not has_provider_rows and _has_blocking_sync_warning(provider_label, warnings):
+        return result
 
     if not has_provider_rows and not any("no campaign data" in str(w).lower() for w in warnings):
         warnings.append(
