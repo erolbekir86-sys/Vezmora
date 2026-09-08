@@ -45,8 +45,9 @@ def _has_blocking_sync_warning(provider_label: str, warnings: list[object]) -> b
         text = str(warning).lower()
         if "sync failed" in text:
             return True
-        if provider == "google ads" and "google ads" in text and " is missing" in text:
-            return True
+        if provider == "google ads" and " is missing" in text:
+            if "google ads" in text or "google_ads_" in text:
+                return True
     return False
 
 
