@@ -21,15 +21,21 @@ def test_go_no_go_without_base_url_is_configuration_only(monkeypatch):
     assert result["pilot_ready"] is None
     assert result["manual_verification_required"] is True
     assert "live" not in result
+    assert "runtime" not in result
     assert "legal_discoverability" not in result
     assert "does not approve" in result["note"]
 
 
-def test_go_no_go_combines_live_and_legal_checks(monkeypatch):
+def test_go_no_go_combines_live_runtime_and_legal_checks(monkeypatch):
     monkeypatch.setattr(pilot_go_no_go, "build_preflight_snapshot", lambda: _configuration(True))
     monkeypatch.setattr(
         pilot_go_no_go,
         "build_live_preflight",
+        lambda base_url: {"ok": True, "base_url": base_url, "blockers": []},
+    )
+    monkeypatch.setattr(
+        pilot_go_no_go,
+        "build_public_runtime_preflight",
         lambda base_url: {"ok": True, "base_url": base_url, "blockers": []},
     )
     monkeypatch.setattr(
@@ -42,7 +48,25 @@ def test_go_no_go_combines_live_and_legal_checks(monkeypatch):
 
     assert result["ok"] is True
     assert result["live"]["ok"] is True
+    assert result["runtime"]["ok"] is True
     assert result["legal_discoverability"]["ok"] is True
+
+
+def test_go_no_go_fails_closed_when_runtime_fails(monkeypatch):
+    monkeypatch.setattr(pilot_go_no_go, "build_preflight_snapshot", lambda: _configuration(True))
+    monkeypatch.setattr(pilot_go_no_go, "build_live_preflight", lambda base_url: {"ok": True})
+    monkeypatch.setattr(
+        pilot_go_no_go,
+        "build_public_runtime_preflight",
+        lambda base_url: {"ok": False, "blockers": ["database_connection_unhealthy"]},
+    )
+    monkeypatch.setattr(pilot_go_no_go, "build_public_legal_preflight", lambda base_url: {"ok": True})
+
+    result = pilot_go_no_go.build_go_no_go_snapshot("https://vexmera.com")
+
+    assert result["ok"] is False
+    assert result["status"] == "blocked"
+    assert result["runtime"]["blockers"] == ["database_connection_unhealthy"]
 
 
 def test_go_no_go_fails_closed_when_legal_discoverability_fails(monkeypatch):
@@ -50,6 +74,11 @@ def test_go_no_go_fails_closed_when_legal_discoverability_fails(monkeypatch):
     monkeypatch.setattr(
         pilot_go_no_go,
         "build_live_preflight",
+        lambda base_url: {"ok": True, "base_url": base_url, "blockers": []},
+    )
+    monkeypatch.setattr(
+        pilot_go_no_go,
+        "build_public_runtime_preflight",
         lambda base_url: {"ok": True, "base_url": base_url, "blockers": []},
     )
     monkeypatch.setattr(
@@ -72,6 +101,7 @@ def test_go_no_go_fails_closed_when_legal_discoverability_fails(monkeypatch):
 def test_go_no_go_preserves_configuration_blocker(monkeypatch):
     monkeypatch.setattr(pilot_go_no_go, "build_preflight_snapshot", lambda: _configuration(False))
     monkeypatch.setattr(pilot_go_no_go, "build_live_preflight", lambda base_url: {"ok": True})
+    monkeypatch.setattr(pilot_go_no_go, "build_public_runtime_preflight", lambda base_url: {"ok": True})
     monkeypatch.setattr(pilot_go_no_go, "build_public_legal_preflight", lambda base_url: {"ok": True})
 
     result = pilot_go_no_go.build_go_no_go_snapshot("https://vexmera.com")
