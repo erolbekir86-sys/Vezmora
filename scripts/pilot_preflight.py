@@ -160,12 +160,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    result: dict[str, Any] = {"configuration": build_preflight_snapshot()}
+    # Preserve the original top-level configuration fields so existing operator
+    # tooling remains compatible. The optional live result is additive only.
+    result = build_preflight_snapshot()
     if args.base_url:
         result["live"] = build_live_preflight(args.base_url)
 
     print(json.dumps(result, indent=2, sort_keys=True))
-    ok = result["configuration"]["ok"] and result.get("live", {"ok": True})["ok"]
+    ok = result["ok"] and result.get("live", {"ok": True})["ok"]
     return 0 if ok else 1
 
 
