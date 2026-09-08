@@ -20,7 +20,15 @@ Also run the repository preflight from the deployed commit or an equivalent chec
 python scripts/pilot_preflight.py
 ```
 
-Treat `status: configuration_blocked` or a non-zero exit code as a stop condition. An exit code of zero means only that machine-checkable configuration blockers are clear; it does **not** mean the pilot is approved or ready while `manual_verification_required` is true or manual gates remain.
+When production is reachable, add the public GET-only live check:
+
+```bash
+python scripts/pilot_preflight.py --base-url https://vexmera.com
+```
+
+The live check verifies the public beta-readiness endpoint, confirms external/autopilot execution remain locked, and confirms the public Privacy Policy and Terms pages are reachable with expected content. It sends no credentials and performs no mutations.
+
+Treat `status: configuration_blocked`, any live-check blocker, or a non-zero exit code as a stop condition. An exit code of zero means only that machine-checkable configuration and requested public endpoint checks are clear; it does **not** mean the pilot is approved or ready while `manual_verification_required` is true or manual gates remain.
 
 Do not onboard a pilot company if any of those conditions fail.
 
@@ -61,7 +69,7 @@ Use one row per company. Do not store credentials, tokens, account secrets, paym
 ### 1. Preflight
 
 - [ ] Re-check `/health/beta-readiness`
-- [ ] Run `python scripts/pilot_preflight.py` against the same revision and confirm it is not `configuration_blocked`
+- [ ] Run `python scripts/pilot_preflight.py --base-url https://vexmera.com` against the same deployed revision and confirm neither configuration nor live checks report blockers
 - [ ] Record remaining manual gates as unresolved until current evidence exists; never interpret `ok: true` as pilot approval
 - [ ] Confirm execution remains locked
 - [ ] Confirm the company understands the pilot is analysis/recommendation only
@@ -145,7 +153,7 @@ Avoid copying customer credentials, tokens, ad-account secrets, payment data, or
 Pause onboarding for the affected company if any of the following occurs:
 
 - execution safety check becomes false
-- pilot preflight reports `configuration_blocked`
+- pilot preflight reports `configuration_blocked` or a live-check blocker
 - the app shows another company's data
 - authentication or tenant isolation appears incorrect
 - a connector requests unexpectedly broad/write permissions

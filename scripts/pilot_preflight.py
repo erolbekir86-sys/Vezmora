@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -34,9 +37,6 @@ def build_preflight_snapshot() -> dict[str, Any]:
     if not CHECKOUT_PRICING_RECONCILED and "checkout_pricing_reconciliation" not in blockers:
         blockers.append("checkout_pricing_reconciliation")
 
-    # Older beta-readiness snapshots did not include this field. Only an explicit
-    # False is treated as a blocker so the preflight stays backward-compatible
-    # with historical/fake snapshots while current runtime snapshots are stricter.
     core_internal_secrets_configured = snapshot.get("core_internal_secrets_configured") is not False
     if not core_internal_secrets_configured and "core_internal_secrets_configured" not in blockers:
         blockers.append("core_internal_secrets_configured")
@@ -73,10 +73,102 @@ def build_preflight_snapshot() -> dict[str, Any]:
     }
 
 
-def main() -> int:
+def _get_text(url: str, timeout: float = 8.0) -> tuple[int, str]:
+    request = Request(url, headers={"User-Agent": "Vexmera-Pilot-Preflight/1.0"})
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            return int(response.status), response.read().decode("utf-8", errors="replace")
+    except HTTPError as exc:
+        return int(exc.code), ""
+    except (URLError, TimeoutError, OSError) as exc:
+        raise RuntimeError(f"request_failed:{type(exc).__name__}") from exc
+
+
+def build_live_preflight(base_url: str) -> dict[str, Any]:
+    """Read only public production endpoints and report pilot-safety evidence.
+
+    This function performs GET requests only. It never sends credentials, mutates
+    provider state, changes campaigns, or reads secret values.
+    """
+    base = base_url.rstrip("/")
+    checks: dict[str, dict[str, Any]] = {}
+    blockers: list[str] = []
+
+    try:
+        status, body = _get_text(f"{base}/health/beta-readiness")
+        health_ok = status == 200
+        payload = json.loads(body) if health_ok else {}
+        execution_safe = payload.get("private_beta_execution_safe") is True
+        external_locked = payload.get("external_execution_enabled") is False
+        autopilot_locked = payload.get("autopilot_execution_enabled") is False
+        checks["beta_readiness"] = {
+            "status_code": status,
+            "reachable": health_ok,
+            "private_beta_execution_safe": execution_safe,
+            "external_execution_enabled": payload.get("external_execution_enabled"),
+            "autopilot_execution_enabled": payload.get("autopilot_execution_enabled"),
+        }
+        if not health_ok:
+            blockers.append("beta_readiness_unreachable")
+        if health_ok and not execution_safe:
+            blockers.append("private_beta_execution_unsafe")
+        if health_ok and not external_locked:
+            blockers.append("external_execution_not_locked")
+        if health_ok and not autopilot_locked:
+            blockers.append("autopilot_execution_not_locked")
+    except (RuntimeError, json.JSONDecodeError):
+        checks["beta_readiness"] = {"reachable": False}
+        blockers.append("beta_readiness_unreachable")
+
+    legal_expectations = {
+        "privacy": ("/privacy", "Integritetspolicy", "Google API Services User Data Policy"),
+        "terms": ("/terms", "Terms of Service", "Vexmera"),
+    }
+    for name, (path, marker_a, marker_b) in legal_expectations.items():
+        try:
+            status, body = _get_text(f"{base}{path}")
+            reachable = status == 200
+            content_ok = reachable and marker_a in body and marker_b in body
+            checks[name] = {
+                "status_code": status,
+                "reachable": reachable,
+                "expected_content_present": content_ok,
+            }
+            if not reachable:
+                blockers.append(f"{name}_page_unreachable")
+            elif not content_ok:
+                blockers.append(f"{name}_page_unexpected_content")
+        except RuntimeError:
+            checks[name] = {"reachable": False, "expected_content_present": False}
+            blockers.append(f"{name}_page_unreachable")
+
+    return {
+        "ok": not blockers,
+        "scope": "public_read_only_live_checks",
+        "base_url": base,
+        "checks": checks,
+        "blockers": blockers,
+        "note": "GET-only production checks. No credentials are sent and no external advertising state is changed.",
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Vexmera five-company pilot safety preflight")
+    parser.add_argument(
+        "--base-url",
+        help="Optionally run GET-only checks against public endpoints, e.g. https://vexmera.com",
+    )
+    args = parser.parse_args(argv)
+
+    # Preserve the original top-level configuration fields so existing operator
+    # tooling remains compatible. The optional live result is additive only.
     result = build_preflight_snapshot()
+    if args.base_url:
+        result["live"] = build_live_preflight(args.base_url)
+
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0 if result["ok"] else 1
+    ok = result["ok"] and result.get("live", {"ok": True})["ok"]
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
