@@ -45,6 +45,27 @@ Result: PASS / BLOCKED
 
 Observed friction, wording issue, or visual defect:
 
+## Google Analytics connector
+
+Mark N/A if this company is not testing Google Analytics.
+
+- [ ] OAuth/connection flow returns to the expected Vexmera state
+- [ ] Connected state is understandable
+- [ ] Read-only data is retrieved when access exists
+- [ ] Valid zero-row data is presented as an empty state
+- [ ] Authentication/API failure is presented as an error rather than healthy empty data
+- [ ] GA `sessions` are interpreted as website sessions, not paid-ad clicks
+- [ ] `source=google_analytics` values are excluded from paid-media click totals, CPC/CTR interpretation, and paid-click cross-channel comparisons
+- [ ] The GA metric-semantics warning remains visible where applicable
+- [ ] Disconnect works cleanly
+- [ ] No external execution capability became available
+
+Result: PASS / BLOCKED / N/A
+
+Non-sensitive note:
+
+Until the KPI schema has a dedicated sessions field, a failed metric-semantics check is a stop condition for Google Analytics analysis and the company should not be marked PASS on GA evidence.
+
 ## Google Ads connector
 
 Mark N/A if this company is not testing Google Ads.
@@ -139,4 +160,4 @@ List only reproducible, non-sensitive symptoms and the affected route/feature. D
 - Follow-up issue/commit references:
 - Date closed:
 
-A company should not be marked PASS while any cross-tenant, secret-exposure, execution-safety, unexpected write-scope, transport-safety, pricing-reconciliation, or live-billing issue remains unresolved.
+A company should not be marked PASS while any cross-tenant, secret-exposure, execution-safety, unexpected write-scope, transport-safety, Google Analytics metric-semantics, pricing-reconciliation, or live-billing issue remains unresolved.
