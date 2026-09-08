@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from .store import get_workspace_settings, usage_summary
+from .stripe_billing import CHECKOUT_PRICING_RECONCILED
 
 # Customer-facing plan limits are kept in one place so the app, pricing copy,
 # and backend enforcement can stay aligned. Prices are displayed in the UI;
@@ -61,7 +62,8 @@ def billing_status(workspace_id: int) -> dict[str, Any]:
     usage = usage_summary(workspace_id)
     limits = PLANS.get(plan, PLANS["starter"])
     stripe_ready = bool(
-        os.getenv("STRIPE_SECRET_KEY")
+        CHECKOUT_PRICING_RECONCILED
+        and os.getenv("STRIPE_SECRET_KEY")
         and os.getenv("STRIPE_PRICE_STARTER")
         and os.getenv("STRIPE_PRICE_GROWTH")
         and os.getenv("STRIPE_PRICE_SCALE")
