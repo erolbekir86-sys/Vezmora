@@ -90,6 +90,7 @@ def _pilot_readiness_snapshot(
     *,
     private_beta_execution_safe: bool,
     production_transport_safe: bool,
+    core_internal_secrets_configured: bool,
     remote_database_configured: bool,
     stripe_sandbox_ready: bool,
     google_oauth_configured: bool,
@@ -107,6 +108,7 @@ def _pilot_readiness_snapshot(
     checks = {
         "execution_locked": private_beta_execution_safe,
         "production_transport_safe": production_transport_safe,
+        "core_internal_secrets_configured": core_internal_secrets_configured,
         "remote_database_configured": remote_database_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
@@ -172,6 +174,7 @@ def beta_safety_snapshot() -> dict[str, object]:
     pilot_readiness = _pilot_readiness_snapshot(
         private_beta_execution_safe=private_beta_execution_safe,
         production_transport_safe=bool(transport["safe"]),
+        core_internal_secrets_configured=core_internal_secrets_configured,
         remote_database_configured=bool(database["remote_database_configured"]),
         stripe_sandbox_ready=stripe_sandbox_ready,
         google_oauth_configured=google_oauth_configured,
