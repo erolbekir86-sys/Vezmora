@@ -16,6 +16,10 @@ PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing"})
 _raw_build_id = (os.getenv("VERCEL_GIT_COMMIT_SHA") or "local").strip()
 BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
 _STATIC_ASSET_RE = re.compile(r'(?P<prefix>(?:src|href)=["\'])(?P<url>/static/[^"\']+)')
+_FOOTER_LINK_RE = re.compile(
+    r'<a\s+href="[^"]*"(?P<attrs>[^>]*)data-i18n="footer\.(?P<kind>privacy|terms)"(?P<tail>[^>]*)>',
+    re.IGNORECASE,
+)
 
 
 NO_STORE_HEADERS = {
@@ -42,6 +46,20 @@ def _version_static_assets(html: str) -> str:
         return f'{match.group("prefix")}{url}{separator}build={BUILD_ID}'
 
     return _STATIC_ASSET_RE.sub(replace, html)
+
+
+def _link_public_legal_pages(html: str) -> str:
+    """Point existing translated footer links at the public legal pages."""
+
+    def replace(match: re.Match[str]) -> str:
+        kind = match.group("kind").lower()
+        path = "/privacy" if kind == "privacy" else "/terms"
+        return (
+            f'<a href="{path}"{match.group("attrs")}data-i18n="footer.{kind}"'
+            f'{match.group("tail")}>'
+        )
+
+    return _FOOTER_LINK_RE.sub(replace, html)
 
 
 def install_public_routing(app: FastAPI) -> None:
@@ -80,6 +98,7 @@ def install_public_routing(app: FastAPI) -> None:
         # pointed to login. Keep all existing CTA copy/design, but send those
         # root links to the authenticated product route now.
         html = html.replace('href="/"', 'href="/app"')
+        html = _link_public_legal_pages(html)
         seo = (
             f'  <link rel="canonical" href="{CANONICAL_ORIGIN}/" />\n'
             '  <meta name="robots" content="index,follow" />\n'
@@ -125,6 +144,14 @@ def install_public_routing(app: FastAPI) -> None:
         html = _version_static_assets(html)
         return HTMLResponse(html, headers=NO_STORE_HEADERS)
 
+    async def privacy_policy() -> HTMLResponse:
+        html = (STATIC / "privacy.html").read_text(encoding="utf-8")
+        return HTMLResponse(html, headers=NO_STORE_HEADERS)
+
+    async def terms_of_service() -> HTMLResponse:
+        html = (STATIC / "terms.html").read_text(encoding="utf-8")
+        return HTMLResponse(html, headers=NO_STORE_HEADERS)
+
     async def product_shell() -> HTMLResponse:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
         # The original app polish helper observes the whole dynamic product DOM.
@@ -152,6 +179,8 @@ def install_public_routing(app: FastAPI) -> None:
         body = (
             "User-agent: *\n"
             "Allow: /\n"
+            "Allow: /privacy\n"
+            "Allow: /terms\n"
             "Disallow: /app\n"
             "Disallow: /api/\n"
             "Disallow: /health\n"
@@ -169,6 +198,16 @@ def install_public_routing(app: FastAPI) -> None:
             "    <changefreq>weekly</changefreq>\n"
             "    <priority>1.0</priority>\n"
             "  </url>\n"
+            "  <url>\n"
+            f"    <loc>{CANONICAL_ORIGIN}/privacy</loc>\n"
+            "    <changefreq>monthly</changefreq>\n"
+            "    <priority>0.5</priority>\n"
+            "  </url>\n"
+            "  <url>\n"
+            f"    <loc>{CANONICAL_ORIGIN}/terms</loc>\n"
+            "    <changefreq>monthly</changefreq>\n"
+            "    <priority>0.4</priority>\n"
+            "  </url>\n"
             "</urlset>\n"
         )
         return Response(content=body, media_type="application/xml")
@@ -179,6 +218,34 @@ def install_public_routing(app: FastAPI) -> None:
         methods=["GET"],
         include_in_schema=False,
         name="marketing_home",
+    )
+    app.add_api_route(
+        "/privacy",
+        privacy_policy,
+        methods=["GET"],
+        include_in_schema=False,
+        name="privacy_policy",
+    )
+    app.add_api_route(
+        "/privacy/",
+        privacy_policy,
+        methods=["GET"],
+        include_in_schema=False,
+        name="privacy_policy_slash",
+    )
+    app.add_api_route(
+        "/terms",
+        terms_of_service,
+        methods=["GET"],
+        include_in_schema=False,
+        name="terms_of_service",
+    )
+    app.add_api_route(
+        "/terms/",
+        terms_of_service,
+        methods=["GET"],
+        include_in_schema=False,
+        name="terms_of_service_slash",
     )
     app.add_api_route(
         "/app",

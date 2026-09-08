@@ -84,6 +84,8 @@ def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     assert 'Förstå din marknadsföring.' in response.text
     assert 'id="authScreen"' not in response.text
     assert 'href="/app"' in response.text
+    assert 'href="/privacy"' in response.text
+    assert 'href="/terms"' in response.text
     assert '<link rel="canonical" href="https://vexmera.com/" />' in response.text
     assert '<meta name="robots" content="index,follow" />' in response.text
     assert '/static/landing-ux.css?build=' in response.text
@@ -91,6 +93,39 @@ def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     assert '/static/landing-refine.js?build=' in response.text
     assert '/static/vexmera-founder.jpg?build=' in response.text
     assert 'window.__VEXMERA_BUILD__=' in response.text
+
+
+def test_public_privacy_policy_is_available_and_discloses_google_data_use():
+    with TestClient(app) as client:
+        response = client.get('/privacy')
+        slash = client.get('/privacy/')
+
+    assert response.status_code == 200
+    assert slash.status_code == 200
+    assert response.headers['content-type'].startswith('text/html')
+    assert '<link rel="canonical" href="https://vexmera.com/privacy" />' in response.text
+    assert 'Integritetspolicy' in response.text
+    assert 'Google-användardata' in response.text
+    assert 'Google API Services User Data Policy' in response.text
+    assert 'Limited Use' in response.text
+    assert 'vexmera.platform@gmail.com' in response.text
+    # The policy must not leak implementation secrets or credentials.
+    for marker in ('GOOGLE_ADS_DEVELOPER_TOKEN', 'META_APP_SECRET', 'OPENAI_API_KEY', 'CRON_SECRET'):
+        assert marker not in response.text
+
+
+def test_public_terms_page_is_available_and_links_to_privacy():
+    with TestClient(app) as client:
+        response = client.get('/terms')
+        slash = client.get('/terms/')
+
+    assert response.status_code == 200
+    assert slash.status_code == 200
+    assert response.headers['content-type'].startswith('text/html')
+    assert '<link rel="canonical" href="https://vexmera.com/terms" />' in response.text
+    assert 'Användarvillkor' in response.text
+    assert 'privata betan' in response.text
+    assert 'href="/privacy"' in response.text
 
 
 def test_authenticated_product_shell_lives_under_app_and_is_noindex():
@@ -121,12 +156,14 @@ def test_legacy_product_return_links_are_forwarded_to_app():
     assert billing.headers['location'] == '/app?billing=success&session_id=cs_test_123'
 
 
-def test_search_engine_files_publish_only_the_public_marketing_root():
+def test_search_engine_files_publish_public_marketing_and_legal_pages_only():
     with TestClient(app) as client:
         robots = client.get('/robots.txt')
         sitemap = client.get('/sitemap.xml')
 
     assert robots.status_code == 200
+    assert 'Allow: /privacy' in robots.text
+    assert 'Allow: /terms' in robots.text
     assert 'Disallow: /app' in robots.text
     assert 'Disallow: /api/' in robots.text
     assert 'Sitemap: https://vexmera.com/sitemap.xml' in robots.text
@@ -134,4 +171,6 @@ def test_search_engine_files_publish_only_the_public_marketing_root():
     assert sitemap.status_code == 200
     assert sitemap.headers['content-type'].startswith('application/xml')
     assert '<loc>https://vexmera.com/</loc>' in sitemap.text
+    assert '<loc>https://vexmera.com/privacy</loc>' in sitemap.text
+    assert '<loc>https://vexmera.com/terms</loc>' in sitemap.text
     assert '<loc>https://vexmera.com/app</loc>' not in sitemap.text
