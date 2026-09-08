@@ -87,6 +87,10 @@ Do not expand requested scopes merely to make onboarding pass.
 - [ ] Recommendations remain proposals only
 - [ ] Any action requiring external execution remains unavailable/locked
 - [ ] The user can understand the next useful step without staff explanation
+- [ ] Google Analytics `sessions` are treated as website sessions, not paid-ad clicks, even though the current normalized KPI schema temporarily stores that value in the generic `clicks` field
+- [ ] Paid-media click totals, CPC/CTR interpretation, and cross-channel comparisons do not combine `source=google_analytics` click values with Google Ads or Meta Ads clicks during the private beta
+
+Until the KPI schema has a dedicated sessions field, the Google Analytics sync warning is an intentional beta-safety disclosure. Do not remove, hide, or reinterpret it merely to make the pilot look cleaner.
 
 ### 5. Privacy and deletion check
 
@@ -136,6 +140,7 @@ Pause onboarding for the affected company if any of the following occurs:
 - live billing is reached unexpectedly
 - a secret or token appears in UI, logs, diagnostics, screenshots, or error output
 - an API failure is misrepresented as valid empty data in a way that could mislead the user
+- Google Analytics sessions are presented or used as paid-ad clicks without an explicit source distinction
 - production transport is reported unsafe
 
 Resume only after the issue is understood, fixed, tested, and redeployed.
@@ -145,7 +150,7 @@ Resume only after the issue is understood, fixed, tested, and redeployed.
 The five-company pilot is operationally complete only when:
 
 1. all five companies can complete the intended read-only onboarding path,
-2. no unresolved cross-tenant, secret-exposure, execution-safety, or billing-safety issue remains,
+2. no unresolved cross-tenant, secret-exposure, execution-safety, billing-safety, or metric-semantics issue remains,
 3. empty states and connector failures are distinguishable and understandable,
 4. disconnect/privacy controls have been exercised successfully,
 5. final browser QA has been completed on the deployed build,
