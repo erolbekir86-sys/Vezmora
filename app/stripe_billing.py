@@ -22,6 +22,14 @@ PRICE_ENV = {
     "scale": "STRIPE_PRICE_SCALE",
 }
 
+# Safety gate for the 2026-09 pricing migration. The public site currently uses
+# Start / Growth / Pro while the backend and verified Stripe sandbox still use
+# Starter / Growth / Scale. Keep new Checkout creation disabled until those
+# surfaces and their tests are intentionally reconciled to one approved model.
+# Existing webhook/portal handling remains available for already-created test
+# customers and subscriptions.
+CHECKOUT_PRICING_RECONCILED = False
+
 
 def stripe_configured() -> bool:
     return bool(os.getenv("STRIPE_SECRET_KEY"))
@@ -83,6 +91,12 @@ def _trial_days(settings: dict[str, Any]) -> int:
 
 
 def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
+    if not CHECKOUT_PRICING_RECONCILED:
+        raise HTTPException(
+            status_code=503,
+            detail="Checkout is temporarily unavailable while Vexmera pricing is being reconciled for the private beta",
+        )
+
     client = _stripe_client()
     settings = get_workspace_settings(workspace_id)
     if settings.get("stripe_subscription_id") and str(settings.get("billing_status") or "") not in {"canceled", "incomplete_expired"}:
