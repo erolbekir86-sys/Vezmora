@@ -13,6 +13,7 @@ def test_pilot_preflight_surfaces_checkout_pricing_gate(monkeypatch):
     assert result["checkout_pricing_reconciled"] is False
     assert "checkout_pricing_reconciliation" in result["blockers"]
     assert result["ok"] is False
+    assert result["status"] == "configuration_blocked"
 
 
 def test_pilot_preflight_does_not_duplicate_pricing_blocker(monkeypatch):
@@ -38,12 +39,48 @@ def test_pilot_preflight_does_not_duplicate_pricing_blocker(monkeypatch):
 def test_pilot_preflight_cannot_be_mistaken_for_pilot_approval(monkeypatch):
     monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
 
+    original_snapshot = pilot_preflight.beta_safety_snapshot
+
+    def fake_snapshot():
+        snapshot = original_snapshot()
+        snapshot["pilot_readiness"] = dict(snapshot["pilot_readiness"])
+        snapshot["pilot_readiness"]["configuration_blockers"] = []
+        snapshot["pilot_readiness"]["configuration_ready"] = True
+        return snapshot
+
+    monkeypatch.setattr(pilot_preflight, "beta_safety_snapshot", fake_snapshot)
     result = pilot_preflight.build_preflight_snapshot()
 
+    assert result["ok"] is True
     assert result["ok_scope"] == "configuration_only"
+    assert result["status"] == "manual_verification_required"
     assert result["pilot_ready"] is None
     assert result["manual_verification_required"] is bool(result["manual_gates"])
     assert "ok=true does not mean pilot-ready" in result["note"]
+
+
+def test_pilot_preflight_status_can_report_configuration_clear(monkeypatch):
+    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+
+    def fake_snapshot():
+        return {
+            "phase": "private_beta",
+            "private_beta_execution_safe": True,
+            "production_transport_safe": True,
+            "pilot_readiness": {
+                "configuration_ready": True,
+                "configuration_blockers": [],
+                "manual_gates": [],
+            },
+        }
+
+    monkeypatch.setattr(pilot_preflight, "beta_safety_snapshot", fake_snapshot)
+    result = pilot_preflight.build_preflight_snapshot()
+
+    assert result["ok"] is True
+    assert result["manual_verification_required"] is False
+    assert result["status"] == "configuration_clear"
+    assert result["pilot_ready"] is None
 
 
 def test_pilot_preflight_never_renders_secret_values(monkeypatch):
