@@ -105,11 +105,12 @@ Non-sensitive note:
 
 ## Billing sandbox
 
-Mark N/A if billing is not part of this pilot session.
+Mark N/A if billing is not part of this pilot session. If pricing reconciliation is incomplete, leave checkout blocked and record `BLOCKED` or `N/A`; do not bypass the pricing-migration guard and do not treat the historical Starter / Growth / Scale catalog as current.
 
+- [ ] Public pricing, backend plans and Stripe sandbox catalog are reconciled to the same current model
 - [ ] Stripe test mode confirmed
-- [ ] Sandbox catalog confirmed
-- [ ] Test checkout completed
+- [ ] Current reconciled sandbox catalog confirmed
+- [ ] Test checkout completed through the normal guarded flow
 - [ ] Test webhook state reflected correctly
 - [ ] No live charge attempted
 
@@ -138,4 +139,4 @@ List only reproducible, non-sensitive symptoms and the affected route/feature. D
 - Follow-up issue/commit references:
 - Date closed:
 
-A company should not be marked PASS while any cross-tenant, secret-exposure, execution-safety, unexpected write-scope, transport-safety, or live-billing issue remains unresolved.
+A company should not be marked PASS while any cross-tenant, secret-exposure, execution-safety, unexpected write-scope, transport-safety, pricing-reconciliation, or live-billing issue remains unresolved.
