@@ -25,12 +25,15 @@ These remain manual gates even when configuration checks are green:
 - [ ] Final authenticated browser QA on the deployed application
 - [ ] Privacy Policy and Beta Terms reviewed and ready for the intended business pilot
 - [ ] Google Ads external approval / manager linking completed if required for read access
-- [ ] Fresh Stripe sandbox end-to-end test completed
+- [ ] Public pricing, backend plans and Stripe sandbox catalog reconciled to the same current model
+- [ ] Fresh Stripe sandbox end-to-end test completed **only after** pricing reconciliation is complete and the checkout safety gate is intentionally open
 - [ ] Production transport check is green
 - [ ] Remote database configuration check is green
 - [ ] Transactional email configuration check is green
 - [ ] Google OAuth configuration check is green
 - [ ] Meta OAuth configuration check is green if Meta is included in the pilot
+
+Do not bypass the pricing-migration checkout guard to satisfy a pilot checklist. The historical Starter / Growth / Scale sandbox catalog is evidence of earlier test configuration, not the current pilot billing target.
 
 ## Pilot roster
 
@@ -98,11 +101,13 @@ Do not delete a real pilot company's data merely to satisfy a test. Use a dedica
 
 ### 6. Billing sandbox check
 
-If billing is shown during the pilot:
+If billing is shown during the pilot, first confirm pricing reconciliation is complete. If it is not complete, leave checkout blocked and mark the billing check `BLOCKED` or `N/A`; do not bypass the guard or reuse the historical catalog as if it were current.
+
+Only after reconciliation:
 
 - [ ] Stripe is in test mode
-- [ ] Verified sandbox catalog is in use
-- [ ] Test checkout succeeds
+- [ ] The current reconciled sandbox catalog matches the public/backend plan model
+- [ ] Test checkout succeeds through the normal guarded flow
 - [ ] Test webhook state is reflected correctly
 - [ ] No live charge is attempted
 
