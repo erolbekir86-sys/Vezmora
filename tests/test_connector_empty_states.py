@@ -87,3 +87,29 @@ def test_existing_scalar_provider_warning_is_preserved():
 
     assert guarded["warnings"][0] == "Partial attribution data"
     assert any("No campaign data found" in warning for warning in guarded["warnings"])
+
+
+def test_google_ads_http_failure_warning_is_not_reframed_as_healthy_empty_state():
+    result = {
+        "campaign_rows": 0,
+        "ads_rows": 0,
+        "warnings": ["Google Ads sync failed (403)"],
+    }
+
+    guarded = _with_empty_state_warning("Google Ads", result, 7)
+
+    assert guarded["warnings"] == ["Google Ads sync failed (403)"]
+    assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
+
+
+def test_google_ads_missing_configuration_is_not_reframed_as_healthy_empty_state():
+    result = {
+        "campaign_rows": 0,
+        "ads_rows": 0,
+        "warnings": ["GOOGLE_ADS_DEVELOPER_TOKEN is missing"],
+    }
+
+    guarded = _with_empty_state_warning("Google Ads", result, 7)
+
+    assert guarded["warnings"] == ["GOOGLE_ADS_DEVELOPER_TOKEN is missing"]
+    assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
