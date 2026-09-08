@@ -55,6 +55,14 @@ For each connected source, record only non-secret status information.
 
 If the 30-day sync succeeds and the source has sufficient data, optionally verify the 7-day and 90-day windows as a consistency check. Do not turn a provider/account limitation into a product failure when the source legitimately lacks history for the requested period.
 
+If Google Analytics is connected, verify the current beta metric semantics explicitly:
+
+- GA `sessions` are interpreted as website sessions, not paid-ad clicks: pass / fail / not applicable
+- `source=google_analytics` values are excluded from paid-media click totals, CPC/CTR interpretation, and cross-channel paid-click comparisons: pass / fail / not applicable
+- The user-visible GA metric-semantics warning remains visible where applicable: pass / fail / not applicable
+
+Until the KPI schema has a dedicated sessions field, any failure of these checks is a pilot stop condition for Google Analytics analysis. Do not hide or reinterpret the warning merely to make the pilot output look cleaner.
+
 If a provider fails, record only the user-visible error category/message and non-sensitive request/reference ID where available. Never paste credentials, OAuth tokens, developer tokens, API keys, authorization headers, or raw provider payloads containing secrets.
 
 ## Recommendation quality
@@ -111,4 +119,5 @@ Keep these fields consistent across all five copies so the sessions can be compa
 - useful recommendation reached: yes / no
 - recommendation grounded in observed data: yes / no / not applicable
 - customer would return unassisted: yes / no / unsure
+- GA metric semantics verified when Google Analytics is used: yes / no / not applicable
 - safety failures: 0 required
