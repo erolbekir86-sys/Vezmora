@@ -12,6 +12,8 @@ def _clear(monkeypatch):
         "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
         "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
         "VEZMORA_DEV_SHOW_TOKENS",
+        "VEZMORA_SECRET_KEY",
+        "CRON_SECRET",
         "VEZMORA_APP_URL",
         "VEZMORA_COOKIE_SECURE",
         "VERCEL",
@@ -67,6 +69,7 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     }
     assert snapshot["pilot_readiness"]["configuration_ready"] is False
     assert snapshot["pilot_readiness"]["configuration_blockers"] == [
+        "core_internal_secrets_configured",
         "remote_database_configured",
         "stripe_sandbox_ready",
         "google_oauth_configured",
@@ -191,6 +194,8 @@ def test_beta_readiness_marks_google_ads_api_config_incomplete_without_developer
 
 def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(monkeypatch):
     _clear(monkeypatch)
+    monkeypatch.setenv("VEZMORA_SECRET_KEY", "configured-value-a")
+    monkeypatch.setenv("CRON_SECRET", "configured-value-b")
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("VERCEL_ENV", "production")
     monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
@@ -214,6 +219,7 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     assert pilot["configuration_ready"] is True
     assert pilot["configuration_blockers"] == []
     assert pilot["checks"]["execution_locked"] is True
+    assert pilot["checks"]["core_internal_secrets_configured"] is True
     assert pilot["checks"]["google_ads_api_configured"] is True
     assert pilot["manual_gates"] == [
         "production_observability_verified",
@@ -237,6 +243,8 @@ def test_pricing_reconciliation_remains_an_explicit_pilot_gate(monkeypatch):
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     _clear(monkeypatch)
     values = {
+        "VEZMORA_SECRET_KEY": "configured-value-a",
+        "CRON_SECRET": "configured-value-b",
         "VEZMORA_APP_URL": "https://example.test",
         "DATABASE_URL": "postgresql://database-private",
         "STRIPE_SECRET_KEY": "sk_test_private",
@@ -272,6 +280,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["google_ads_developer_token_configured"] is True
     assert payload["google_ads_login_customer_id_configured"] is True
     assert payload["pilot_readiness"]["checks"]["google_ads_api_configured"] is True
+    assert payload["pilot_readiness"]["checks"]["core_internal_secrets_configured"] is True
     assert payload["meta_oauth_configured"] is True
     assert payload["smtp_minimum_configured"] is True
     assert payload["production_transport_safe"] is True
