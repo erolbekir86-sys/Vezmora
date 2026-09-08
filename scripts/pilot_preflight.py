@@ -101,12 +101,16 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
         execution_safe = payload.get("private_beta_execution_safe") is True
         external_locked = payload.get("external_execution_enabled") is False
         autopilot_locked = payload.get("autopilot_execution_enabled") is False
+        meta_execution_scope_locked = payload.get("meta_execution_scope_enabled") is False
+        dev_show_tokens_locked = payload.get("dev_show_tokens_enabled") is False
         checks["beta_readiness"] = {
             "status_code": status,
             "reachable": health_ok,
             "private_beta_execution_safe": execution_safe,
             "external_execution_enabled": payload.get("external_execution_enabled"),
             "autopilot_execution_enabled": payload.get("autopilot_execution_enabled"),
+            "meta_execution_scope_enabled": payload.get("meta_execution_scope_enabled"),
+            "dev_show_tokens_enabled": payload.get("dev_show_tokens_enabled"),
         }
         if not health_ok:
             blockers.append("beta_readiness_unreachable")
@@ -116,6 +120,10 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
             blockers.append("external_execution_not_locked")
         if health_ok and not autopilot_locked:
             blockers.append("autopilot_execution_not_locked")
+        if health_ok and not meta_execution_scope_locked:
+            blockers.append("meta_execution_scope_not_locked")
+        if health_ok and not dev_show_tokens_locked:
+            blockers.append("dev_show_tokens_not_locked")
     except (RuntimeError, json.JSONDecodeError):
         checks["beta_readiness"] = {"reachable": False}
         blockers.append("beta_readiness_unreachable")
