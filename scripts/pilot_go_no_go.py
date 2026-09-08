@@ -6,14 +6,15 @@ from typing import Any
 
 from scripts.pilot_preflight import build_live_preflight, build_preflight_snapshot
 from scripts.public_legal_preflight import build_public_legal_preflight
+from scripts.public_runtime_preflight import build_public_runtime_preflight
 
 
 def build_go_no_go_snapshot(base_url: str | None = None) -> dict[str, Any]:
     """Combine existing non-mutating pilot checks into one operator snapshot.
 
     This deliberately does not claim that the pilot is approved. It only combines
-    machine-checkable configuration, public execution-lock evidence and public
-    legal discoverability. Manual gates in the pilot runbook remain mandatory.
+    machine-checkable configuration, public execution-lock evidence, runtime health
+    and public legal discoverability. Manual gates in the pilot runbook remain mandatory.
     """
     configuration = build_preflight_snapshot()
     result: dict[str, Any] = {
@@ -30,10 +31,14 @@ def build_go_no_go_snapshot(base_url: str | None = None) -> dict[str, Any]:
 
     if base_url:
         live = build_live_preflight(base_url)
+        runtime = build_public_runtime_preflight(base_url)
         legal = build_public_legal_preflight(base_url)
         result["live"] = live
+        result["runtime"] = runtime
         result["legal_discoverability"] = legal
-        result["ok"] = bool(result["ok"] and live.get("ok") and legal.get("ok"))
+        result["ok"] = bool(
+            result["ok"] and live.get("ok") and runtime.get("ok") and legal.get("ok")
+        )
 
     result["status"] = "machine_checks_clear" if result["ok"] else "blocked"
     return result
