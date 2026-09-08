@@ -14,11 +14,14 @@ Use `PILOT_SESSION_TEMPLATE.md` for each company so the five sessions can be com
 - Treat `pilot_readiness.configuration_ready` as configuration-only. It does not replace the manual gates returned in `pilot_readiness.manual_gates`.
 - Final authenticated browser QA has been completed on the deployed Command Center.
 - Privacy Policy and Beta Terms have been reviewed and finalized from the current drafts.
-- A fresh Stripe test-mode Checkout, 14-day trial, signed webhook and Customer Portal flow has passed end to end.
+- Public Start / Growth / Pro pricing, backend plan metadata and the Stripe sandbox catalog have been reconciled before any pilot Checkout test is attempted.
+- After that reconciliation gate is cleared, a fresh Stripe test-mode Checkout, 14-day trial, signed webhook and Customer Portal flow has passed end to end.
 - Any Google Ads functionality offered to a pilot company is limited to access actually approved and active for that account.
 - The workspace base currency is correct.
 
 If the readiness endpoint reports a configuration blocker, fix or intentionally exclude the affected source before inviting a company. Do not use the customer session itself to discover known environment/configuration gaps.
+
+While the pricing-reconciliation safety gate is active, do not attempt to bypass it and do not treat the historical Starter / Growth / Scale Stripe sandbox catalog as current pilot billing configuration. Pilot onboarding may continue only without Checkout/billing where that is appropriate and explicitly intended.
 
 ## Pilot onboarding flow
 
