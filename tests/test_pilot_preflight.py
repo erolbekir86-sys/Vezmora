@@ -43,6 +43,7 @@ def test_pilot_preflight_cannot_be_mistaken_for_pilot_approval(monkeypatch):
 
     def fake_snapshot():
         snapshot = original_snapshot()
+        snapshot["core_internal_secrets_configured"] = True
         snapshot["pilot_readiness"] = dict(snapshot["pilot_readiness"])
         snapshot["pilot_readiness"]["configuration_blockers"] = []
         snapshot["pilot_readiness"]["configuration_ready"] = True
