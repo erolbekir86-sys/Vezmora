@@ -14,6 +14,14 @@ Before every pilot onboarding, confirm `/health/beta-readiness` reports:
 - `meta_execution_scope_enabled: false`
 - `dev_show_tokens_enabled: false`
 
+Also run the repository preflight from the deployed commit or an equivalent checked-out revision:
+
+```bash
+python scripts/pilot_preflight.py
+```
+
+Treat `status: configuration_blocked` or a non-zero exit code as a stop condition. An exit code of zero means only that machine-checkable configuration blockers are clear; it does **not** mean the pilot is approved or ready while `manual_verification_required` is true or manual gates remain.
+
 Do not onboard a pilot company if any of those conditions fail.
 
 Never enable external ad execution, autonomous campaign changes, budget or bid changes, live billing changes, or broader ad-platform write scopes as part of this pilot.
@@ -28,6 +36,7 @@ These remain manual gates even when configuration checks are green:
 - [ ] Public pricing, backend plans and Stripe sandbox catalog reconciled to the same current model
 - [ ] Fresh Stripe sandbox end-to-end test completed **only after** pricing reconciliation is complete and the checkout safety gate is intentionally open
 - [ ] Production transport check is green
+- [ ] Core internal-secret configuration check is green (boolean only; never copy secret values into pilot evidence)
 - [ ] Remote database configuration check is green
 - [ ] Transactional email configuration check is green
 - [ ] Google OAuth configuration check is green
@@ -52,6 +61,8 @@ Use one row per company. Do not store credentials, tokens, account secrets, paym
 ### 1. Preflight
 
 - [ ] Re-check `/health/beta-readiness`
+- [ ] Run `python scripts/pilot_preflight.py` against the same revision and confirm it is not `configuration_blocked`
+- [ ] Record remaining manual gates as unresolved until current evidence exists; never interpret `ok: true` as pilot approval
 - [ ] Confirm execution remains locked
 - [ ] Confirm the company understands the pilot is analysis/recommendation only
 - [ ] Confirm the correct company/user account is being onboarded
@@ -134,6 +145,7 @@ Avoid copying customer credentials, tokens, ad-account secrets, payment data, or
 Pause onboarding for the affected company if any of the following occurs:
 
 - execution safety check becomes false
+- pilot preflight reports `configuration_blocked`
 - the app shows another company's data
 - authentication or tenant isolation appears incorrect
 - a connector requests unexpectedly broad/write permissions
