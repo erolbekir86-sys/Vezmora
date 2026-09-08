@@ -123,8 +123,8 @@ def test_public_terms_page_is_available_and_links_to_privacy():
     assert slash.status_code == 200
     assert response.headers['content-type'].startswith('text/html')
     assert '<link rel="canonical" href="https://vexmera.com/terms" />' in response.text
-    assert 'Användarvillkor' in response.text
-    assert 'privata betan' in response.text
+    assert 'Terms of Service' in response.text
+    assert 'private beta' in response.text
     assert 'href="/privacy"' in response.text
 
 
