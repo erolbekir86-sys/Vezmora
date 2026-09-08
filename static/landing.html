@@ -314,5 +314,74 @@
   </footer>
 
   <script src="/static/landing.js" defer></script>
+
+<style id="vexmera-complete-polish">
+/* Final Vexmera visual pass */
+:root{--vex-gold:#d5ae72;--vex-gold-bright:#e6c487}
+.site-header{min-height:76px!important}
+.site-header .brand-mark{width:46px!important;height:46px!important}
+.site-header .brand-mark svg{width:32px!important;height:32px!important}
+.site-header .brand-copy strong{font-size:17px!important;letter-spacing:.16em!important}
+.site-header .brand-copy small{font-size:10px!important;letter-spacing:.12em!important}
+.desktop-nav a{font-size:14px!important;padding:10px 4px!important}
+.header-actions .utility-btn{min-width:42px!important;height:42px!important;font-size:14px!important}
+.header-actions .text-link,.header-actions>.button{font-size:14px!important}
+.header-actions .button-small{padding:13px 17px!important}
+.vex-art-section>.vex-section-art{left:calc((100vw - 100%)/-2)!important;right:calc((100vw - 100%)/-2)!important}
+.workflow-section .workflow-node>span:first-child{display:none!important}
+.workflow-section .workflow-node{min-height:150px!important;padding:34px 24px!important;text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+.workflow-section .workflow-node strong{font-size:20px!important}
+.workflow-section .workflow-node small{font-size:14px!important}
+.workflow-section .workflow-node::before{content:"";width:58px;height:58px;margin:0 auto 15px;border-radius:18px;border:1px solid rgba(213,174,114,.52);background:linear-gradient(145deg,#252d38,#10151c) center/34px no-repeat;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.16)}
+.workflow-section .workflow-node:nth-of-type(1)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M4 17V7h16v10'/%3E%3Cpath d='M7 13l3-3 3 2 4-4'/%3E%3C/svg%3E")}
+.workflow-section .workflow-node:nth-of-type(2)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Ccircle cx='10' cy='10' r='5'/%3E%3Cpath d='m14 14 6 6M7 10h6M10 7v6'/%3E%3C/svg%3E")}
+.workflow-section .workflow-node:nth-of-type(3)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M12 3 20 6v5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6l8-3Z'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E")}
+.workflow-section .workflow-node:nth-of-type(4)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M4 18 18 4M12 4h6v6'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E")}
+.integration-card{min-height:168px!important;text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+.integration-card .source-logo{width:60px!important;height:60px!important;border-radius:17px!important;margin-bottom:12px!important}
+.integration-card strong{font-size:17px!important}
+.integration-card small{font-size:13px!important}
+.outcomes-section .split-heading{display:block!important;text-align:center!important;max-width:800px!important;margin-left:auto!important;margin-right:auto!important}
+.outcomes-section .split-heading p{margin:18px auto 0!important}
+.outcome-grid{align-items:stretch!important}
+.outcome-grid article{text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;min-height:190px!important;padding:28px!important}
+.outcome-grid article>span{display:block!important;width:66px!important;height:66px!important;border-radius:19px!important;font-size:0!important;border:1px solid rgba(213,174,114,.4)!important;background:#18202a center/34px no-repeat!important}
+.outcome-grid article:nth-child(1)>span{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E")}
+.outcome-grid article:nth-child(2)>span{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M4 19V9m5 10V5m5 14v-7m5 7H2'/%3E%3Cpath d='m4 7 5-3 5 4 5-5'/%3E%3C/svg%3E")}
+.outcome-grid article:nth-child(3)>span{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M12 3v18M3 12h18'/%3E%3Ccircle cx='12' cy='12' r='7'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E")}
+.outcome-grid article:nth-child(4)>span{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d5ae72' stroke-width='1.8'%3E%3Cpath d='M4 17 17 4M10 4h7v7'/%3E%3Cpath d='M4 20h16'/%3E%3C/svg%3E")}
+.outcome-grid article h3{font-size:19px!important;text-align:center!important;margin-top:18px!important}
+.founder-card{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)!important}
+.founder-copy{order:-1!important}
+.founder-portrait{background-image:url('/static/vexmera-founder.jpg')!important;background-size:cover!important;background-position:center!important;min-height:430px!important}
+.founder-meta-mark{background:#171d25!important;color:var(--vex-gold)!important;border-color:var(--vex-gold)!important}
+.founder-copy .eyebrow,.founder-copy h2,.founder-copy p{text-align:left!important}
+.beta-proof-head{display:block!important;text-align:center!important;max-width:780px!important;margin:0 auto 42px!important}
+.beta-proof-head>p{margin:18px auto 0!important}
+.beta-proof-grid{align-items:stretch!important}
+.beta-proof-card{text-align:center!important;display:flex!important;flex-direction:column!important;align-items:center!important}
+.beta-proof-icon{width:64px!important;height:64px!important;margin:0 auto 20px!important}
+.beta-proof-card strong,.beta-proof-card p{text-align:center!important}
+.security-grid span{color:var(--vex-gold)!important}
+.security-grid span::before{border-color:rgba(213,174,114,.45)!important;background-color:rgba(213,174,114,.10)!important}
+.billing-toggle button{font-size:16px!important;padding:14px 22px!important}
+.billing-toggle small{font-size:13px!important}
+.footer-brand .brand-mark{width:44px!important;height:44px!important}
+.footer-brand .brand-copy strong{font-size:16px!important}
+.footer-grid>div>strong,.footer-grid a,.footer-brand p,.footer-bottom{font-size:14px!important}
+.footer-grid a{margin-top:10px!important}
+@media(max-width:900px){
+ .site-header .brand-mark{width:40px!important;height:40px!important}.site-header .brand-copy strong{font-size:15px!important}
+ .desktop-nav a{font-size:13px!important}.founder-card{grid-template-columns:1fr!important}.founder-copy{order:0!important}.founder-portrait{min-height:340px!important}
+ .workflow-section .workflow{gap:14px!important}.workflow-section .workflow-node{min-height:135px!important}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.workflow-node>span:first-child').forEach(n=>n.remove());
+  document.querySelectorAll('.outcome-grid article>span').forEach(n=>{n.setAttribute('aria-hidden','true');});
+  document.querySelectorAll('.founder-portrait').forEach(n=>n.style.backgroundImage="url('/static/vexmera-founder.jpg')");
+});
+</script>
 </body>
 </html>
