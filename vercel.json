@@ -6,6 +6,12 @@
       "excludeFiles": "{tests/**,docs/**,data/**,**/__pycache__/**,**/*.pyc,render.yaml,Dockerfile}"
     }
   },
+  "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/static/privacy.html"
+    }
+  ],
   "crons": [
     {
       "path": "/api/internal/cron/maintenance",
