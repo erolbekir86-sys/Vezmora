@@ -104,8 +104,11 @@ def test_competitor_fetch_validates_and_follows_public_relative_redirect(monkeyp
     assert _FakeClient.follow_redirects_values == [False]
 
 
-def test_safe_public_url_rejects_common_local_targets():
+def test_safe_public_url_rejects_non_global_and_credentialed_targets():
     assert monitor._safe_public_url("http://127.0.0.1/admin") is False
     assert monitor._safe_public_url("http://169.254.169.254/latest/meta-data/") is False
+    assert monitor._safe_public_url("http://100.64.0.1/internal") is False
     assert monitor._safe_public_url("http://localhost/internal") is False
+    assert monitor._safe_public_url("http://user:password@8.8.8.8/private") is False
     assert monitor._safe_public_url("file:///etc/passwd") is False
+    assert monitor._safe_public_url("https://8.8.8.8/") is True
