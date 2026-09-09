@@ -9,26 +9,13 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from .pricing import STRIPE_PRICE_ENV, checkout_pricing_reconciled, normalize_plan
 from .store import (
     get_workspace_settings,
     record_billing_event,
     set_workspace_billing,
     workspace_id_by_stripe_customer,
 )
-
-PRICE_ENV = {
-    "starter": "STRIPE_PRICE_STARTER",
-    "growth": "STRIPE_PRICE_GROWTH",
-    "scale": "STRIPE_PRICE_SCALE",
-}
-
-# Safety gate for the 2026-09 pricing migration. The public site currently uses
-# Start / Growth / Pro while the backend and verified Stripe sandbox still use
-# Starter / Growth / Scale. Keep new Checkout creation disabled until those
-# surfaces and their tests are intentionally reconciled to one approved model.
-# Existing webhook/portal handling remains available for already-created test
-# customers and subscriptions.
-CHECKOUT_PRICING_RECONCILED = False
 
 
 def stripe_configured() -> bool:
@@ -46,11 +33,19 @@ def _stripe_client():
     return StripeClient(key, max_network_retries=2)
 
 
+def _canonical_plan(plan: str) -> str:
+    try:
+        return normalize_plan(plan)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Unknown Vexmera billing plan") from exc
+
+
 def _price_id(plan: str) -> str:
-    env = PRICE_ENV.get(plan)
-    price = os.getenv(env or "")
+    canonical = _canonical_plan(plan)
+    env = STRIPE_PRICE_ENV[canonical]
+    price = os.getenv(env)
     if not price:
-        raise HTTPException(status_code=503, detail=f"Stripe price is not configured for plan: {plan}")
+        raise HTTPException(status_code=503, detail=f"Stripe price is not configured for plan: {canonical}")
     return price
 
 
@@ -91,12 +86,13 @@ def _trial_days(settings: dict[str, Any]) -> int:
 
 
 def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
-    if not CHECKOUT_PRICING_RECONCILED:
+    if not checkout_pricing_reconciled():
         raise HTTPException(
             status_code=503,
-            detail="Checkout is temporarily unavailable while Vexmera pricing is being reconciled for the private beta",
+            detail="Checkout is temporarily unavailable until the current Vexmera Stripe sandbox pricing has been verified",
         )
 
+    canonical_plan = _canonical_plan(plan)
     client = _stripe_client()
     settings = get_workspace_settings(workspace_id)
     if settings.get("stripe_subscription_id") and str(settings.get("billing_status") or "") not in {"canceled", "incomplete_expired"}:
@@ -106,7 +102,7 @@ def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
     trial_days = _trial_days(settings)
     metadata = {
         "workspace_id": str(workspace_id),
-        "plan": plan,
+        "plan": canonical_plan,
         "trial_days": str(trial_days),
     }
     subscription_data: dict[str, Any] = {"metadata": metadata}
@@ -115,7 +111,7 @@ def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
 
     params: dict[str, Any] = {
         "mode": "subscription",
-        "line_items": [{"price": _price_id(plan), "quantity": 1}],
+        "line_items": [{"price": _price_id(canonical_plan), "quantity": 1}],
         "success_url": f"{base_url}/?billing=success&session_id={{CHECKOUT_SESSION_ID}}",
         "cancel_url": f"{base_url}/?billing=cancelled",
         "client_reference_id": str(workspace_id),
@@ -130,7 +126,7 @@ def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
         params["customer_email"] = email
 
     session = client.v1.checkout.sessions.create(params)
-    return {"id": session.id, "url": session.url, "trial_days": trial_days}
+    return {"id": session.id, "url": session.url, "trial_days": trial_days, "plan": canonical_plan}
 
 
 def create_portal(workspace_id: int) -> dict[str, Any]:
@@ -168,12 +164,18 @@ def _trial_end_iso(obj: dict[str, Any]) -> str | None:
         return None
 
 
+def _event_plan(value: object, fallback: object = "start") -> str:
+    # Accept historical metadata values from already-created test subscriptions
+    # while persisting only current canonical plan names going forward.
+    try:
+        return normalize_plan(str(value or fallback or "start"))
+    except ValueError:
+        return "start"
+
+
 def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     event_id = str(event.get("id") or "")
     if not event_id:
-        # Stripe events always carry a stable event id. Refuse malformed input
-        # before any billing mutation so replay/idempotency protection cannot be
-        # bypassed by an otherwise signature-valid payload without an id.
         raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
 
     event_type = str(event.get("type") or "")
@@ -193,7 +195,7 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, "duplicate": True}
 
     if event_type == "checkout.session.completed" and workspace_id is not None:
-        plan = str(metadata.get("plan") or "starter")
+        plan = _event_plan(metadata.get("plan"))
         trialing = int(metadata.get("trial_days") or 0) > 0
         set_workspace_billing(
             workspace_id,
@@ -203,7 +205,7 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
             billing_status="trialing" if trialing else "active",
         )
     elif event_type in {"customer.subscription.updated", "customer.subscription.created"} and workspace_id is not None:
-        plan = str(metadata.get("plan") or get_workspace_settings(workspace_id).get("plan") or "starter")
+        plan = _event_plan(metadata.get("plan"), get_workspace_settings(workspace_id).get("plan"))
         set_workspace_billing(
             workspace_id,
             plan=plan,
