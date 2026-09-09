@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from app import store
 from app.main import app
 from app import stripe_billing
+from app.pricing import CURRENT_PRICING_VERSION
 import main as deployment_main
 
 
@@ -28,21 +29,21 @@ def test_cron_requires_secret(tmp_path, monkeypatch):
         assert payload["jobs_processed"] == 0
 
 
-def test_checkout_is_blocked_while_public_and_backend_pricing_differ(tmp_path, monkeypatch):
+def test_checkout_is_blocked_until_current_pricing_version_is_verified(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DB_PATH", tmp_path / "stripe-guard.db")
     store.init_db()
     _, workspace_id = store.create_user("guard@example.com", "salt", "hash", "Stripe guard")
-    monkeypatch.setattr(stripe_billing, "CHECKOUT_PRICING_RECONCILED", False)
+    monkeypatch.delenv("VEZMORA_STRIPE_PRICING_VERSION", raising=False)
 
     with pytest.raises(Exception) as exc_info:
-        stripe_billing.create_checkout(workspace_id, "guard@example.com", "starter")
+        stripe_billing.create_checkout(workspace_id, "guard@example.com", "start")
 
     exc = exc_info.value
     assert getattr(exc, "status_code", None) == 503
-    assert "pricing" in str(getattr(exc, "detail", "")).lower()
+    assert "sandbox pricing" in str(getattr(exc, "detail", "")).lower()
 
 
-def test_checkout_has_beta_trial_and_configured_test_price(tmp_path, monkeypatch):
+def test_checkout_has_beta_trial_and_current_test_price(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "DB_PATH", tmp_path / "stripe.db")
     store.init_db()
     _, workspace_id = store.create_user("owner@example.com", "salt", "hash", "Stripe test")
@@ -69,14 +70,16 @@ def test_checkout_has_beta_trial_and_configured_test_price(tmp_path, monkeypatch
             return {"id": "evt_test", "type": "noop", "data": {"object": {}}}
 
     monkeypatch.setitem(sys.modules, "stripe", SimpleNamespace(StripeClient=FakeStripeClient))
-    monkeypatch.setattr(stripe_billing, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", CURRENT_PRICING_VERSION)
     monkeypatch.setenv("STRIPE_SECRET_KEY", "test-only-placeholder")
-    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_test_starter")
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_test_start")
     monkeypatch.setenv("VEZMORA_TRIAL_DAYS", "14")
 
     result = stripe_billing.create_checkout(workspace_id, "owner@example.com", "starter")
     assert result["trial_days"] == 14
-    assert captured["line_items"][0]["price"] == "price_test_starter"
+    assert result["plan"] == "start"
+    assert captured["metadata"]["plan"] == "start"
+    assert captured["line_items"][0]["price"] == "price_test_start"
     assert captured["subscription_data"]["trial_period_days"] == 14
     assert captured["mode"] == "subscription"
     assert captured["integration_identifier"].startswith("vezmora_beta_")
