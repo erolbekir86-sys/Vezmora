@@ -60,7 +60,8 @@
   <div id="appShell" class="shell hidden">
     <aside class="sidebar">
       <div class="brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span><span class="beta-brand-badge">Privat beta</span></div></div>
-      <nav aria-label="Vexmera navigation">
+      <button id="appMenuToggle" class="ghost app-menu-toggle" type="button" aria-expanded="false" aria-controls="appNavigation">Meny</button>
+      <nav id="appNavigation" aria-label="Vexmera navigation">
         <button class="nav active" data-view="dashboard">Översikt <span>KPI:er</span></button>
         <button class="nav" data-view="agent">Core <span>AI Marketing Officer</span></button>
         <button class="nav" data-view="strategy">Pulse <span>Strategi</span></button>
@@ -206,5 +207,93 @@
   <script src="/static/app.js"></script>
   <script src="/static/app-polish.js?v=1"></script>
   <script src="/static/account-privacy-ui.js?v=1"></script>
+  <style id="vexmera-app-responsive">
+    .app-menu-toggle{display:none}
+    @media(max-width:900px){
+      html body .shell{display:block!important;min-width:0}
+      html body .sidebar{position:sticky!important;top:0;z-index:20;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center;height:auto!important;max-height:100dvh;overflow-y:auto;overflow-x:hidden;padding:10px 16px!important;border-right:0!important;border-bottom:1px solid var(--line)}
+      html body .sidebar .brand{min-width:0;padding:0!important;margin:0!important;border:0!important;gap:10px}
+      html body .sidebar .brand .sigil{flex-shrink:0}
+      html body .sidebar .brand span{font-size:10px}
+      html body .sidebar .beta-brand-badge{display:none!important}
+      html body .app-menu-toggle{display:block!important;min-width:64px;min-height:44px;color:var(--accent);border-color:var(--accent2)}
+      html body .sidebar nav{display:none!important;grid-column:1/-1;min-width:0}
+      html body .sidebar.mobile-nav-open nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;padding-top:12px;max-height:calc(100dvh - 80px);overflow-y:auto;overscroll-behavior:contain}
+      html body .sidebar .nav{width:100%;min-width:0;min-height:48px;white-space:normal;font-size:14px!important;transform:none!important}
+      html body .sidebar .status{display:none}
+      html body main{min-width:0;max-width:100%;padding:24px 16px calc(36px + env(safe-area-inset-bottom))!important}
+      html body .view,html body .panel,html body .grid>*{min-width:0;max-width:100%}
+      html body .grid,html body .dashboard-grid,html body .rivals-grid{grid-template-columns:minmax(0,1fr)!important}
+      html body header{flex-direction:column;gap:16px}
+      html body .header-controls{width:100%;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}
+      html body .header-controls>*{min-width:0!important;width:100%;max-width:100%;margin:0}
+      html body .header-controls select{min-width:0!important;width:100%}
+      html body .header-language-control{display:grid;grid-template-columns:auto minmax(0,1fr)}
+      html body .header-controls .ghost{grid-column:auto}
+      html body .two,html body .three{grid-template-columns:repeat(2,minmax(0,1fr))}
+      html body .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      html body .table-wrap{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+      html body th,html body td{font-size:12px!important;padding:12px!important}
+      html body input:not([type=checkbox]):not([type=radio]),html body select,html body textarea{font-size:16px!important;min-width:0;max-width:100%}
+      html body button,html body select{min-height:44px;touch-action:manipulation}
+      html body .ghost,html body .primary,html body .text-button{font-size:14px!important;white-space:normal}
+      html body .output-head,html body .output-actions,html body .connector-head,html body .core-today-head,html body .safety-row{flex-wrap:wrap}
+      html body .output,html body .notification-card,html body .approval-card,html body .connector-card,html body .competitor-card,html body .run-card{overflow-wrap:anywhere;min-width:0}
+      html body .output pre{max-width:100%;overflow:auto;white-space:pre-wrap}
+      html body .modal-shell{padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+      html body .modal-card{max-height:calc(100dvh - 24px);width:100%;padding:22px!important;overscroll-behavior:contain}
+      html body .auth-screen{min-height:100svh;padding:24px 16px;overflow:clip}
+      html body .auth-card{min-width:0;width:100%;padding:28px 22px!important}
+      html body .auth-card h1{font-size:clamp(28px,7vw,40px)!important;line-height:1.15!important}
+      html body .auth-card .brand{min-width:0}
+      html body .auth-card .lead,html body label{font-size:14px!important}
+      html body .vex-toast-stack{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));max-width:calc(100vw - 28px)}
+    }
+    @media(max-width:600px){
+      html body h1{font-size:32px!important;overflow-wrap:anywhere}
+      html body .panel{padding:18px!important}
+      html body .two,html body .three,html body .runs,html body .connector-grid,html body .core-card-grid,html body .plan-grid,html body .mode-cards,html body .signal-strip{grid-template-columns:minmax(0,1fr)!important}
+      html body .metric{padding:14px!important}
+      html body .metric strong{font-size:23px!important;overflow-wrap:anywhere}
+      html body .metric span,html body .metric small{font-size:11px!important}
+      html body .panel-title{line-height:1.5}
+      html body .notification-card p,html body .approval-card p,html body .connector-card p,html body .module-head p,html body .fineprint{font-size:13px!important;line-height:1.55}
+      html body .modal-actions{display:flex;flex-wrap:wrap;gap:10px}
+      html body .modal-actions>span{display:none}
+      html body .modal-actions button{flex:1 1 120px;margin-top:0}
+      html body .onboarding-top{flex-wrap:wrap}
+    }
+    @media(max-width:360px){html body .metric-grid,html body .header-controls,html body .sidebar.mobile-nav-open nav{grid-template-columns:minmax(0,1fr)!important}}
+  </style>
+  <script>
+    (() => {
+      const toggle = document.getElementById('appMenuToggle');
+      const nav = document.getElementById('appNavigation');
+      const sidebar = toggle.closest('.sidebar');
+      const mobile = window.matchMedia('(max-width:900px)');
+      function setMenu(open, restoreFocus = false) {
+        sidebar.classList.toggle('mobile-nav-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.textContent = open ? 'Stäng meny' : 'Meny';
+        if (restoreFocus) toggle.focus();
+      }
+      toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+      nav.addEventListener('click', event => {
+        if (mobile.matches && event.target.closest('button[data-view]')) {
+          setMenu(false);
+          const title = document.getElementById('pageTitle');
+          title.tabIndex = -1;
+          title.focus({preventScroll:true});
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && sidebar.classList.contains('mobile-nav-open')) setMenu(false, true);
+      });
+      document.addEventListener('click', event => {
+        if (mobile.matches && !sidebar.contains(event.target)) setMenu(false);
+      });
+      mobile.addEventListener('change', () => setMenu(false));
+    })();
+  </script>
 </body>
 </html>
