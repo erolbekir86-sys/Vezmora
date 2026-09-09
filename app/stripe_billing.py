@@ -170,6 +170,12 @@ def _trial_end_iso(obj: dict[str, Any]) -> str | None:
 
 def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     event_id = str(event.get("id") or "")
+    if not event_id:
+        # Stripe events always carry a stable event id. Refuse malformed input
+        # before any billing mutation so replay/idempotency protection cannot be
+        # bypassed by an otherwise signature-valid payload without an id.
+        raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
+
     event_type = str(event.get("type") or "")
     obj = ((event.get("data") or {}).get("object") or {})
     workspace_id: int | None = None
@@ -183,7 +189,7 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     if workspace_id is None and customer:
         workspace_id = workspace_id_by_stripe_customer(str(customer))
 
-    if event_id and not record_billing_event(workspace_id, event_id, event_type, event):
+    if not record_billing_event(workspace_id, event_id, event_type, event):
         return {"ok": True, "duplicate": True}
 
     if event_type == "checkout.session.completed" and workspace_id is not None:
