@@ -91,7 +91,7 @@
       <button class="utility-btn sound-toggle" id="soundToggle" type="button" aria-label="Ljud av"><span>♪</span><i></i></button>
       <a class="text-link" href="/" data-i18n="nav.login">Logga in</a>
       <a class="button button-small button-dark" href="/" data-i18n="nav.start">Kom igång</a>
-      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Öppna meny"><span></span><span></span></button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Öppna meny" aria-expanded="false" aria-controls="mobileMenu"><span></span><span></span></button>
     </div>
 
     <div class="mobile-menu" id="mobileMenu">
@@ -388,5 +388,89 @@ document.addEventListener('DOMContentLoaded',()=>{
 .site-header .utility-btn:hover,.desktop-nav a:hover{color:#e6c487!important;border-color:rgba(213,174,114,.62)!important}
 .header-actions .text-link{color:#d5ae72!important}
 .footer-bottom button{font-size:14px!important;color:#d5ae72!important}
-</style></body>
+</style>
+<style id="vexmera-mobile-layout">
+@media(max-width:900px){
+ html body .section-wrap{width:calc(100% - 32px)!important;max-width:100%;min-width:0}
+ html body .site-header{width:calc(100% - 24px)!important;display:flex!important;flex-wrap:wrap;gap:10px;min-height:0!important;height:auto!important;padding:12px!important;top:8px}
+ html body .site-header .desktop-nav{display:none!important}
+ html body .site-header>.brand{flex:1 1 auto;min-width:0}
+ html body .site-header .brand-copy strong{font-size:16px!important}
+ html body .site-header .brand-copy small{font-size:9px!important}
+ html body .site-header .header-actions{display:flex!important;flex-wrap:wrap;gap:8px;min-width:0}
+ html body .site-header .utility-btn,html body .site-header .menu-toggle{display:inline-flex!important;align-items:center;justify-content:center;min-width:44px!important;width:44px!important;min-height:44px!important;height:44px!important;flex-shrink:0}
+ html body .site-header .menu-toggle{flex-direction:column;gap:6px}
+ html body .site-header .header-actions>.text-link{display:inline-flex!important;align-items:center;min-height:44px;padding:0 8px}
+ html body .site-header .header-actions>.button{display:inline-flex!important;min-height:44px;padding:12px 16px!important}
+ html body .mobile-menu{display:none!important;position:absolute;inset:auto 0 auto!important;top:calc(100% + 8px)!important;width:100%!important;max-height:calc(100dvh - 170px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:10px}
+ html body .mobile-menu.open{display:grid!important;opacity:1;transform:none;pointer-events:auto}
+ html body .mobile-menu a{display:flex;align-items:center;min-height:48px;font-size:16px!important}
+ html body main{min-width:0}
+ html body .hero{grid-template-columns:minmax(0,1fr)!important;gap:32px!important}
+ html body .hero-copy,html body .hero-visual,html body .demo-copy,html body .demo-visual{min-width:0;max-width:100%}
+ html body h1{font-size:clamp(36px,8vw,62px)!important;line-height:1.08!important;overflow-wrap:break-word}
+ html body h2{font-size:clamp(28px,6vw,44px)!important;line-height:1.15!important;overflow-wrap:break-word}
+ html body .section-heading,html body .split-heading{display:block!important}
+ html body .section-heading p,html body .split-heading p{margin-top:16px}
+ html body .demo-layout,html body .demo-grid,html body .pulse-layout,html body .security-card,html body .founder-card{grid-template-columns:minmax(0,1fr)!important}
+ html body .value-grid,html body .module-grid,html body .outcome-grid,html body .beta-proof-grid,html body .pricing-grid{grid-template-columns:minmax(0,1fr)!important;gap:20px!important}
+ html body #hur .steps{grid-template-columns:minmax(0,1fr)!important;gap:30px!important}
+ html body #hur .steps .step{min-width:0;padding:24px!important}
+ html body #hur .steps .step h3{min-height:0!important}
+ html body #hur .step:not(:last-child)::before{left:50%!important;top:100%!important;width:2px!important;height:31px!important;transform:translateX(-50%)!important}
+ html body .workflow-section .workflow{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+ html body .workflow-section .workflow>i{justify-self:center;transform:rotate(90deg)}
+ html body .workflow-section .workflow-node{width:100%!important;min-width:0;min-height:0!important;padding:26px 22px!important}
+ html body .control-points{flex-wrap:wrap;gap:12px}
+ html body .integration-grid,html body .security-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body .integration-card{min-width:0;padding:20px 12px!important}
+ html body .integration-card strong{font-size:16px!important;overflow-wrap:anywhere}
+ html body .value-card h3,html body .outcome-grid article h3{font-size:25px!important}
+ html body .founder-portrait{min-height:0!important;height:auto!important;max-width:360px!important;aspect-ratio:4/5!important;margin-inline:auto!important}
+ html body .founder-copy{min-width:0}
+ html body .billing-toggle{display:flex!important;flex-wrap:wrap;max-width:100%;justify-content:center}
+ html body .billing-toggle button{min-height:48px;font-size:16px!important;padding:12px 16px!important;white-space:normal}
+ html body .button,html body button,html body summary{min-height:44px;touch-action:manipulation}
+ html body input,html body select,html body textarea{font-size:16px!important;max-width:100%}
+ html body .footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:28px 20px!important}
+ html body .footer-brand{grid-column:1/-1}
+ html body .footer-grid a{min-height:44px;display:flex;align-items:center;margin-top:0!important}
+ html body .footer-bottom{flex-wrap:wrap;gap:16px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+ html body .vex-art-section>.vex-section-art{left:0!important;right:0!important;background-size:cover!important;background-attachment:scroll!important}
+ html body section[id]{scroll-margin-top:170px}
+}
+@media(max-width:600px){
+ html body .site-header .header-actions{width:100%;justify-content:space-between;gap:4px}
+ html body .site-header .header-actions>.text-link{font-size:13px!important;padding:0 4px}
+ html body .site-header .header-actions>.button{font-size:13px!important;padding:10px!important}
+ html body .hero{padding-top:36px!important}
+ html body .hero-actions{display:flex!important;flex-direction:column;align-items:stretch!important;gap:12px}
+ html body .hero-actions .button{width:100%;justify-content:center}
+ html body .hero-visual{width:100%!important;transform:none!important;margin:0!important}
+ html body .dashboard-window{width:100%!important;min-width:0!important;transform:none!important;grid-template-columns:60px minmax(0,1fr)!important}
+ html body .dash-main{min-width:0;padding:14px 10px!important}
+ html body .metric-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body .security-grid{grid-template-columns:minmax(0,1fr)!important}
+ html body .security-card{padding:26px 20px!important}
+ html body .final-cta h2{font-size:clamp(32px,9vw,48px)!important}
+ html body .final-cta p{font-size:18px!important}
+ html body #produkt .data-convergence{min-width:0;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:repeat(4,200px)!important;margin-left:26px!important;gap:28px!important}
+ html body #produkt .source-stack{height:200px!important}
+ html body #produkt .vexmera-core{grid-column:1!important;grid-row:4!important}
+ html body #produkt .flow-lines{inset:100px auto 100px -24px!important;width:2px!important;height:auto!important}
+ html body #produkt .flow-lines::before,html body #produkt .flow-lines::after{display:none!important}
+ html body #produkt .source-stack::after,html body #produkt .vexmera-core::after{left:-24px!important;top:50%!important;width:24px!important;height:2px!important;transform:none!important}
+}
+@media(max-width:400px){
+ html body .site-header .header-actions{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+ html body .site-header .header-actions>.utility-btn{grid-row:1}
+ html body .site-header .menu-toggle{grid-row:1;grid-column:6;justify-self:end}
+ html body .site-header .header-actions>.text-link{grid-row:2;grid-column:1/4;justify-content:center}
+ html body .site-header .header-actions>.button{grid-row:2;grid-column:4/7;justify-content:center}
+ html body section[id]{scroll-margin-top:210px}
+ html body .mobile-menu{max-height:calc(100dvh - 210px)}
+ html body .integration-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+</style>
+</body>
 </html>
