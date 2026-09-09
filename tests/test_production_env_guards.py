@@ -36,17 +36,17 @@ def test_vercel_forces_private_beta_unsafe_flags_off(monkeypatch):
         assert os.getenv(name) == "false"
 
 
-def test_vercel_clears_stale_legacy_stripe_price_aliases(monkeypatch):
+def test_vercel_clears_stale_legacy_only_stripe_price_aliases(monkeypatch):
     _clear_stripe(monkeypatch)
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("STRIPE_PRICE_STARTER", "old-start")
-    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "old-growth")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "growth-shared-name")
     monkeypatch.setenv("STRIPE_PRICE_SCALE", "old-scale")
 
     apply_production_env_guards()
 
     assert os.getenv("STRIPE_PRICE_STARTER") is None
-    assert os.getenv("STRIPE_PRICE_GROWTH") is None
+    assert os.getenv("STRIPE_PRICE_GROWTH") == "growth-shared-name"
     assert os.getenv("STRIPE_PRICE_SCALE") is None
 
 
