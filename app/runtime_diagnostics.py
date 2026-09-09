@@ -30,12 +30,12 @@ def storage_backend() -> str:
 
 
 def runtime_health_payload() -> dict[str, Any]:
-    """Build the existing health payload with backend-safe path reporting."""
+    """Build the health payload without reflecting storage connection details."""
 
     payload = dict(_main.health())
     backend = storage_backend()
     payload["storage_backend"] = backend
-    payload["data_path"] = "remote" if backend in _REMOTE_BACKENDS else payload.get("data_path")
+    payload["data_path"] = "remote" if backend in _REMOTE_BACKENDS else "local"
     return payload
 
 
