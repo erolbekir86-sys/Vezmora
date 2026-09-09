@@ -18,7 +18,8 @@
     const method = String(options.method || 'GET').toUpperCase();
     if (method !== 'GET') return false;
     const value = String(path || '');
-    return value.includes('/api/dashboard') || value.includes('/api/kpis?');
+    const pathname = value.split('?')[0].replace(/\/+$/, '');
+    return pathname.endsWith('/api/dashboard') || pathname.endsWith('/api/kpis');
   }
 
   function showDashboardReadFailure() {
