@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -40,8 +41,8 @@ def billing_status(workspace_id: int) -> dict[str, Any]:
     stripe_ready = bool(
         checkout_pricing_reconciled()
         and current_stripe_prices_configured()
-        and __import__("os").getenv("STRIPE_SECRET_KEY")
-        and __import__("os").getenv("STRIPE_WEBHOOK_SECRET")
+        and os.getenv("STRIPE_SECRET_KEY")
+        and os.getenv("STRIPE_WEBHOOK_SECRET")
     )
     return {
         "plan": plan,
