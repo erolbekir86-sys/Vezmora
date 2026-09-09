@@ -162,11 +162,13 @@ def install_public_routing(app: FastAPI) -> None:
             '<script src="/static/app-polish-safe.js"></script>',
         )
         # Keep the legacy app bundle unchanged while enforcing fail-closed onboarding
-        # saves as a small, reversible beta hardening layer loaded immediately after it.
+        # saves and fail-closed dashboard reads as small, reversible beta hardening
+        # layers loaded immediately after it.
         html = html.replace(
             '<script src="/static/app.js"></script>',
             '<script src="/static/app.js"></script>\n'
-            '  <script src="/static/onboarding-save-guard.js"></script>',
+            '  <script src="/static/onboarding-save-guard.js"></script>\n'
+            '  <script src="/static/dashboard-read-guard.js"></script>',
             1,
         )
         html = _inject_before_head_end(
