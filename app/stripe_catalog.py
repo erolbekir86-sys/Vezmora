@@ -5,25 +5,17 @@ from typing import Any
 
 import httpx
 
-
-PRICE_ENV = {
-    "starter": "STRIPE_PRICE_STARTER",
-    "growth": "STRIPE_PRICE_GROWTH",
-    "scale": "STRIPE_PRICE_SCALE",
-}
-
-EXPECTED_MONTHLY_SEK_ORE = {
-    "starter": 149_900,
-    "growth": 299_900,
-    "scale": 599_900,
-}
+from .pricing import EXPECTED_MONTHLY_SEK_ORE, STRIPE_PRICE_ENV, normalize_plan
 
 
 def validate_price_payload(plan: str, payload: dict[str, Any]) -> tuple[bool, str]:
-    """Validate one Stripe Price without exposing identifiers or secret values."""
-    expected = EXPECTED_MONTHLY_SEK_ORE.get(plan)
-    if expected is None:
+    """Validate one current Vexmera Stripe Price without exposing identifiers."""
+    try:
+        canonical = normalize_plan(plan)
+    except ValueError:
         return False, "unknown_plan"
+
+    expected = EXPECTED_MONTHLY_SEK_ORE[canonical]
     if payload.get("object") != "price":
         return False, "not_a_price"
     if payload.get("active") is not True:
@@ -39,20 +31,21 @@ def validate_price_payload(plan: str, payload: dict[str, Any]) -> tuple[bool, st
 
 
 def verify_configured_prices(timeout: float = 8.0) -> dict[str, Any]:
-    """Verify configured Stripe prices using booleans/reason codes only.
+    """Verify configured current-model Stripe prices using safe reason codes only.
 
-    The function deliberately never returns a Stripe secret, Price ID, Product ID,
-    customer data, or raw Stripe payload. It is suitable for deployment preflight.
+    The function never returns a Stripe secret, Price ID, Product ID, customer
+    data, or raw Stripe payload. It is safe to use during controlled deployment
+    verification after the Start/Growth/Pro sandbox catalog has been created.
     """
     secret = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
-    configured = bool(secret) and all((os.getenv(env) or "").strip() for env in PRICE_ENV.values())
+    configured = bool(secret) and all((os.getenv(env) or "").strip() for env in STRIPE_PRICE_ENV.values())
     result: dict[str, Any] = {
         "configured": configured,
         "ok": False,
         "plans": {},
     }
     if not configured:
-        for plan, env in PRICE_ENV.items():
+        for plan, env in STRIPE_PRICE_ENV.items():
             result["plans"][plan] = {
                 "configured": bool((os.getenv(env) or "").strip()),
                 "ok": False,
@@ -61,7 +54,7 @@ def verify_configured_prices(timeout: float = 8.0) -> dict[str, Any]:
         return result
 
     all_ok = True
-    for plan, env in PRICE_ENV.items():
+    for plan, env in STRIPE_PRICE_ENV.items():
         price_id = (os.getenv(env) or "").strip()
         try:
             response = httpx.get(

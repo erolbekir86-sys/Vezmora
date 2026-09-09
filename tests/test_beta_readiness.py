@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from app import beta_readiness
 from app.main import app
+from app.pricing import CURRENT_PRICING_VERSION
 
 
 def _clear(monkeypatch):
@@ -22,9 +23,10 @@ def _clear(monkeypatch):
         "POSTGRES_URL",
         "TURSO_DATABASE_URL",
         "STRIPE_SECRET_KEY",
-        "STRIPE_PRICE_STARTER",
+        "STRIPE_PRICE_START",
         "STRIPE_PRICE_GROWTH",
-        "STRIPE_PRICE_SCALE",
+        "STRIPE_PRICE_PRO",
+        "VEZMORA_STRIPE_PRICING_VERSION",
         "STRIPE_WEBHOOK_SECRET",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
@@ -38,6 +40,15 @@ def _clear(monkeypatch):
         "SMTP_FROM",
     ):
         monkeypatch.delenv(name, raising=False)
+
+
+def _set_current_stripe_sandbox(monkeypatch, *, key: str = "sk_test_private") -> None:
+    monkeypatch.setenv("STRIPE_SECRET_KEY", key)
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_start_private")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth_private")
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_private")
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", CURRENT_PRICING_VERSION)
 
 
 def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypatch):
@@ -57,7 +68,8 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
         "remote_database_configured": False,
     }
     assert snapshot["stripe_key_mode"] == "missing"
-    assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
+    assert snapshot["stripe_catalog_env_configured"] is False
+    assert snapshot["stripe_pricing_version_reconciled"] is False
     assert snapshot["stripe_sandbox_ready"] is False
     assert snapshot["google_ads_developer_token_configured"] is False
     assert snapshot["google_ads_login_customer_id_configured"] is False
@@ -149,33 +161,29 @@ def test_beta_readiness_accepts_secure_production_transport(monkeypatch):
     assert snapshot["transport"]["secure_cookie_explicitly_disabled"] is False
 
 
-def test_beta_readiness_marks_verified_stripe_sandbox_ready(monkeypatch):
+def test_beta_readiness_marks_current_stripe_sandbox_ready(monkeypatch):
     _clear(monkeypatch)
-    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
-    for name, value in beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES.items():
-        monkeypatch.setenv(name, value)
+    _set_current_stripe_sandbox(monkeypatch)
 
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["stripe_key_mode"] == "test"
     assert snapshot["stripe_catalog_env_configured"] is True
-    assert snapshot["stripe_catalog_matches_verified_sandbox"] is True
+    assert snapshot["stripe_pricing_version_reconciled"] is True
     assert snapshot["stripe_webhook_env_configured"] is True
     assert snapshot["stripe_sandbox_ready"] is True
 
 
-def test_beta_readiness_detects_live_key_or_wrong_sandbox_catalog(monkeypatch):
+def test_beta_readiness_rejects_live_key_or_wrong_pricing_version(monkeypatch):
     _clear(monkeypatch)
-    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_private")
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
-    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_wrong")
-    monkeypatch.setenv("STRIPE_PRICE_GROWTH", beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES["STRIPE_PRICE_GROWTH"])
-    monkeypatch.setenv("STRIPE_PRICE_SCALE", beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES["STRIPE_PRICE_SCALE"])
-
+    _set_current_stripe_sandbox(monkeypatch, key="sk_live_private")
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["stripe_key_mode"] == "live"
-    assert snapshot["stripe_catalog_env_configured"] is True
-    assert snapshot["stripe_catalog_matches_verified_sandbox"] is False
+    assert snapshot["stripe_sandbox_ready"] is False
+
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", "old-model")
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["stripe_pricing_version_reconciled"] is False
     assert snapshot["stripe_sandbox_ready"] is False
 
 
@@ -200,10 +208,7 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     monkeypatch.setenv("VERCEL_ENV", "production")
     monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
     monkeypatch.setenv("DATABASE_URL", "postgresql://private-placeholder")
-    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
-    for name, value in beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES.items():
-        monkeypatch.setenv(name, value)
+    _set_current_stripe_sandbox(monkeypatch)
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client-private")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret-private")
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.test/google")
@@ -225,7 +230,6 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
         "production_observability_verified",
         "final_authenticated_browser_qa",
         "privacy_terms_legal_review",
-        "public_pricing_backend_and_stripe_sandbox_reconciled",
         "google_ads_external_approval_and_manager_link_if_required",
         "google_ads_live_read_only_sync_verified",
         "meta_ads_live_read_only_sync_verified",
@@ -233,11 +237,14 @@ def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(
     ]
 
 
-def test_pricing_reconciliation_remains_an_explicit_pilot_gate(monkeypatch):
+def test_pricing_reconciliation_requires_exact_current_marker(monkeypatch):
     _clear(monkeypatch)
+    _set_current_stripe_sandbox(monkeypatch)
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", "legacy")
     snapshot = beta_readiness.beta_safety_snapshot()
-    assert "public_pricing_backend_and_stripe_sandbox_reconciled" in snapshot["pilot_readiness"]["manual_gates"]
-    assert any("public pricing" in note.lower() and "sandbox" in note.lower() for note in snapshot["notes"])
+    assert snapshot["stripe_pricing_version_reconciled"] is False
+    assert snapshot["stripe_sandbox_ready"] is False
+    assert any("pricing-version marker" in note.lower() for note in snapshot["notes"])
 
 
 def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
@@ -249,6 +256,10 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         "DATABASE_URL": "postgresql://database-private",
         "STRIPE_SECRET_KEY": "sk_test_private",
         "STRIPE_WEBHOOK_SECRET": "whsec_private",
+        "STRIPE_PRICE_START": "price_start_private",
+        "STRIPE_PRICE_GROWTH": "price_growth_private",
+        "STRIPE_PRICE_PRO": "price_pro_private",
+        "VEZMORA_STRIPE_PRICING_VERSION": CURRENT_PRICING_VERSION,
         "GOOGLE_CLIENT_ID": "google-client-private",
         "GOOGLE_CLIENT_SECRET": "google-secret-private",
         "GOOGLE_REDIRECT_URI": "https://example.test/google",
@@ -260,7 +271,6 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         "SMTP_HOST": "smtp.example.test",
         "SMTP_FROM": "sender@example.test",
     }
-    values.update(beta_readiness.VERIFIED_STRIPE_SANDBOX_PRICES)
     for name, value in values.items():
         monkeypatch.setenv(name, value)
 
@@ -272,7 +282,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["database"]["database_url_configured"] is True
     assert payload["database"]["turso_url_configured"] is False
     assert payload["stripe_catalog_env_configured"] is True
-    assert payload["stripe_catalog_matches_verified_sandbox"] is True
+    assert payload["stripe_pricing_version_reconciled"] is True
     assert payload["stripe_webhook_env_configured"] is True
     assert payload["stripe_key_mode"] == "test"
     assert payload["stripe_sandbox_ready"] is True
@@ -290,4 +300,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
 
     rendered = response.text
     for secret in values.values():
+        if secret == CURRENT_PRICING_VERSION:
+            # The expected version identifier is intentionally public metadata.
+            continue
         assert secret not in rendered

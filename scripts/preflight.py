@@ -5,6 +5,8 @@ import os
 import sys
 from typing import Any
 
+from app.pricing import CURRENT_PRICING_VERSION, STRIPE_PRICE_ENV, checkout_pricing_reconciled
+
 CORE_REQUIRED = [
     "VEZMORA_APP_URL",
     "VEZMORA_SECRET_KEY",
@@ -15,16 +17,9 @@ CORE_REQUIRED = [
 BILLING = [
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
-    "STRIPE_PRICE_STARTER",
-    "STRIPE_PRICE_GROWTH",
-    "STRIPE_PRICE_SCALE",
+    *STRIPE_PRICE_ENV.values(),
+    "VEZMORA_STRIPE_PRICING_VERSION",
 ]
-
-VERIFIED_STRIPE_SANDBOX_PRICES = {
-    "STRIPE_PRICE_STARTER": "price_1UCGVX32EFR9j6MxSP6VB2TF",
-    "STRIPE_PRICE_GROWTH": "price_1UCGVf32EFR9j6Mx0fCKTHzK",
-    "STRIPE_PRICE_SCALE": "price_1UCGVm32EFR9j6MxFOxJD3zp",
-}
 
 SMTP = ["SMTP_HOST", "SMTP_FROM"]
 GOOGLE_OAUTH = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"]
@@ -49,8 +44,6 @@ def enabled(name: str) -> bool:
 
 
 def database_configured() -> bool:
-    # Production prefers Neon/Postgres. Keep the legacy Turso pair supported
-    # for compatibility with older deployments.
     if configured("DATABASE_URL") or configured("POSTGRES_URL"):
         return True
     return configured("TURSO_DATABASE_URL") and configured("TURSO_AUTH_TOKEN")
@@ -69,10 +62,6 @@ def _stripe_key_mode() -> str:
     if key.startswith(("sk_live_", "rk_live_")):
         return "live"
     return "unknown"
-
-
-def _stripe_catalog_matches_verified_sandbox() -> bool:
-    return all((os.getenv(name) or "").strip() == expected for name, expected in VERIFIED_STRIPE_SANDBOX_PRICES.items())
 
 
 def build_report() -> dict[str, Any]:
@@ -94,11 +83,13 @@ def build_report() -> dict[str, Any]:
     beta_execution_locked = not unsafe_flags
     production_transport_safe = not insecure_app_url and not insecure_cookie_override
     stripe_key_mode = _stripe_key_mode()
-    stripe_catalog_matches = _stripe_catalog_matches_verified_sandbox()
+    stripe_prices_configured = all(configured(name) for name in STRIPE_PRICE_ENV.values())
+    stripe_pricing_version_reconciled = checkout_pricing_reconciled()
     stripe_sandbox_ready = (
         stripe_key_mode == "test"
         and configured("STRIPE_WEBHOOK_SECRET")
-        and stripe_catalog_matches
+        and stripe_prices_configured
+        and stripe_pricing_version_reconciled
     )
     google_oauth_ready = not google_oauth_missing
     meta_oauth_ready = not meta_oauth_missing
@@ -120,11 +111,11 @@ def build_report() -> dict[str, Any]:
         "phase": "private_beta",
         "core_ready": not core_missing,
         "database_ready": database_configured(),
-        # Kept for deployment-config compatibility: all billing variables exist.
-        # Use stripe_sandbox_ready for the stricter private-beta go/no-go check.
         "billing_ready": not billing_missing,
         "stripe_key_mode": stripe_key_mode,
-        "stripe_catalog_matches_verified_sandbox": stripe_catalog_matches,
+        "stripe_current_price_env_configured": stripe_prices_configured,
+        "stripe_pricing_version_reconciled": stripe_pricing_version_reconciled,
+        "stripe_expected_pricing_version": CURRENT_PRICING_VERSION,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "smtp_ready": smtp_ready,
         "google_oauth_ready": google_oauth_ready,
@@ -142,6 +133,8 @@ def build_report() -> dict[str, Any]:
                 "final_authenticated_browser_qa",
                 "privacy_terms_legal_review",
                 "google_ads_external_approval_and_manager_link_if_required",
+                "google_ads_live_read_only_sync_verified",
+                "meta_ads_live_read_only_sync_verified",
                 "fresh_stripe_sandbox_end_to_end_test",
             ],
         },
@@ -174,6 +167,7 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"core: {_status(bool(report['core_ready']))}")
     print(f"database: {_status(bool(report['database_ready']))}")
     print(f"billing variables: {_status(bool(report['billing_ready']))}")
+    print(f"current pricing model: {'RECONCILED' if report['stripe_pricing_version_reconciled'] else 'LOCKED'}")
     print(f"Stripe sandbox: {'READY' if report['stripe_sandbox_ready'] else 'NOT READY'}")
     print(f"transactional email: {_status(bool(report['smtp_ready']))}")
     print(f"Google OAuth: {_status(bool(report['google_oauth_ready']))}")
@@ -209,8 +203,6 @@ def print_report(report: dict[str, Any]) -> None:
 def main() -> int:
     report = build_report()
     if "--json" in sys.argv[1:]:
-        # The report contains names, booleans, safe modes and non-secret readiness
-        # labels only. It never contains environment-variable secret values.
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
         print_report(report)

@@ -103,15 +103,18 @@ def test_preflight_reports_optional_service_readiness_without_secret_values(monk
         monkeypatch.setenv(name, f"secret-{name}")
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
-    for name, value in preflight.VERIFIED_STRIPE_SANDBOX_PRICES.items():
-        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_start_private")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth_private")
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_private")
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", preflight.CURRENT_PRICING_VERSION)
     monkeypatch.setenv("GOOGLE_ADS_DEVELOPER_TOKEN", "secret-developer-token")
     monkeypatch.setenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID", "1234567890")
 
     report = preflight.build_report()
     assert report["billing_ready"] is True
     assert report["stripe_key_mode"] == "test"
-    assert report["stripe_catalog_matches_verified_sandbox"] is True
+    assert report["stripe_current_price_env_configured"] is True
+    assert report["stripe_pricing_version_reconciled"] is True
     assert report["stripe_sandbox_ready"] is True
     assert report["smtp_ready"] is True
     assert report["google_oauth_ready"] is True
@@ -127,8 +130,24 @@ def test_preflight_reports_optional_service_readiness_without_secret_values(monk
     assert "postgresql://" not in output
     assert "private-beta execution locks: SAFE" in output
     assert "production transport: SAFE" in output
+    assert "current pricing model: RECONCILED" in output
     assert "Stripe sandbox: READY" in output
     assert "pilot configuration: READY" in output
+
+
+def test_preflight_requires_exact_pricing_version_marker(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_private")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_start_private")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth_private")
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_private")
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", "old-model")
+
+    report = preflight.build_report()
+    assert report["stripe_current_price_env_configured"] is True
+    assert report["stripe_pricing_version_reconciled"] is False
+    assert report["stripe_sandbox_ready"] is False
 
 
 def test_preflight_does_not_treat_merely_present_live_stripe_config_as_sandbox_ready(monkeypatch):
@@ -140,8 +159,10 @@ def test_preflight_does_not_treat_merely_present_live_stripe_config_as_sandbox_r
         monkeypatch.setenv(name, "configured")
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_private")
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private")
-    for name, value in preflight.VERIFIED_STRIPE_SANDBOX_PRICES.items():
-        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_start_private")
+    monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth_private")
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_private")
+    monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", preflight.CURRENT_PRICING_VERSION)
 
     report = preflight.build_report()
     assert report["billing_ready"] is True
