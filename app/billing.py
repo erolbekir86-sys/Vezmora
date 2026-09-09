@@ -1,46 +1,12 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException
 
+from .pricing import PLANS, checkout_pricing_reconciled, current_stripe_prices_configured, normalize_plan
 from .store import get_workspace_settings, usage_summary
-from .stripe_billing import CHECKOUT_PRICING_RECONCILED
-
-# Customer-facing plan limits are kept in one place so the app, pricing copy,
-# and backend enforcement can stay aligned. Prices are displayed in the UI;
-# Stripe Price IDs remain configured through environment variables.
-PLANS: dict[str, dict[str, Any]] = {
-    "starter": {
-        "label": "Starter",
-        "monthly_price_sek": 1_499,
-        "ai_runs": 100,
-        "jobs": 300,
-        "team_members": 1,
-        "campaign_rows": 10_000,
-        "positioning": "For solo operators and small local businesses",
-    },
-    "growth": {
-        "label": "Growth",
-        "monthly_price_sek": 2_999,
-        "ai_runs": 1_000,
-        "jobs": 5_000,
-        "team_members": 3,
-        "campaign_rows": 250_000,
-        "positioning": "For growing teams running multiple marketing channels",
-    },
-    "scale": {
-        "label": "Scale",
-        "monthly_price_sek": 5_999,
-        "ai_runs": 10_000,
-        "jobs": 50_000,
-        "team_members": 10,
-        "campaign_rows": 2_000_000,
-        "positioning": "For larger teams, agencies and higher-volume operations",
-    },
-}
 
 
 def _trial_active(settings: dict[str, Any]) -> bool:
@@ -56,17 +22,26 @@ def _trial_active(settings: dict[str, Any]) -> bool:
         return False
 
 
+def _stored_plan(value: object) -> str:
+    # Existing beta databases can still contain the historical values
+    # "starter" and "scale". Treat them as aliases instead of requiring a
+    # production data migration just to adopt the current public plan names.
+    try:
+        return normalize_plan(str(value or "start"))
+    except ValueError:
+        return "start"
+
+
 def billing_status(workspace_id: int) -> dict[str, Any]:
     settings = get_workspace_settings(workspace_id)
-    plan = settings.get("plan") or "starter"
+    plan = _stored_plan(settings.get("plan"))
     usage = usage_summary(workspace_id)
-    limits = PLANS.get(plan, PLANS["starter"])
+    limits = PLANS[plan]
     stripe_ready = bool(
-        CHECKOUT_PRICING_RECONCILED
-        and os.getenv("STRIPE_SECRET_KEY")
-        and os.getenv("STRIPE_PRICE_STARTER")
-        and os.getenv("STRIPE_PRICE_GROWTH")
-        and os.getenv("STRIPE_PRICE_SCALE")
+        checkout_pricing_reconciled()
+        and current_stripe_prices_configured()
+        and __import__("os").getenv("STRIPE_SECRET_KEY")
+        and __import__("os").getenv("STRIPE_WEBHOOK_SECRET")
     )
     return {
         "plan": plan,
