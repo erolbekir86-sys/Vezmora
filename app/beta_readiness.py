@@ -3,13 +3,7 @@ from __future__ import annotations
 import os
 
 from .main import app as _app
-
-
-VERIFIED_STRIPE_SANDBOX_PRICES = {
-    "STRIPE_PRICE_STARTER": "price_1UCGVX32EFR9j6MxSP6VB2TF",
-    "STRIPE_PRICE_GROWTH": "price_1UCGVf32EFR9j6Mx0fCKTHzK",
-    "STRIPE_PRICE_SCALE": "price_1UCGVm32EFR9j6MxFOxJD3zp",
-}
+from .pricing import CURRENT_PRICING_VERSION, STRIPE_PRICE_ENV, checkout_pricing_reconciled
 
 
 def _configured(name: str) -> bool:
@@ -82,10 +76,6 @@ def _stripe_key_mode() -> str:
     return "unknown"
 
 
-def _stripe_catalog_matches_verified_sandbox() -> bool:
-    return all((os.getenv(name) or "").strip() == expected for name, expected in VERIFIED_STRIPE_SANDBOX_PRICES.items())
-
-
 def _pilot_readiness_snapshot(
     *,
     private_beta_execution_safe: bool,
@@ -98,13 +88,7 @@ def _pilot_readiness_snapshot(
     meta_oauth_configured: bool,
     smtp_minimum_configured: bool,
 ) -> dict[str, object]:
-    """Summarize configuration-only blockers for the five-company pilot.
-
-    This deliberately does not claim third-party approvals, successful live account
-    linking, legal sign-off, production observability, browser QA, or commercial
-    pricing reconciliation. Those remain explicit manual gates even when
-    configuration_ready is true.
-    """
+    """Summarize configuration-only blockers for the five-company pilot."""
     checks = {
         "execution_locked": private_beta_execution_safe,
         "production_transport_safe": production_transport_safe,
@@ -125,7 +109,6 @@ def _pilot_readiness_snapshot(
             "production_observability_verified",
             "final_authenticated_browser_qa",
             "privacy_terms_legal_review",
-            "public_pricing_backend_and_stripe_sandbox_reconciled",
             "google_ads_external_approval_and_manager_link_if_required",
             "google_ads_live_read_only_sync_verified",
             "meta_ads_live_read_only_sync_verified",
@@ -149,12 +132,13 @@ def beta_safety_snapshot() -> dict[str, object]:
     core_internal_secrets_configured = _all_configured("VEZMORA_SECRET_KEY", "CRON_SECRET")
     database = _database_snapshot()
     stripe_key_mode = _stripe_key_mode()
-    stripe_catalog_configured = _all_configured(*VERIFIED_STRIPE_SANDBOX_PRICES.keys())
-    stripe_catalog_matches = _stripe_catalog_matches_verified_sandbox()
+    stripe_catalog_configured = _all_configured(*STRIPE_PRICE_ENV.values())
+    stripe_pricing_version_reconciled = checkout_pricing_reconciled()
     stripe_webhook_configured = _configured("STRIPE_WEBHOOK_SECRET")
     stripe_sandbox_ready = (
         stripe_key_mode == "test"
-        and stripe_catalog_matches
+        and stripe_catalog_configured
+        and stripe_pricing_version_reconciled
         and stripe_webhook_configured
     )
     google_oauth_configured = _all_configured(
@@ -198,7 +182,8 @@ def beta_safety_snapshot() -> dict[str, object]:
         "database": database,
         "stripe_key_mode": stripe_key_mode,
         "stripe_catalog_env_configured": stripe_catalog_configured,
-        "stripe_catalog_matches_verified_sandbox": stripe_catalog_matches,
+        "stripe_pricing_version_reconciled": stripe_pricing_version_reconciled,
+        "stripe_expected_pricing_version": CURRENT_PRICING_VERSION,
         "stripe_webhook_env_configured": stripe_webhook_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
@@ -217,8 +202,8 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Configuration booleans do not prove third-party approval or account access.",
             "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
-            "Stripe sandbox readiness compares environment configuration with the verified Vexmera test catalog without exposing keys or Price IDs.",
-            "The verified Stripe sandbox catalog may lag public pricing changes; public pricing, backend plan definitions, tests and sandbox products/prices must be reconciled before pilot Checkout testing.",
+            "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, and the exact pricing-version marker; no Stripe identifiers are returned.",
+            "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
             "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
