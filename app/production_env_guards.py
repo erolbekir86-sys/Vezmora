@@ -16,6 +16,7 @@ _CURRENT_PRICE_ENV = {
     "STRIPE_PRICE_GROWTH": "STRIPE_PRICE_GROWTH",
     "STRIPE_PRICE_SCALE": "STRIPE_PRICE_PRO",
 }
+_LEGACY_ONLY_PRICE_ENV = ("STRIPE_PRICE_STARTER", "STRIPE_PRICE_SCALE")
 
 
 def _current_pricing_verified() -> bool:
@@ -42,11 +43,12 @@ def apply_production_env_guards() -> None:
 
     # The legacy Vercel entrypoint still has a boolean-only Stripe configuration
     # check using STARTER/GROWTH/SCALE variable names. Prevent stale historical
-    # values from making that diagnostic green. Only expose compatibility aliases
-    # when the explicit Start/Growth/Pro pricing-version gate has been verified.
+    # STARTER/SCALE values from making that diagnostic green. Growth keeps the
+    # same variable name in both models, so it is never cleared. Compatibility
+    # aliases are exposed only when the exact current pricing version is verified.
     if _current_pricing_verified():
         for legacy_name, current_name in _CURRENT_PRICE_ENV.items():
             os.environ[legacy_name] = (os.getenv(current_name) or "").strip()
     else:
-        for legacy_name in _CURRENT_PRICE_ENV:
+        for legacy_name in _LEGACY_ONLY_PRICE_ENV:
             os.environ.pop(legacy_name, None)
