@@ -20,7 +20,7 @@ def _snapshot(*, core_internal_secrets_configured: bool | None) -> dict[str, obj
 
 
 def test_pilot_preflight_blocks_explicitly_missing_internal_secrets(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: True)
     monkeypatch.setattr(
         pilot_preflight,
         "beta_safety_snapshot",
@@ -36,7 +36,7 @@ def test_pilot_preflight_blocks_explicitly_missing_internal_secrets(monkeypatch)
 
 
 def test_pilot_preflight_accepts_configured_internal_secrets(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: True)
     monkeypatch.setattr(
         pilot_preflight,
         "beta_safety_snapshot",
@@ -52,7 +52,7 @@ def test_pilot_preflight_accepts_configured_internal_secrets(monkeypatch):
 
 
 def test_pilot_preflight_keeps_legacy_snapshot_compatibility(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: True)
     monkeypatch.setattr(
         pilot_preflight,
         "beta_safety_snapshot",
