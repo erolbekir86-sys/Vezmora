@@ -28,12 +28,14 @@ def verify_password(password: str, salt_hex: str, expected_hex: str) -> bool:
 
 
 def _secure_cookie() -> bool:
+    # Vercel production/preview deployments are HTTPS. Never allow a stale or
+    # mistaken VEZMORA_COOKIE_SECURE=false override to weaken auth cookies there.
+    if os.getenv("VERCEL"):
+        return True
     configured = os.getenv("VEZMORA_COOKIE_SECURE")
     if configured is not None:
         return configured.lower() in {"1", "true", "yes", "on"}
-    # Vercel production/preview deployments are HTTPS. Defaulting to secure
-    # there avoids accidentally shipping an authentication cookie over HTTP.
-    return bool(os.getenv("VERCEL")) or (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
+    return (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
 
 
 def start_session(response: Response, user_id: int) -> None:
