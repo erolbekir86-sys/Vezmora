@@ -22,9 +22,16 @@ def hash_password(password: str, salt: bytes | None = None) -> tuple[str, str]:
 
 
 def verify_password(password: str, salt_hex: str, expected_hex: str) -> bool:
-    salt = bytes.fromhex(salt_hex)
+    """Verify credentials without turning malformed stored hashes into a 500."""
+    try:
+        salt = bytes.fromhex(salt_hex)
+        expected = bytes.fromhex(expected_hex)
+    except (TypeError, ValueError):
+        return False
+    if not salt or len(expected) != hashlib.sha256().digest_size:
+        return False
     _, digest_hex = hash_password(password, salt)
-    return hmac.compare_digest(digest_hex, expected_hex)
+    return hmac.compare_digest(digest_hex, expected.hex())
 
 
 def _secure_cookie() -> bool:
