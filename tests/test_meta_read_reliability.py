@@ -5,6 +5,7 @@ import asyncio
 import pytest
 from fastapi import HTTPException
 
+from app import connector_empty_states
 from app import connectors
 from app import meta_read_reliability as reliability
 
@@ -155,6 +156,9 @@ def test_meta_row_deduplication_prevents_duplicate_daily_aggregation():
     assert by_id["1"]["clicks"] == "11"
 
 
-def test_installer_replaces_connector_sync_meta_with_reliable_read_only_sync():
+def test_meta_reliable_sync_is_preserved_under_existing_empty_state_wrapper():
+    """Reliability must be the read base while existing UX wrappers remain intact."""
     reliability.install_meta_read_reliability()
-    assert connectors.sync_meta is reliability.sync_meta_reliable
+
+    assert connector_empty_states._original_sync_meta is reliability.sync_meta_reliable
+    assert connectors.sync_meta is connector_empty_states.sync_meta_with_empty_state
