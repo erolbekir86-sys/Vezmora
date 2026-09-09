@@ -9,6 +9,10 @@ Language = Literal["sv", "en", "de", "es", "fr", "tr"]
 Objective = Literal["awareness", "leads", "sales", "bookings", "retention", "launch"]
 ApprovalStatus = Literal["pending", "approved", "rejected", "executed", "failed"]
 WorkspaceRole = Literal["owner", "admin", "marketer", "viewer"]
+# Current plans are start/growth/pro. Historical starter/scale values remain
+# accepted at the API boundary during the private-beta migration and are
+# normalized before billing or Stripe persistence.
+BillingPlan = Literal["start", "growth", "pro", "starter", "scale"]
 
 
 class RegisterRequest(BaseModel):
@@ -139,7 +143,8 @@ class JobCreateRequest(BaseModel):
 
 
 class BillingPlanUpdate(BaseModel):
-    plan: Literal["starter", "growth", "scale"]
+    plan: BillingPlan
+
 
 AutopilotMode = Literal["suggest", "assisted", "autopilot"]
 
@@ -191,7 +196,7 @@ class BetaFeedbackCreate(BaseModel):
 
 
 class BillingCheckoutRequest(BaseModel):
-    plan: Literal["starter", "growth", "scale"]
+    plan: BillingPlan
 
 
 class CoreActionCreate(BaseModel):
