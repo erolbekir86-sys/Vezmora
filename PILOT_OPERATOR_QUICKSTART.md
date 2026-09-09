@@ -10,13 +10,15 @@ Run the consolidated read-only check against production:
 python scripts/pilot_go_no_go.py --base-url https://vexmera.com
 ```
 
-This performs machine-checkable configuration checks plus GET-only public checks for execution locks and legal-page discoverability. It does not send credentials, mutate provider data, or approve the pilot.
+This performs machine-checkable configuration checks plus GET-only public checks for execution locks, production runtime health and legal-page discoverability. The runtime gate verifies that the deployed service identifies as Vercel production, the database connection is healthy, required internal security configuration is present, and a deployment commit is identifiable. Only allowlisted non-secret booleans/metadata are surfaced. The command does not send credentials, mutate provider data, or approve the pilot.
 
 Interpretation:
 
 - exit code `0` / `status: machine_checks_clear`: machine checks are clear only; continue with manual gates below.
 - non-zero exit code / `status: blocked`: stop onboarding and resolve the reported blocker first.
 - `pilot_ready` remains intentionally unset because final pilot approval requires human verification.
+
+Common runtime blockers include `runtime_unreachable`, `runtime_not_production`, `database_connection_unhealthy`, `internal_secrets_not_configured`, and `deployment_commit_unknown`. Treat each as a stop condition until the underlying deployment issue is understood and fixed. Never copy secret values into pilot evidence while investigating.
 
 ## Manual gates that still matter
 
@@ -47,6 +49,6 @@ For each company, verify:
 
 ## Immediate stop conditions
 
-Stop onboarding if any execution lock is unexpectedly enabled, tenant isolation looks wrong, provider scopes become broader than expected, a secret/token is exposed, live billing is reached unexpectedly, or production data is presented misleadingly.
+Stop onboarding if any execution lock is unexpectedly enabled, tenant isolation looks wrong, provider scopes become broader than expected, a secret/token is exposed, live billing is reached unexpectedly, production runtime health fails, or production data is presented misleadingly.
 
 For full evidence capture, billing-sandbox rules, privacy/deletion checks, completion criteria and the five-company roster, use `FIVE_COMPANY_PILOT_RUNBOOK.md`.
