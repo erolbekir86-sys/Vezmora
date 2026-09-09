@@ -25,7 +25,10 @@
       onboardingStep = Math.min(3, onboardingStep + 1);
       renderOnboardingStep();
     } catch (err) {
-      $('onboardingError').textContent = `Kunde inte spara steget: ${err.message}`;
+      // Do not surface raw API/provider error text in the onboarding UI. The user
+      // only needs a safe, actionable retry message; detailed diagnostics stay in
+      // the existing protected diagnostic paths.
+      $('onboardingError').textContent = 'Kunde inte spara steget. Kontrollera anslutningen och försök igen.';
     } finally {
       next.disabled = false;
       next.textContent = previousLabel;
