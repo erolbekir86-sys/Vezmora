@@ -13,17 +13,21 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.beta_readiness import beta_safety_snapshot
-from app.stripe_billing import CHECKOUT_PRICING_RECONCILED
+from app.pricing import checkout_pricing_reconciled
+
+
+def _checkout_pricing_reconciled() -> bool:
+    return checkout_pricing_reconciled()
 
 
 def build_preflight_snapshot() -> dict[str, Any]:
     """Return a non-secret, conservative configuration preflight for pilot operators.
 
-    The existing beta-readiness endpoint is intentionally configuration-only and
-    keeps commercial pricing reconciliation as a manual gate. This operator view
-    also treats the code-level Checkout pricing gate and missing internal security
-    secrets as active blockers so a pilot cannot be mistaken for ready while
-    billing is deliberately disabled or token/maintenance protections are absent.
+    The existing beta-readiness endpoint is intentionally configuration-only.
+    This operator view also treats the explicit current-pricing Checkout gate and
+    missing internal security secrets as active blockers so a pilot cannot be
+    mistaken for ready while billing is deliberately disabled or token/maintenance
+    protections are absent.
 
     `ok` means only that machine-checkable configuration blockers are clear. It is
     deliberately not a claim that the five-company pilot is approved or ready:
@@ -33,8 +37,9 @@ def build_preflight_snapshot() -> dict[str, Any]:
     pilot = dict(snapshot.get("pilot_readiness") or {})
     blockers = list(pilot.get("configuration_blockers") or [])
     manual_gates = list(pilot.get("manual_gates") or [])
+    pricing_reconciled = _checkout_pricing_reconciled()
 
-    if not CHECKOUT_PRICING_RECONCILED and "checkout_pricing_reconciliation" not in blockers:
+    if not pricing_reconciled and "checkout_pricing_reconciliation" not in blockers:
         blockers.append("checkout_pricing_reconciliation")
 
     core_internal_secrets_configured = snapshot.get("core_internal_secrets_configured") is not False
@@ -61,7 +66,7 @@ def build_preflight_snapshot() -> dict[str, Any]:
         "production_transport_safe": bool(snapshot.get("production_transport_safe")),
         "core_internal_secrets_configured": core_internal_secrets_configured,
         "configuration_ready": bool(pilot.get("configuration_ready")),
-        "checkout_pricing_reconciled": bool(CHECKOUT_PRICING_RECONCILED),
+        "checkout_pricing_reconciled": pricing_reconciled,
         "blockers": blockers,
         "manual_gates": manual_gates,
         "note": (
@@ -168,8 +173,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # Preserve the original top-level configuration fields so existing operator
-    # tooling remains compatible. The optional live result is additive only.
     result = build_preflight_snapshot()
     if args.base_url:
         result["live"] = build_live_preflight(args.base_url)
