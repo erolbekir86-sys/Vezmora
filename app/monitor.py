@@ -30,21 +30,23 @@ def _safe_public_url(url: str) -> bool:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         return False
+    # Userinfo in a URL can accidentally turn saved competitor URLs or
+    # redirects into credential-bearing requests. The monitor never needs it.
+    if parsed.username is not None or parsed.password is not None:
+        return False
     host = parsed.hostname.lower()
     if host in {"localhost", "localhost.localdomain"} or host.endswith(".local"):
         return False
     try:
-        ip = ipaddress.ip_address(host)
-        return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved)
+        return ipaddress.ip_address(host).is_global
     except ValueError:
         pass
     try:
         for info in socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM):
-            ip = ipaddress.ip_address(info[4][0])
-            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            if not ipaddress.ip_address(info[4][0]).is_global:
                 return False
     except socket.gaierror:
-        pass
+        return False
     return True
 
 
