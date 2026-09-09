@@ -38,6 +38,7 @@ def test_completed_onboarding_routes_to_connections_and_preserves_read_only_beta
     assert "await loadConnectors()" in ALIGNMENT
     assert "Koppla nu en datakälla" in ALIGNMENT
     assert "utan att ändra kampanjer, budgetar eller bud automatiskt" in ALIGNMENT
+    assert "Steg ${onboardingStep} av 3" in ALIGNMENT
 
 
 def test_alignment_layer_does_not_enable_sensitive_execution_or_modify_secrets():
