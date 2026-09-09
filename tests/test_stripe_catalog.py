@@ -21,21 +21,21 @@ def test_validate_expected_vexmera_monthly_prices():
 
 
 def test_validate_rejects_wrong_amount_currency_or_interval():
-    assert stripe_catalog.validate_price_payload("starter", _price(99_900))[1] == "amount_mismatch"
-    assert stripe_catalog.validate_price_payload("starter", _price(149_900, currency="usd"))[1] == "currency_mismatch"
-    assert stripe_catalog.validate_price_payload("starter", _price(149_900, interval="year"))[1] == "interval_mismatch"
+    assert stripe_catalog.validate_price_payload("start", _price(99_900))[1] == "amount_mismatch"
+    assert stripe_catalog.validate_price_payload("start", _price(99_500, currency="usd"))[1] == "currency_mismatch"
+    assert stripe_catalog.validate_price_payload("start", _price(99_500, interval="year"))[1] == "interval_mismatch"
 
 
 def test_verify_configured_prices_returns_safe_status(monkeypatch):
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_placeholder")
-    monkeypatch.setenv("STRIPE_PRICE_STARTER", "price_starter")
+    monkeypatch.setenv("STRIPE_PRICE_START", "price_start")
     monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth")
-    monkeypatch.setenv("STRIPE_PRICE_SCALE", "price_scale")
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro")
 
     payloads = {
-        "price_starter": _price(149_900),
-        "price_growth": _price(299_900),
-        "price_scale": _price(599_900),
+        "price_start": _price(99_500),
+        "price_growth": _price(149_500),
+        "price_pro": _price(299_500),
     }
 
     def fake_get(url, **kwargs):
@@ -46,7 +46,7 @@ def test_verify_configured_prices_returns_safe_status(monkeypatch):
     result = stripe_catalog.verify_configured_prices()
     assert result["ok"] is True
     assert result["configured"] is True
-    assert set(result["plans"]) == {"starter", "growth", "scale"}
+    assert set(result["plans"]) == {"start", "growth", "pro"}
     serialized = repr(result)
     assert "sk_test_placeholder" not in serialized
-    assert "price_starter" not in serialized
+    assert "price_start" not in serialized
