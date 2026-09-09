@@ -5,6 +5,7 @@ import asyncio
 import pytest
 from fastapi import HTTPException
 
+import main as vercel_entrypoint
 from app import connector_empty_states
 from app import connectors
 from app import meta_read_reliability as reliability
@@ -156,9 +157,10 @@ def test_meta_row_deduplication_prevents_duplicate_daily_aggregation():
     assert by_id["1"]["clicks"] == "11"
 
 
-def test_meta_reliable_sync_is_preserved_under_existing_empty_state_wrapper():
-    """Reliability must be the read base while existing UX wrappers remain intact."""
+def test_meta_reliable_sync_is_preserved_through_all_existing_wrappers():
+    """Reliability is the base, empty-state UX is middle, discovery remains outermost."""
     reliability.install_meta_read_reliability()
 
     assert connector_empty_states._original_sync_meta is reliability.sync_meta_reliable
-    assert connectors.sync_meta is connector_empty_states.sync_meta_with_empty_state
+    assert vercel_entrypoint._original_sync_meta is connector_empty_states.sync_meta_with_empty_state
+    assert connectors.sync_meta is vercel_entrypoint._sync_meta_with_account_discovery
