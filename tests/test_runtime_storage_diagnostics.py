@@ -5,7 +5,14 @@ from app.runtime_diagnostics import runtime_health_payload, storage_backend
 
 def test_storage_backend_reports_sqlite_without_remote_url(monkeypatch):
     monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
+    monkeypatch.setenv("VEZMORA_DB_PATH", "/tmp/private/vexmera.sqlite3")
+    payload = runtime_health_payload()
+    rendered = repr(payload)
+
     assert storage_backend() == "sqlite"
+    assert payload["storage_backend"] == "sqlite"
+    assert payload["data_path"] == "local"
+    assert "/tmp/private/vexmera.sqlite3" not in rendered
 
 
 def test_storage_backend_reports_real_turso(monkeypatch):
