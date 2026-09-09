@@ -10,6 +10,20 @@ _PRIVATE_BETA_DISABLED_FLAGS = (
     "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
 )
 
+_CURRENT_PRICING_VERSION = "2026-09-start-growth-pro"
+_CURRENT_PRICE_ENV = {
+    "STRIPE_PRICE_STARTER": "STRIPE_PRICE_START",
+    "STRIPE_PRICE_GROWTH": "STRIPE_PRICE_GROWTH",
+    "STRIPE_PRICE_SCALE": "STRIPE_PRICE_PRO",
+}
+
+
+def _current_pricing_verified() -> bool:
+    return (
+        (os.getenv("VEZMORA_STRIPE_PRICING_VERSION") or "").strip() == _CURRENT_PRICING_VERSION
+        and all((os.getenv(name) or "").strip() for name in ("STRIPE_PRICE_START", "STRIPE_PRICE_GROWTH", "STRIPE_PRICE_PRO"))
+    )
+
 
 def apply_production_env_guards() -> None:
     """Fail closed for unsafe Private Beta-only overrides on Vercel.
@@ -17,8 +31,22 @@ def apply_production_env_guards() -> None:
     Local development can still opt into explicit test behavior. On Vercel,
     however, stale or accidental environment overrides must not expose reset or
     invite tokens, unlock external ad mutations, enable autonomous execution,
-    or request Meta's ads_management scope during the Private Beta.
+    request Meta's ads_management scope, or make the historical Stripe pricing
+    configuration appear current.
     """
-    if os.getenv("VERCEL"):
-        for name in _PRIVATE_BETA_DISABLED_FLAGS:
-            os.environ[name] = "false"
+    if not os.getenv("VERCEL"):
+        return
+
+    for name in _PRIVATE_BETA_DISABLED_FLAGS:
+        os.environ[name] = "false"
+
+    # The legacy Vercel entrypoint still has a boolean-only Stripe configuration
+    # check using STARTER/GROWTH/SCALE variable names. Prevent stale historical
+    # values from making that diagnostic green. Only expose compatibility aliases
+    # when the explicit Start/Growth/Pro pricing-version gate has been verified.
+    if _current_pricing_verified():
+        for legacy_name, current_name in _CURRENT_PRICE_ENV.items():
+            os.environ[legacy_name] = (os.getenv(current_name) or "").strip()
+    else:
+        for legacy_name in _CURRENT_PRICE_ENV:
+            os.environ.pop(legacy_name, None)
