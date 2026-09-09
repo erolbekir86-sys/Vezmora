@@ -2,6 +2,7 @@
   'use strict';
 
   const SVG = (body) => `<svg class="vex-premium-icon" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+  const BRAND = (body) => `<svg class="vex-brand-icon" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
 
   const icons = {
     growth: SVG('<path d="M4 18V7"/><path d="M4 18h16"/><path d="m7 14 4-4 3 2 5-6"/><path d="M16.5 6H20v3.5"/><circle cx="7" cy="14" r="1"/><circle cx="11" cy="10" r="1"/><circle cx="14" cy="12" r="1"/>'),
@@ -30,6 +31,13 @@
     home: SVG('<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'),
     settings: SVG('<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.8-1L14.4 3h-4.8l-.3 3.1a7 7 0 0 0-1.8 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.8 1l.3 3.1h4.8l.3-3.1a7 7 0 0 0 1.8-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/>')
   };
+
+  icons.googleAds = BRAND('<path d="M9.2 19.2a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0Z" fill="#34A853"/><path d="M10.35 18.7 16.9 7.35a3.2 3.2 0 0 0-5.55-3.2L4.8 15.5a4.8 4.8 0 0 1 5.55 3.2Z" fill="#4285F4"/><path d="m13.5 4.15 7.8 13.5a3.2 3.2 0 1 1-5.55 3.2L8 7.35a3.2 3.2 0 0 1 5.5-3.2Z" fill="#FBBC04"/>');
+  icons.meta = BRAND('<path d="M3 15.2C4.4 8.8 6.9 5.8 9.3 5.8c2.1 0 3.8 2.5 5.4 5.3 1.4 2.5 2.4 4.2 3.7 4.2 1.1 0 1.8-1.2 1.8-3 0-3.8-2.1-6.5-5.1-6.5-3.1 0-5.2 2.7-7 6.1-1.4 2.7-2.5 4.4-3.6 4.4-.9 0-1.5-.8-1.5-2.2 0-2.2 1.1-4.3 2.8-5.6" fill="none" stroke="#168AFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>');
+  icons.analytics = BRAND('<rect x="3" y="13" width="5" height="8" rx="2.4" fill="#F9AB00"/><rect x="10" y="7" width="5" height="14" rx="2.4" fill="#E37400"/><rect x="17" y="3" width="4" height="18" rx="2" fill="#F9AB00"/>');
+  icons.linkedin = BRAND('<rect x="2" y="2" width="20" height="20" rx="3" fill="#0A66C2"/><circle cx="7" cy="8" r="1.5" fill="#fff"/><path d="M5.7 10.5h2.7V19H5.7zm4.5 0h2.6v1.15c.72-.92 1.72-1.45 3.16-1.45 2.56 0 3.34 1.68 3.34 4.2V19h-2.7v-4.05c0-1.07-.02-2.45-1.5-2.45s-1.73 1.17-1.73 2.37V19h-2.7v-8.5Z" fill="#fff"/>');
+  icons.tiktok = BRAND('<path d="M14.2 3h3.1c.35 2.05 1.55 3.45 3.7 3.9v3.15a8.5 8.5 0 0 1-3.7-1.1v6.1A5.95 5.95 0 1 1 12.15 9.1v3.2a2.85 2.85 0 1 0 2.05 2.75V3Z" fill="#25F4EE"/><path d="M15.2 3h2.1c.35 2.05 1.55 3.45 3.7 3.9v2.15a7.7 7.7 0 0 1-4.7-2.1v8.1a4.95 4.95 0 1 1-4.15-4.88v2.13a2.85 2.85 0 1 0 3.05 2.75V3Z" fill="#FE2C55" opacity=".9"/><path d="M14.2 3h2.1c.33 1.9 1.36 3.05 3.1 3.62v2.16a7.4 7.4 0 0 1-3.1-1.83v8.1a4.9 4.9 0 1 1-4.15-4.88v2.13a2.85 2.85 0 1 0 2.05 2.75V3Z" fill="#fff"/>');
+  icons.shopify = BRAND('<path d="m6 7 1.2 14 11.8-2.5L17.7 5.8 6 7Z" fill="#95BF47"/><path d="M9 8V6.1C9 3.8 10.3 2 12 2s2.8 1.6 3 3.9" fill="none" stroke="#5E8E3E" stroke-width="1.7"/><path d="M14.2 9.5c-.55-.3-1.2-.45-1.85-.42-1.35.06-1.8.8-1.8 1.42 0 1.8 3.65 1.25 3.65 4.3 0 2.4-1.52 3.95-3.58 4.05-1.23.06-2.13-.65-2.13-.65l.38-1.58s.76.58 1.38.55c.4-.02.55-.35.55-.58 0-1.35-2.98-1.25-2.98-4.05 0-2.35 1.68-4.65 5.08-4.8.88-.04 1.32.18 1.32.18l-.02 1.58Z" fill="#fff"/>');
 
   const outcomeCopy = {
     sv: [
@@ -85,12 +93,21 @@
 
   function upgradeModules() {
     document.querySelectorAll('.module-card').forEach((card) => {
+      card.querySelector('.module-top > span:not(.module-letter)')?.remove();
       const el = card.querySelector('.module-letter');
       if (!el) return;
       const text = (card.textContent || '').toLowerCase();
       const name = text.includes('pulse') ? 'pulse' : text.includes('launch') ? 'launch' : text.includes('autopilot') ? 'autopilot' : 'core';
       el.classList.add('ux-symbol');
       setIcon(el, name);
+    });
+  }
+
+  function upgradeAutopilotFlow() {
+    const flowIcons = ['⌁', '✦', '✓', '↗'];
+    document.querySelectorAll('.workflow-node').forEach((node, i) => {
+      node.querySelector(':scope > span')?.remove();
+      node.dataset.flowIcon = flowIcons[i] || '✦';
     });
   }
 
@@ -103,9 +120,9 @@
       if (text.includes('google')) name = 'googleAds';
       else if (text.includes('meta')) name = 'meta';
       else if (text.includes('analytics')) name = 'analytics';
-      else if (text.includes('linkedin')) name = 'briefcase';
-      else if (text.includes('tiktok')) name = 'play';
-      else if (text.includes('shopify')) name = 'bag';
+      else if (text.includes('linkedin')) name = 'linkedin';
+      else if (text.includes('tiktok')) name = 'tiktok';
+      else if (text.includes('shopify')) name = 'shopify';
       el.classList.add('ux-source');
       setIcon(el, name);
     });
@@ -119,6 +136,13 @@
       else if (text.includes('pulse')) name = 'pulse';
       else if (text.includes('launch')) name = 'launch';
       else if (text.includes('autopilot')) name = 'autopilot';
+      else if (text.includes('brief')) name = 'briefcase';
+      else if (text.includes('queue')) name = 'control';
+      else if (text.includes('konkurrent') || text.includes('competitor')) name = 'detect';
+      else if (text.includes('anslut') || text.includes('connection')) name = 'channels';
+      else if (text.includes('insikt') || text.includes('insight')) name = 'insight';
+      else if (text.includes('team')) name = 'simple';
+      else if (text.includes('varum') || text.includes('brand')) name = 'smart';
       else if (text.includes('inställ') || text.includes('setting')) name = 'settings';
       const existing = nav.querySelector('.ux-icon,.vex-premium-icon,b');
       if (existing) existing.outerHTML = icons[name];
@@ -132,6 +156,7 @@
     upgradeOutcomes();
     upgradeBeta();
     upgradeModules();
+    upgradeAutopilotFlow();
     upgradeIntegrations();
     upgradeDashboard();
     document.documentElement.classList.add('vexmera-premium-icons-ready');

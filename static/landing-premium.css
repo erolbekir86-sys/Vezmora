@@ -109,6 +109,26 @@ html[data-theme="dark"] main>section::after{
 .outcome-grid article h3{position:relative;z-index:2}
 .outcome-grid article h3::after{content:"";display:block;width:54%;height:44px;margin-top:18px;opacity:.42;background:linear-gradient(90deg,color-mix(in srgb,var(--icon-color) 30%,transparent),transparent);clip-path:polygon(0 64%,18% 58%,33% 70%,49% 36%,63% 48%,78% 25%,100% 10%,100% 19%,79% 36%,65% 59%,50% 47%,34% 80%,18% 69%,0 75%)}
 
+/* Remove workflow numbering and use a Vexmera-gold icon for each step. */
+.module-top>span:not(.module-letter),.value-card>.index,.outcome-grid article>span{display:none!important}
+.workflow-node{padding-top:18px!important;text-align:center!important}
+.workflow-node::before{content:attr(data-flow-icon);display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border:1px solid rgba(198,162,103,.48);border-radius:15px;color:#d5b276;background:rgba(198,162,103,.10);font-size:22px;font-weight:700;box-shadow:0 10px 24px rgba(198,162,103,.12)}
+.workflow-node>strong{font-size:15px!important}.workflow-node>small{font-size:11px!important}
+
+/* Increase the existing atmospheric art without changing the image assets. */
+.vex-art-section>.vex-section-art{opacity:1!important;background-size:cover!important}
+.vex-art-section>.vex-section-art::after{background:linear-gradient(180deg,rgba(15,19,25,.72),rgba(15,19,25,.56) 48%,rgba(15,19,25,.78))!important}
+
+/* Larger navigation, controls and pricing toggle. */
+.site-header{height:82px!important;padding-inline:18px!important}
+.site-header .brand-mark{width:46px!important;height:46px!important}.site-header .brand-mark svg{width:31px!important}.site-header .brand-copy strong{font-size:15px!important}.site-header .brand-copy small{font-size:8px!important}.desktop-nav{font-size:13px!important;gap:32px!important}.header-actions{gap:10px!important}.header-actions .text-link{font-size:13px!important}.header-actions>.button{font-size:13px!important;padding:13px 18px!important}.billing-toggle button{font-size:14px!important;padding:13px 19px!important}.billing-toggle button small{font-size:11px!important}.footer-grid>div>strong{font-size:12px!important}.footer-grid>div>a{font-size:12px!important}.footer-bottom,.footer-bottom button{font-size:11px!important}
+
+/* Founder story: copy first, portrait second, framed in Vexmera dark with gold mark. */
+.founder-card{grid-template-columns:1.1fr .9fr!important;background:linear-gradient(145deg,#11151c,#1b2028)!important;border-color:rgba(198,162,103,.28)!important}.founder-copy{order:1!important;padding:52px!important}.founder-portrait{order:2!important;align-self:stretch!important;max-width:none!important;width:100%!important;height:100%!important;min-height:440px!important;border-radius:0!important;box-shadow:none!important;border:0!important}.founder-copy h2,.founder-copy p,.founder-copy .eyebrow{text-align:left!important}.founder-meta-mark{background:linear-gradient(145deg,#c6a267,#8f6732)!important;color:#17130e!important}
+.security-grid span{border-color:rgba(198,162,103,.34)!important;background:rgba(198,162,103,.08)!important;color:#d8b87e!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 8px 20px rgba(198,162,103,.08)!important}.security-grid span b{color:#f3e6cb!important}.security-card .eyebrow{color:#d0aa6f!important}
+.value-card,.outcome-grid article,.trust-strip article{text-align:center!important}.value-card .icon-box,.outcome-grid article::after,.trust-icon{margin-inline:auto!important}
+@media(max-width:900px){.site-header{height:72px!important}.founder-card{grid-template-columns:1fr!important}.founder-copy{order:1!important;padding:32px 24px!important}.founder-portrait{order:2!important;min-height:360px!important;border-radius:0 0 22px 22px!important}.desktop-nav{gap:18px!important}}
+
 /* Dark themed feature sections keep deliberate contrast */
 .pulse-feature,.workflow-section{color:#f4f5f7!important}
 .pulse-feature h2,.workflow-section h2,.pulse-feature h3,.workflow-section h3{color:#f5f2eb!important}

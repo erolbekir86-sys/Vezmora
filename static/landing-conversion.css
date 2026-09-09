@@ -399,3 +399,95 @@ html[data-theme="dark"] .beta-proof-icon{background:rgba(210,174,115,.10);color:
 @media (prefers-reduced-motion:reduce){
   .conversion-flow-arrow{animation:none!important}
 }
+
+/* Homepage product preview mirrors the real Vexmera overview. */
+.dashboard-window{min-height:540px!important}
+.dash-sidebar{gap:3px!important}
+.dash-nav{height:25px!important}
+.dash-signal-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin-top:14px;
+}
+.dash-signal-strip>span{
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid rgba(116,128,145,.22);
+  border-radius:9px;
+  background:rgba(255,255,255,.025);
+}
+.dash-signal-strip b,
+.dash-signal-strip em{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.dash-signal-strip b{
+  color:#d2ae73;
+  font-size:6px;
+  font-weight:800;
+  letter-spacing:.09em;
+}
+.dash-signal-strip em{
+  margin-top:3px;
+  color:#aeb7c3;
+  font-size:6px;
+  font-style:normal;
+}
+.metric-row{margin-top:11px!important}
+
+/* Brand marks should read as the services themselves, not generic symbols. */
+.integration-card .source-logo.ux-source{
+  width:54px!important;
+  height:54px!important;
+  border-color:rgba(255,255,255,.13)!important;
+  background:rgba(255,255,255,.96)!important;
+}
+.integration-card .source-logo.ux-source::after{display:none!important}
+.integration-card .vex-brand-icon{
+  position:relative;
+  z-index:2;
+  display:block;
+  width:30px!important;
+  height:30px!important;
+  overflow:visible;
+}
+
+/* Remove the obsolete decorative icon boxes from the outcome cards. */
+html body .outcomes-section .outcome-grid article{
+  align-items:center!important;
+  text-align:center!important;
+}
+html body .outcomes-section .outcome-grid article::before{
+  content:none!important;
+  display:none!important;
+}
+html body .outcomes-section .outcome-grid article > span{
+  display:none!important;
+}
+html body .outcomes-section .outcome-grid article h3{
+  margin-inline:auto!important;
+}
+html body .outcomes-section .outcome-grid article h3::after{display:none!important}
+html body .outcomes-section .outcome-grid article .outcome-support-copy{
+  margin-inline:auto!important;
+  text-align:center!important;
+}
+
+@media (max-width:760px){
+  .dashboard-window{min-height:510px!important}
+  .dash-sidebar{gap:2px!important}
+  .dash-nav{height:24px!important}
+  .dash-signal-strip{grid-template-columns:1fr;margin-top:10px;gap:5px}
+  .dash-signal-strip>span{padding:6px 7px}
+  .dash-signal-strip>span:nth-child(2),
+  .dash-signal-strip>span:nth-child(3){display:none}
+}
+
+@media (max-width:520px){
+  .dashboard-window{grid-template-columns:70px minmax(0,1fr)!important}
+  .dash-nav{height:23px!important;justify-content:center!important}
+  .dash-nav .vex-premium-icon{width:15px!important;height:15px!important}
+}
