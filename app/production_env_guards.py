@@ -3,12 +3,22 @@ from __future__ import annotations
 import os
 
 
-def apply_production_env_guards() -> None:
-    """Fail closed for development-only response behavior on Vercel.
+_PRIVATE_BETA_DISABLED_FLAGS = (
+    "VEZMORA_DEV_SHOW_TOKENS",
+    "VEZMORA_EXECUTION_ENABLED",
+    "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
+    "VEZMORA_ENABLE_META_EXECUTION_SCOPE",
+)
 
-    VEZMORA_DEV_SHOW_TOKENS exists only to make local development and tests
-    convenient. A stale Vercel environment override must never cause password
-    reset or invite tokens to be returned in HTTP responses.
+
+def apply_production_env_guards() -> None:
+    """Fail closed for unsafe Private Beta-only overrides on Vercel.
+
+    Local development can still opt into explicit test behavior. On Vercel,
+    however, stale or accidental environment overrides must not expose reset or
+    invite tokens, unlock external ad mutations, enable autonomous execution,
+    or request Meta's ads_management scope during the Private Beta.
     """
     if os.getenv("VERCEL"):
-        os.environ["VEZMORA_DEV_SHOW_TOKENS"] = "false"
+        for name in _PRIVATE_BETA_DISABLED_FLAGS:
+            os.environ[name] = "false"
