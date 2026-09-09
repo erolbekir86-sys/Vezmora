@@ -23,11 +23,18 @@ def test_product_shell_loads_dashboard_read_guard_after_app_bundle():
 
 
 def test_dashboard_read_failure_clears_potentially_stale_metrics():
-    assert "value.includes('/api/dashboard')" in GUARD
-    assert "value.includes('/api/kpis?')" in GUARD
+    assert "value.split('?')[0]" in GUARD
+    assert "pathname.endsWith('/api/dashboard')" in GUARD
+    assert "pathname.endsWith('/api/kpis')" in GUARD
     assert "node.textContent = '—'" in GUARD
     assert 'Kunde inte hämta aktuell data. Försök uppdatera igen.' in GUARD
     assert 'Aktuell KPI-data kunde inte verifieras.' in GUARD
+
+
+def test_dashboard_guard_covers_kpis_with_or_without_query_string():
+    assert "const pathname = value.split('?')[0].replace(/\\/+$/, '')" in GUARD
+    assert "pathname.endsWith('/api/kpis')" in GUARD
+    assert "value.includes('/api/kpis?')" not in GUARD
 
 
 def test_dashboard_guard_only_targets_get_reads():
