@@ -12,13 +12,20 @@ def test_vercel_config_sets_minimal_csp_without_restricting_app_assets():
 
     assert global_rule is not None
     headers = {item["key"].lower(): item["value"] for item in global_rule.get("headers", [])}
-    assert headers["content-security-policy"] == "base-uri 'self'; object-src 'none'; form-action 'self'"
+    assert headers["content-security-policy"] == (
+        "base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
+    )
+    assert headers["x-content-type-options"] == "nosniff"
+    assert headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
 
     # Keep this deliberately narrow for Private Beta. These directives harden
-    # injected <base>, plugin/object content, and cross-origin HTML form posts
-    # without changing script/style, API, OAuth, analytics, or payment origins.
+    # injected <base>, plugin/object content, cross-origin HTML form posts, and
+    # clickjacking without changing script/style, API, OAuth, analytics, or
+    # payment origins.
     csp = headers["content-security-policy"]
     assert "form-action 'self'" in csp
+    assert "frame-ancestors 'none'" in csp
     assert "default-src" not in csp
     assert "script-src" not in csp
     assert "style-src" not in csp
