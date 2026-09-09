@@ -25,7 +25,7 @@ def test_product_shell_loads_onboarding_save_guard_after_app_bundle():
 def test_onboarding_step_only_advances_after_successful_save():
     save_call = "await api(ws('/api/onboarding')"
     advance = "onboardingStep = Math.min(3, onboardingStep + 1)"
-    error_message = "Kunde inte spara steget:"
+    error_message = "Kunde inte spara steget. Kontrollera anslutningen och försök igen."
 
     assert save_call in GUARD
     assert advance in GUARD
@@ -34,6 +34,13 @@ def test_onboarding_step_only_advances_after_successful_save():
     assert error_message in GUARD
     assert "next.disabled = true" in GUARD
     assert "next.disabled = false" in GUARD
+
+
+def test_onboarding_save_error_does_not_render_raw_exception_details():
+    assert "${err.message}" not in GUARD
+    assert ".textContent = err.message" not in GUARD
+    assert "String(err)" not in GUARD
+    assert "Kontrollera anslutningen och försök igen." in GUARD
 
 
 def test_onboarding_guard_does_not_enable_execution_or_touch_sensitive_settings():
