@@ -35,6 +35,17 @@
     }
   }
 
+  function localizeOnboardingProgress() {
+    if (typeof renderOnboardingStep !== 'function') return;
+    const originalRender = renderOnboardingStep;
+    renderOnboardingStep = function alignedRenderOnboardingStep() {
+      originalRender();
+      const label = document.getElementById('onboardingStepLabel');
+      if (label && typeof onboardingStep !== 'undefined') label.textContent = `Steg ${onboardingStep} av 3`;
+    };
+    renderOnboardingStep();
+  }
+
   function addOnboardingNextStep() {
     const step = document.querySelector('[data-onboarding-step="3"]');
     if (!step || step.querySelector('[data-vexmera-onboarding-next-step]')) return;
@@ -68,6 +79,7 @@
   }
 
   alignBillingPlans();
+  localizeOnboardingProgress();
   addOnboardingNextStep();
   routeCompletedOnboardingToConnections();
 })();
