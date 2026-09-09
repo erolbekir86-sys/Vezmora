@@ -6,7 +6,7 @@ from scripts import pilot_preflight
 
 
 def test_pilot_preflight_surfaces_checkout_pricing_gate(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", False)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: False)
     result = pilot_preflight.build_preflight_snapshot()
     assert result["checkout_pricing_reconciled"] is False
     assert "checkout_pricing_reconciliation" in result["blockers"]
@@ -15,7 +15,7 @@ def test_pilot_preflight_surfaces_checkout_pricing_gate(monkeypatch):
 
 
 def test_pilot_preflight_does_not_duplicate_pricing_blocker(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", False)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: False)
     original_snapshot = pilot_preflight.beta_safety_snapshot
 
     def fake_snapshot():
@@ -33,7 +33,7 @@ def test_pilot_preflight_does_not_duplicate_pricing_blocker(monkeypatch):
 
 
 def test_pilot_preflight_cannot_be_mistaken_for_pilot_approval(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: True)
     original_snapshot = pilot_preflight.beta_safety_snapshot
 
     def fake_snapshot():
@@ -55,7 +55,7 @@ def test_pilot_preflight_cannot_be_mistaken_for_pilot_approval(monkeypatch):
 
 
 def test_pilot_preflight_status_can_report_configuration_clear(monkeypatch):
-    monkeypatch.setattr(pilot_preflight, "CHECKOUT_PRICING_RECONCILED", True)
+    monkeypatch.setattr(pilot_preflight, "_checkout_pricing_reconciled", lambda: True)
 
     def fake_snapshot():
         return {
