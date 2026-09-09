@@ -31,11 +31,13 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: STRIPE_PRICE_STARTER
+      - key: STRIPE_PRICE_START
         sync: false
       - key: STRIPE_PRICE_GROWTH
         sync: false
-      - key: STRIPE_PRICE_SCALE
+      - key: STRIPE_PRICE_PRO
+        sync: false
+      - key: VEZMORA_STRIPE_PRICING_VERSION
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
