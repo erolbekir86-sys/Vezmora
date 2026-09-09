@@ -5,7 +5,7 @@ import html
 import ipaddress
 import re
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from fastapi import HTTPException
@@ -22,28 +22,66 @@ _TAG_RE = re.compile(r"<[^>]+>")
 _SCRIPT_RE = re.compile(r"<(script|style|noscript)[^>]*>.*?</\1>", re.I | re.S)
 _SPACE_RE = re.compile(r"\s+")
 _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.I | re.S)
+_REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+_MAX_REDIRECTS = 4
 
 
 def _safe_public_url(url: str) -> bool:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         return False
+    # Userinfo in a URL can accidentally turn saved competitor URLs or
+    # redirects into credential-bearing requests. The monitor never needs it.
+    if parsed.username is not None or parsed.password is not None:
+        return False
     host = parsed.hostname.lower()
     if host in {"localhost", "localhost.localdomain"} or host.endswith(".local"):
         return False
     try:
-        ip = ipaddress.ip_address(host)
-        return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved)
+        return ipaddress.ip_address(host).is_global
     except ValueError:
         pass
     try:
         for info in socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM):
-            ip = ipaddress.ip_address(info[4][0])
-            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            if not ipaddress.ip_address(info[4][0]).is_global:
                 return False
     except socket.gaierror:
-        pass
+        return False
     return True
+
+
+async def _fetch_public_page(url: str, headers: dict[str, str]) -> httpx.Response:
+    """Fetch one public page while validating every redirect target.
+
+    Automatic redirects are intentionally disabled. A public competitor URL can
+    otherwise redirect Vexmera to localhost, link-local metadata services or
+    another private address after the initial SSRF check has already passed.
+    """
+    current_url = url
+    async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
+        for redirect_count in range(_MAX_REDIRECTS + 1):
+            if not _safe_public_url(current_url):
+                raise HTTPException(status_code=400, detail="Only public HTTP/HTTPS competitor URLs can be scanned")
+            try:
+                response = await client.get(current_url, headers=headers)
+            except httpx.HTTPError as exc:
+                raise HTTPException(status_code=502, detail="Competitor page could not be fetched") from exc
+
+            if response.status_code not in _REDIRECT_STATUSES:
+                return response
+
+            location = response.headers.get("location")
+            if not location:
+                raise HTTPException(status_code=502, detail="Competitor page returned an invalid redirect")
+            if redirect_count >= _MAX_REDIRECTS:
+                raise HTTPException(status_code=502, detail="Competitor page redirected too many times")
+
+            next_url = urljoin(str(response.url), location)
+            if not _safe_public_url(next_url):
+                raise HTTPException(status_code=400, detail="Competitor page redirected to a non-public URL")
+            current_url = next_url
+
+    raise HTTPException(status_code=502, detail="Competitor page redirected too many times")
 
 
 def normalize_page(html_text: str) -> tuple[str | None, str, str]:
@@ -66,11 +104,7 @@ async def scan_competitor(workspace_id: int, competitor_id: int) -> dict[str, ob
     if not _safe_public_url(url):
         raise HTTPException(status_code=400, detail="Only public HTTP/HTTPS competitor URLs can be scanned")
     headers = {"User-Agent": "VezmoraBot/0.4 (+competitive-monitor; respectful single-page checks)"}
-    try:
-        async with httpx.AsyncClient(timeout=15, follow_redirects=True, max_redirects=4) as client:
-            response = await client.get(url, headers=headers)
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail="Competitor page could not be fetched") from exc
+    response = await _fetch_public_page(url, headers)
     if response.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Competitor page returned HTTP {response.status_code}")
     content_type = response.headers.get("content-type", "")
