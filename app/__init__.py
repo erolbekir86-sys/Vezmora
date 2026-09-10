@@ -10,6 +10,12 @@ _apply_production_env_guards()
 from .kpi_semantics import install_kpi_semantics_guard as _install_kpi_semantics_guard
 _install_kpi_semantics_guard()
 
+# Password-reset and workspace-invite tokens are one-time capabilities. Install
+# atomic claim helpers before app.main binds the store functions so concurrent
+# requests cannot both accept the same token.
+from .one_time_token_safety import install_one_time_token_safety as _install_one_time_token_safety
+_install_one_time_token_safety()
+
 # Harden Google read/token requests before diagnostics and connector UX wrappers
 # capture the sync functions. This keeps bounded retry and payload validation at
 # the base of the existing Google wrapper chain.
