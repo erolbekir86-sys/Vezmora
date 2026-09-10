@@ -28,6 +28,12 @@ _install_oauth_state_safety()
 from .queue_claim_safety import install_queue_claim_safety as _install_queue_claim_safety
 _install_queue_claim_safety()
 
+# Successful transactional emails no longer need their raw body in the outbox.
+# Install before emailer.py binds finish_email so delivered invite/reset links are
+# scrubbed from future sent audit rows while failed mail remains retryable.
+from .email_outbox_privacy import install_email_outbox_privacy as _install_email_outbox_privacy
+_install_email_outbox_privacy()
+
 # New workspaces should use the current Start plan and a bounded 14-day trial.
 # Install this before app.main binds create_user/create_workspace. Historical
 # workspace rows remain untouched and continue through the compatibility reader.
