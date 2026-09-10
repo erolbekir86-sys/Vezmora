@@ -48,6 +48,14 @@ class FakeConnection:
         raise AssertionError(sql)
 
 
+def _job_claim_sql(connection: FakeConnection) -> str:
+    return next(
+        sql
+        for sql, _ in connection.calls
+        if "UPDATE jobs SET status='running'" in sql and "WHERE id=?" in sql
+    )
+
+
 def test_job_claim_returns_only_when_worker_wins_conditional_update(monkeypatch):
     row = {"id": 3, "workspace_id": 1, "kind": "sync_google", "payload_json": '{"days": 30}', "attempts": 1}
     after = {**row, "status": "running", "payload_json": '{"days": 30}', "attempts": 2}
@@ -56,8 +64,9 @@ def test_job_claim_returns_only_when_worker_wins_conditional_update(monkeypatch)
     result = claim_job_atomic()
     assert result["id"] == 3
     assert result["payload"] == {"days": 30}
-    assert "status='queued'" in won.calls[2][0]
-    assert "datetime(run_after)<=CURRENT_TIMESTAMP" in won.calls[2][0]
+    claim_sql = _job_claim_sql(won)
+    assert "status='queued'" in claim_sql
+    assert "datetime(run_after)<=CURRENT_TIMESTAMP" in claim_sql
 
     lost = FakeConnection(row, 0, after)
     monkeypatch.setattr(store, "_connect", lambda: lost)
@@ -80,16 +89,16 @@ def test_email_claim_returns_only_when_worker_wins_conditional_update(monkeypatc
     assert lost.select_count == 1
 
 
-def test_empty_queues_do_not_attempt_claim_update(monkeypatch):
+def test_empty_queues_do_not_attempt_item_claim_update(monkeypatch):
     empty_job = FakeConnection(None, 1, None)
     monkeypatch.setattr(store, "_connect", lambda: empty_job)
     assert claim_job_atomic() is None
-    assert len(empty_job.calls) == 2
+    assert not any("UPDATE jobs SET status='running'" in sql for sql, _ in empty_job.calls)
 
     empty_email = FakeConnection(None, 1, None)
     monkeypatch.setattr(store, "_connect", lambda: empty_email)
     assert claim_email_atomic() is None
-    assert len(empty_email.calls) == 2
+    assert not any("UPDATE email_outbox SET status='sending'" in sql for sql, _ in empty_email.calls)
 
 
 def test_worker_and_emailer_bind_atomic_claim_helpers():
