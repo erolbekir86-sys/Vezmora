@@ -47,13 +47,4 @@
       throw err;
     }
   };
-
-  // Keep connector mutations out of the read guard itself. Load the small,
-  // separately auditable disconnect helper after the guarded API wrapper exists.
-  if (!document.querySelector('script[data-vexmera-connector-disconnect]')) {
-    const script = document.createElement('script');
-    script.src = '/static/connector-disconnect.js';
-    script.dataset.vexmeraConnectorDisconnect = '1';
-    document.head.appendChild(script);
-  }
 })();

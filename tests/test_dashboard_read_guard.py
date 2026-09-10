@@ -42,6 +42,14 @@ def test_dashboard_guard_only_targets_get_reads():
     assert "if (method !== 'GET') return false" in GUARD
 
 
+def test_dashboard_guard_does_not_load_obsolete_disconnect_helper():
+    assert 'connector-disconnect.js' not in GUARD
+    assert 'data-vexmera-connector-disconnect' not in GUARD
+    assert 'document.createElement(\'script\')' not in GUARD
+    assert not (ROOT / 'static' / 'connector-disconnect.js').exists()
+    assert (ROOT / 'static' / 'connector-disconnect-ui.js').exists()
+
+
 def test_dashboard_guard_does_not_expose_raw_errors_or_touch_sensitive_actions():
     forbidden = (
         '${err.message}',
