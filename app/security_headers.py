@@ -21,9 +21,15 @@ def _https_runtime() -> bool:
     return (os.getenv("VEZMORA_APP_URL") or "").strip().lower().startswith("https://")
 
 
-def _protect_api_cache(request: Request, response) -> None:
+def _protect_private_cache(request: Request, response) -> None:
     path = request.url.path
-    if path != "/api" and not path.startswith("/api/"):
+    protected = (
+        path == "/api"
+        or path.startswith("/api/")
+        or path == "/health"
+        or path.startswith("/health/")
+    )
+    if not protected:
         return
     for name, value in _API_NO_STORE_HEADERS.items():
         response.headers.setdefault(name, value)
@@ -41,7 +47,7 @@ def install_security_headers(app: FastAPI) -> None:
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
         response = await call_next(request)
-        _protect_api_cache(request, response)
+        _protect_private_cache(request, response)
         _protect_capability_referrer(request, response)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")

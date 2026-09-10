@@ -27,7 +27,11 @@ def test_health_diagnostics_are_no_store_and_https_gets_hsts(monkeypatch):
         response = client.get("/health/runtime")
 
     assert response.status_code == 200
-    assert response.headers["cache-control"] == "no-store"
+    cache_control = response.headers["cache-control"]
+    assert "no-store" in cache_control
+    assert "no-cache" in cache_control
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
     assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
@@ -40,5 +44,9 @@ def test_beta_readiness_is_not_cacheable(monkeypatch):
         response = client.get("/health/beta-readiness")
 
     assert response.status_code == 200
-    assert response.headers["cache-control"] == "no-store"
+    cache_control = response.headers["cache-control"]
+    assert "no-store" in cache_control
+    assert "no-cache" in cache_control
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
     assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
