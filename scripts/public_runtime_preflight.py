@@ -20,13 +20,13 @@ def _safe_json_get(url: str) -> tuple[int | None, bool, dict[str, object]]:
 
 
 def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
-    """Check non-secret production runtime and private-beta safety evidence.
+    """Check minimal production identity and private-beta execution safety.
 
-    Both endpoints expose only booleans and deployment metadata intended for
-    diagnostics. This helper never sends credentials or performs mutations.
-    It fails closed on infrastructure or execution-lock conditions that would
-    make private-beta onboarding unsafe, while leaving provider-specific/manual
-    gates to the existing pilot runbook.
+    Public runtime diagnostics intentionally expose only liveness and deployment
+    identity. Provider configuration, database health and secret-presence checks
+    belong in authenticated/operator tooling rather than on a public endpoint.
+    This helper remains GET-only and fails closed when the production identity or
+    private-beta execution lock cannot be verified.
     """
     base = base_url.rstrip("/")
     blockers: list[str] = []
@@ -34,25 +34,19 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
     runtime_status, runtime_reachable, runtime = _safe_json_get(f"{base}/health/runtime")
     beta_status, beta_reachable, beta = _safe_json_get(f"{base}/health/beta-readiness")
 
-    vercel = runtime.get("vercel") is True
-    production_env = runtime.get("vercel_env") == "production"
-    database_connection_ok = runtime.get("database_connection_ok") is True
-    internal_secrets_configured = runtime.get("internal_secrets_configured") is True
-    commit_sha_present = bool(str(runtime.get("git_commit_sha") or "").strip())
+    platform_vercel = runtime.get("platform") == "vercel"
+    production_env = runtime.get("environment") == "production"
+    deployment_revision_present = bool(str(runtime.get("deployment_revision") or "").strip())
 
     if not runtime_reachable:
         blockers.append("runtime_unreachable")
     else:
-        if not vercel:
+        if not platform_vercel:
             blockers.append("runtime_not_vercel")
         if not production_env:
             blockers.append("runtime_not_production")
-        if not database_connection_ok:
-            blockers.append("database_connection_unhealthy")
-        if not internal_secrets_configured:
-            blockers.append("internal_secrets_not_configured")
-        if not commit_sha_present:
-            blockers.append("deployment_commit_unknown")
+        if not deployment_revision_present:
+            blockers.append("deployment_revision_unknown")
 
     private_beta_execution_safe = beta.get("private_beta_execution_safe") is True
     production_transport_safe = beta.get("production_transport_safe") is True
@@ -85,14 +79,9 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
             "runtime": {
                 "status_code": runtime_status,
                 "reachable": runtime_reachable,
-                "vercel": runtime.get("vercel"),
-                "vercel_env": runtime.get("vercel_env"),
-                "database_connection_ok": runtime.get("database_connection_ok"),
-                "internal_secrets_configured": runtime.get("internal_secrets_configured"),
-                "git_commit_sha_present": commit_sha_present,
-                "google_oauth_configured": runtime.get("google_oauth_configured"),
-                "meta_oauth_configured": runtime.get("meta_oauth_configured"),
-                "smtp_configured": runtime.get("smtp_configured"),
+                "platform": runtime.get("platform"),
+                "environment": runtime.get("environment"),
+                "deployment_revision_present": deployment_revision_present,
             },
             "beta_readiness": {
                 "status_code": beta_status,
@@ -103,14 +92,11 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
                 "autopilot_execution_enabled": beta.get("autopilot_execution_enabled"),
                 "meta_execution_scope_enabled": beta.get("meta_execution_scope_enabled"),
                 "dev_show_tokens_enabled": beta.get("dev_show_tokens_enabled"),
-                "configuration_ready": (beta.get("pilot_readiness") or {}).get("configuration_ready")
-                if isinstance(beta.get("pilot_readiness"), dict)
-                else None,
             },
         },
         "blockers": blockers,
         "note": (
-            "GET-only runtime and beta-safety checks using non-secret deployment diagnostics. "
-            "No credentials are sent and no provider, advertising, billing, or customer state is changed."
+            "GET-only checks using minimal public deployment identity and private-beta safety evidence. "
+            "Database, provider and secret-presence diagnostics are intentionally not exposed publicly."
         ),
     }
