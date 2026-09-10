@@ -14,21 +14,17 @@ Before every pilot onboarding, confirm `/health/beta-readiness` reports:
 - `meta_execution_scope_enabled: false`
 - `dev_show_tokens_enabled: false`
 
-Also run the repository preflight from the deployed commit or an equivalent checked-out revision:
+Run the consolidated repository + deployed read-only gate from the release candidate you intend to pilot:
 
 ```bash
-python scripts/pilot_preflight.py
+python scripts/pilot_go_no_go.py --base-url https://vexmera.com
 ```
 
-When production is reachable, add the public GET-only live check:
+This combines configuration checks with GET-only checks for public execution-lock evidence, production deployment identity and legal-page discoverability. It sends no credentials and performs no mutations. The public runtime check verifies Vercel production identity and that a deployment revision is present; database/provider access still requires the separate manual evidence below.
 
-```bash
-python scripts/pilot_preflight.py --base-url https://vexmera.com
-```
+If production is temporarily unavailable and you only need a local configuration snapshot, `python scripts/pilot_preflight.py` remains useful, but it is **not** a substitute for the consolidated deployed gate before onboarding a real pilot company.
 
-The live check verifies the public beta-readiness endpoint, confirms external/autopilot execution remain locked, and confirms the public Privacy Policy and Terms pages are reachable with expected content. It sends no credentials and performs no mutations.
-
-Treat `status: configuration_blocked`, any live-check blocker, or a non-zero exit code as a stop condition. An exit code of zero means only that machine-checkable configuration and requested public endpoint checks are clear; it does **not** mean the pilot is approved or ready while `manual_verification_required` is true or manual gates remain.
+Treat `status: blocked`, any reported blocker, or a non-zero exit code as a stop condition. An exit code of zero means only that machine-checkable checks are clear; it does **not** mean the pilot is approved or ready while `manual_verification_required` is true or manual gates remain.
 
 Do not onboard a pilot company if any of those conditions fail.
 
@@ -49,6 +45,7 @@ These remain manual gates even when configuration checks are green:
 - [ ] Transactional email configuration check is green
 - [ ] Google OAuth configuration check is green
 - [ ] Meta OAuth configuration check is green if Meta is included in the pilot
+- [ ] Production runtime/log observability has been reviewed when the Vercel project is visible to operator tooling
 
 Do not bypass the pricing-migration checkout guard to satisfy a pilot checklist. The historical Starter / Growth / Scale sandbox catalog is evidence of earlier test configuration, not the current pilot billing target.
 
@@ -69,7 +66,8 @@ Use one row per company. Do not store credentials, tokens, account secrets, paym
 ### 1. Preflight
 
 - [ ] Re-check `/health/beta-readiness`
-- [ ] Run `python scripts/pilot_preflight.py --base-url https://vexmera.com` against the same deployed revision and confirm neither configuration nor live checks report blockers
+- [ ] Run `python scripts/pilot_go_no_go.py --base-url https://vexmera.com` against the same deployed revision and confirm no blocker is reported
+- [ ] Confirm the reported deployment revision matches the release candidate intended for the pilot
 - [ ] Record remaining manual gates as unresolved until current evidence exists; never interpret `ok: true` as pilot approval
 - [ ] Confirm execution remains locked
 - [ ] Confirm the company understands the pilot is analysis/recommendation only
@@ -159,7 +157,8 @@ Avoid copying customer credentials, tokens, ad-account secrets, payment data, or
 Pause onboarding for the affected company if any of the following occurs:
 
 - execution safety check becomes false
-- pilot preflight reports `configuration_blocked` or a live-check blocker
+- consolidated pilot go/no-go reports `blocked` or a public/live/runtime/legal blocker
+- the deployed revision cannot be identified or does not match the intended release candidate
 - the app shows another company's data
 - authentication or tenant isolation appears incorrect
 - a reset link remains valid after a newer reset link is issued for the same account
