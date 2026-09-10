@@ -34,6 +34,11 @@ _install_queue_claim_safety()
 from .job_error_safety import install_job_error_safety as _install_job_error_safety
 _install_job_error_safety()
 
+# Execution request/result JSON is also persistent audit data. Sanitize nested
+# credential-like strings before main/autopilot bind log_execution.
+from .execution_log_safety import install_execution_log_safety as _install_execution_log_safety
+_install_execution_log_safety()
+
 # Successful transactional emails no longer need their raw body in the outbox.
 # Install before emailer.py binds finish_email so delivered invite/reset links are
 # scrubbed from future sent audit rows while failed mail remains retryable.
