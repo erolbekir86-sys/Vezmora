@@ -16,6 +16,12 @@ _install_kpi_semantics_guard()
 from .one_time_token_safety import install_one_time_token_safety as _install_one_time_token_safety
 _install_one_time_token_safety()
 
+# Expired sessions, reset tokens and workspace invites no longer need to remain
+# in capability tables. Prune expired rows opportunistically when new entries of
+# the same type are issued, before auth/main bind creation helpers.
+from .capability_retention import install_capability_retention as _install_capability_retention
+_install_capability_retention()
+
 # OAuth state is also a one-time capability. Consume it with one atomic database
 # statement before connector modules bind the helper so concurrent callbacks
 # cannot reuse the same Google/Meta state value.
