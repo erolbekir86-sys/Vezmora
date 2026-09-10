@@ -73,3 +73,63 @@ def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> Non
 
     assert response.headers["x-frame-options"] == "SAMEORIGIN"
     assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_api_responses_are_no_store_without_changing_public_cache_policy(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/api/private")
+    def private_api():
+        return {"secret_adjacent": "workspace-data"}
+
+    @app.get("/public")
+    def public_route():
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        api_response = client.get("/api/private")
+        public_response = client.get("/public")
+
+    assert api_response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+    assert api_response.headers["pragma"] == "no-cache"
+    assert api_response.headers["expires"] == "0"
+    assert api_response.headers["cdn-cache-control"] == "no-store"
+    assert api_response.headers["vercel-cdn-cache-control"] == "no-store"
+    assert "cache-control" not in public_response.headers
+    assert "cdn-cache-control" not in public_response.headers
+
+
+def test_api_no_store_preserves_explicit_route_cache_control(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/api/custom")
+    def custom(response: Response):
+        response.headers["Cache-Control"] = "private, no-store"
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        response = client.get("/api/custom")
+
+    assert response.headers["cache-control"] == "private, no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
+
+
+def test_vexmera_auth_errors_are_no_store(tmp_path, monkeypatch) -> None:
+    monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    monkeypatch.setattr(store, "DB_PATH", tmp_path / "api-cache.db")
+
+    with TestClient(main_module.app) as client:
+        response = client.get("/api/auth/me")
+
+    assert response.status_code == 401
+    assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
