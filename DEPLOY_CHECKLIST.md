@@ -100,14 +100,14 @@
 - [x] Add `GOOGLE_ADS_DEVELOPER_TOKEN` to Vercel Production and redeploy successfully
 - [x] Submit Google Ads API Basic Access application with Vexmera tool documentation
 - [x] Send manager-account link request from Vexmera MCC to the target Google Ads account
+- [x] Manager-to-client relationship accepted and active in Google Ads on 2026-09-05
 - [x] Add owner/admin-only Google disconnect backend with local credential deletion and best-effort upstream revocation
 - [x] Add customer-facing owner/admin Google disconnect control with explicit confirmation
 - [x] Add bounded retries and safe response validation to Google token refresh, Analytics reads and Ads reads
 - [x] Keep Google read reliability underneath diagnostics and customer empty-state wrappers
-- [ ] Accept the pending manager-account link request from the target Google Ads account
 - [ ] Receive Google approval for Basic Access
-- [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required after manager linking is active
-- [ ] Complete Google Ads sync against a real linked account and confirm campaign-level rows
+- [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required for the active manager hierarchy
+- [ ] Complete Google Ads sync against the real linked account and confirm campaign-level rows
 
 ## Meta
 - [x] Add Meta OAuth production runbook and read-only safety tests
@@ -167,6 +167,7 @@
 - [x] Correct the marketing integrations grid so verified GA4 support is no longer labeled “Kommer snart”
 - [x] Add regression tests for marketing demo window, GA4 status and hero clipping guard
 - [x] Keep the expanding automated suite green across deployment, billing, privacy, integrations, marketing UI and execution safety
+- [x] Bound malformed/oversized session-cookie input before session-store lookup
 - [ ] Perform final authenticated browser QA on the deployed Command Center
 - [ ] Reconfirm production runtime/log observability after direct Vercel connector visibility is restored
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
