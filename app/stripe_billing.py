@@ -173,15 +173,36 @@ def _event_plan(value: object, fallback: object = "start") -> str:
         return "start"
 
 
+def _webhook_object(event: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Return Stripe data.object and metadata without allowing malformed shapes to 500."""
+    data = event.get("data")
+    if data is None:
+        data = {}
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook payload")
+
+    obj = data.get("object")
+    if obj is None:
+        obj = {}
+    if not isinstance(obj, dict):
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook payload")
+
+    metadata = obj.get("metadata")
+    if metadata is None:
+        metadata = {}
+    if not isinstance(metadata, dict):
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook payload")
+    return obj, metadata
+
+
 def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     event_id = str(event.get("id") or "")
     if not event_id:
         raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
 
     event_type = str(event.get("type") or "")
-    obj = ((event.get("data") or {}).get("object") or {})
+    obj, metadata = _webhook_object(event)
     workspace_id: int | None = None
-    metadata = obj.get("metadata") or {}
     if metadata.get("workspace_id"):
         try:
             workspace_id = int(metadata["workspace_id"])
@@ -196,7 +217,10 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
 
     if event_type == "checkout.session.completed" and workspace_id is not None:
         plan = _event_plan(metadata.get("plan"))
-        trialing = int(metadata.get("trial_days") or 0) > 0
+        try:
+            trialing = int(metadata.get("trial_days") or 0) > 0
+        except (TypeError, ValueError):
+            trialing = False
         set_workspace_billing(
             workspace_id,
             plan=plan,
