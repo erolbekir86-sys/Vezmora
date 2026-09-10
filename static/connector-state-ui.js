@@ -143,8 +143,19 @@
     window.loadConnectors = guardedLoadConnectors;
   }
 
+  function loadDisconnectUi() {
+    if (document.querySelector('script[data-vexmera-disconnect-ui]')) return;
+    const script = document.createElement('script');
+    const build = encodeURIComponent(window.__VEXMERA_BUILD__ || 'local');
+    script.src = `/static/connector-disconnect-ui.js?build=${build}`;
+    script.defer = true;
+    script.dataset.vexmeraDisconnectUi = 'true';
+    document.head.appendChild(script);
+  }
+
   installStyles();
   installConnectorStateGuard();
+  loadDisconnectUi();
   if (document.querySelector('#connectorGrid .connector-card')) {
     enrichPersistentConnectorStates();
   }
