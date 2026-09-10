@@ -71,6 +71,8 @@ def install_public_routing(app: FastAPI) -> None:
     if getattr(app.state, "vexmera_public_routing_installed", False):
         return
 
+    # app.main historically owns GET /. Remove only that exact product-shell
+    # route and leave every API/static/docs route untouched.
     app.router.routes[:] = [
         route
         for route in app.router.routes
@@ -82,6 +84,9 @@ def install_public_routing(app: FastAPI) -> None:
     ]
 
     async def marketing_home(request: Request) -> Response:
+        # Existing private-beta email, invite, and Stripe return links were built
+        # against the old product-at-root layout. Preserve those links while the
+        # canonical base URL remains the apex domain.
         if PRODUCT_QUERY_KEYS.intersection(request.query_params.keys()):
             target = "/app"
             if request.url.query:
@@ -89,6 +94,9 @@ def install_public_routing(app: FastAPI) -> None:
             return RedirectResponse(target, status_code=302)
 
         html = (STATIC / "landing.html").read_text(encoding="utf-8")
+        # The landing page was originally shipped beside the app while `/`
+        # pointed to login. Keep all existing CTA copy/design, but send those
+        # root links to the authenticated product route now.
         html = html.replace('href="/"', 'href="/app"')
         html = _link_public_legal_pages(html)
         seo = (
@@ -122,6 +130,10 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/landing-section-art.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
+        # Load the visual premium layer after landing.js so it cannot be
+        # overwritten by the landing script's dynamically appended CSS layers.
+        # The icon pass runs last and uses bounded retries so late-injected
+        # conversion cards receive the same icon system without a permanent observer.
         html = html.replace(
             '<script src="/static/landing.js" defer></script>',
             '<script src="/static/landing.js" defer></script>\n'
@@ -142,10 +154,16 @@ def install_public_routing(app: FastAPI) -> None:
 
     async def product_shell() -> HTMLResponse:
         html = (STATIC / "index.html").read_text(encoding="utf-8")
+        # The original app polish helper observes the whole dynamic product DOM.
+        # Use the stability-first one-shot helper in production so parallel app
+        # bootstrap updates cannot create a mutation storm and freeze the tab.
         html = html.replace(
             '<script src="/static/app-polish.js?v=1"></script>',
             '<script src="/static/app-polish-safe.js"></script>',
         )
+        # Keep the legacy app bundle unchanged while enforcing fail-closed onboarding
+        # saves, fail-closed dashboard reads and current self-service pricing as
+        # small, reversible beta hardening layers loaded immediately after it.
         html = html.replace(
             '<script src="/static/app.js"></script>',
             '<script src="/static/app.js"></script>\n'
