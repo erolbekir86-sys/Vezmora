@@ -18,6 +18,11 @@ BillingPlan = Literal["start", "growth", "pro", "starter", "scale"]
 MAX_OPAQUE_PAYLOAD_BYTES = 64 * 1024
 
 
+def _strip_human_text(value: Any) -> Any:
+    """Trim persisted human-readable identity fields without touching secrets."""
+    return value.strip() if isinstance(value, str) else value
+
+
 def _bounded_opaque_payload(value: dict[str, Any]) -> dict[str, Any]:
     """Keep intentionally flexible persisted payloads small and JSON-safe."""
     try:
@@ -34,6 +39,11 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=200)
     workspace_name: str = Field(default="My Workspace", min_length=2, max_length=120)
 
+    @field_validator("workspace_name", mode="before")
+    @classmethod
+    def normalize_workspace_name(cls, value: Any) -> Any:
+        return _strip_human_text(value)
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -42,6 +52,11 @@ class LoginRequest(BaseModel):
 
 class WorkspaceCreate(BaseModel):
     name: str = Field(min_length=2, max_length=120)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: Any) -> Any:
+        return _strip_human_text(value)
 
 
 class CompanyProfile(BaseModel):
@@ -53,6 +68,11 @@ class CompanyProfile(BaseModel):
     offer: str = Field(min_length=3, max_length=800)
     brand_voice: str = Field(default="clear, trustworthy, useful", max_length=500)
     language: Language = "sv"
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: Any) -> Any:
+        return _strip_human_text(value)
 
 
 class StrategyRequest(BaseModel):
@@ -98,6 +118,11 @@ class CompetitorCreate(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     url: HttpUrl | None = None
     notes: str = Field(default="", max_length=1500)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: Any) -> Any:
+        return _strip_human_text(value)
 
 
 class ConnectorSettings(BaseModel):
@@ -189,6 +214,11 @@ class OnboardingProfile(BaseModel):
     biggest_marketing_problem: str = Field(default="", max_length=1000)
     timezone: str = Field(default="Europe/Stockholm", min_length=3, max_length=80)
     team_size: int = Field(default=1, ge=1, le=100_000)
+
+    @field_validator("company_name", mode="before")
+    @classmethod
+    def normalize_company_name(cls, value: Any) -> Any:
+        return _strip_human_text(value)
 
 
 class AutopilotSettings(BaseModel):
