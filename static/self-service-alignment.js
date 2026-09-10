@@ -7,6 +7,28 @@
     {key: 'pro', label: 'Pro', price: '2 995 kr', button: 'Välj Pro'},
   ];
 
+  const checkoutClosedMessage = 'Betalning öppnas när den verifierade Stripe-miljön är redo.';
+
+  function setCheckoutAvailability(ready) {
+    document.querySelectorAll('#team .plan-button').forEach((button) => {
+      button.disabled = ready !== true;
+      button.dataset.checkoutReady = ready === true ? 'true' : 'false';
+      if (ready === true) {
+        button.removeAttribute('title');
+      } else {
+        button.title = checkoutClosedMessage;
+      }
+    });
+
+    const grid = document.querySelector('#team .plan-grid');
+    const note = grid?.nextElementSibling;
+    if (note?.classList.contains('fineprint')) {
+      note.textContent = ready === true
+        ? 'Priser exkl. moms. Start, Growth och Pro använder samma planmodell på hemsidan, i Vexmera och i Checkout.'
+        : `Priser exkl. moms. ${checkoutClosedMessage}`;
+    }
+  }
+
   function alignBillingPlans() {
     const grid = document.querySelector('#team .plan-grid');
     if (!grid) return;
@@ -29,10 +51,31 @@
       }
     });
 
-    const note = grid.nextElementSibling;
-    if (note?.classList.contains('fineprint')) {
-      note.textContent = 'Priser exkl. moms. Start, Growth och Pro använder samma planmodell på hemsidan, i Vexmera och i Checkout. Betalning öppnas först när den verifierade Stripe-miljön är redo.';
+    // Self-service billing is fail-closed until the billing endpoint explicitly
+    // confirms that the reconciled Stripe environment is ready.
+    setCheckoutAvailability(false);
+  }
+
+  function installCheckoutReadinessGuard() {
+    const originalLoadTeam = typeof window.loadTeam === 'function' ? window.loadTeam : null;
+    if (!originalLoadTeam || originalLoadTeam.__vexmeraCheckoutGuarded) return;
+
+    async function guardedLoadTeam(...args) {
+      setCheckoutAvailability(false);
+      await originalLoadTeam.apply(this, args);
+
+      if (typeof api !== 'function' || typeof ws !== 'function') return;
+      try {
+        const billing = await api(ws('/api/billing'));
+        setCheckoutAvailability(billing?.checkout_ready === true);
+      } catch (_) {
+        // Never turn a billing-read failure into an enabled Checkout button.
+        setCheckoutAvailability(false);
+      }
     }
+
+    guardedLoadTeam.__vexmeraCheckoutGuarded = true;
+    window.loadTeam = guardedLoadTeam;
   }
 
   function localizeOnboardingProgress() {
@@ -79,6 +122,7 @@
   }
 
   alignBillingPlans();
+  installCheckoutReadinessGuard();
   localizeOnboardingProgress();
   addOnboardingNextStep();
   routeCompletedOnboardingToConnections();

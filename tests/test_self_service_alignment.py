@@ -33,6 +33,23 @@ def test_in_app_plan_cards_align_with_public_start_growth_pro_model():
     assert "5 999 kr" not in ALIGNMENT
 
 
+def test_checkout_buttons_fail_closed_until_billing_explicitly_reports_ready():
+    assert "setCheckoutAvailability(false)" in ALIGNMENT
+    assert "billing?.checkout_ready === true" in ALIGNMENT
+    assert "button.disabled = ready !== true" in ALIGNMENT
+    assert "button.dataset.checkoutReady = ready === true ? 'true' : 'false'" in ALIGNMENT
+    assert "Never turn a billing-read failure into an enabled Checkout button" in ALIGNMENT
+    assert "Betalning öppnas när den verifierade Stripe-miljön är redo." in ALIGNMENT
+
+
+def test_checkout_guard_wraps_team_loading_without_rebinding_checkout_handler():
+    assert "const originalLoadTeam = typeof window.loadTeam === 'function' ? window.loadTeam : null" in ALIGNMENT
+    assert "await originalLoadTeam.apply(this, args)" in ALIGNMENT
+    assert "const billing = await api(ws('/api/billing'))" in ALIGNMENT
+    assert "window.loadTeam = guardedLoadTeam" in ALIGNMENT
+    assert "addEventListener('click'" not in ALIGNMENT
+
+
 def test_completed_onboarding_routes_to_connections_and_preserves_read_only_beta_message():
     assert "activateView('connect')" in ALIGNMENT
     assert "await loadConnectors()" in ALIGNMENT
