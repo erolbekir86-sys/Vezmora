@@ -28,6 +28,12 @@ _install_oauth_state_safety()
 from .queue_claim_safety import install_queue_claim_safety as _install_queue_claim_safety
 _install_queue_claim_safety()
 
+# Worker exception strings are persisted and later exposed through /api/jobs.
+# Sanitize them before jobs.py binds fail_job so credentials cannot be retained
+# in operational error rows.
+from .job_error_safety import install_job_error_safety as _install_job_error_safety
+_install_job_error_safety()
+
 # Successful transactional emails no longer need their raw body in the outbox.
 # Install before emailer.py binds finish_email so delivered invite/reset links are
 # scrubbed from future sent audit rows while failed mail remains retryable.
