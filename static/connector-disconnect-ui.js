@@ -35,15 +35,12 @@
     }
   }
 
-  function removeDisconnectButton(card) {
-    card?.querySelector('[data-vexmera-disconnect]')?.remove();
-  }
-
   async function disconnectProvider(provider, button) {
     if (!PROVIDERS.includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
+    if (typeof window.confirm !== 'function') return;
 
     const label = providerLabel(provider);
-    const confirmed = typeof window.confirm !== 'function' || window.confirm(
+    const confirmed = window.confirm(
       `Koppla från ${label}? Vexmera tar bort sparade anslutningsuppgifter och försöker återkalla åtkomsten hos leverantören. Tidigare synkad historik behålls.`
     );
     if (!confirmed) return;
