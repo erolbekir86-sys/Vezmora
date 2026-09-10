@@ -1,4 +1,4 @@
-from app.connector_empty_states import _normalize_sync_result, _with_empty_state_warning
+from app.connector_empty_states import _normalize_sync_result, _safe_period_days, _with_empty_state_warning
 
 
 def test_zero_row_sync_gets_actionable_non_failure_warning():
@@ -168,3 +168,21 @@ def test_valid_provider_result_is_preserved_by_normalizer():
     guarded = _normalize_sync_result("Google Ads", result)
 
     assert guarded is result
+
+
+def test_empty_state_display_period_is_bounded_and_safe():
+    assert _safe_period_days(0) == 1
+    assert _safe_period_days(-30) == 1
+    assert _safe_period_days(9999) == 365
+    assert _safe_period_days("30") == 30
+    assert _safe_period_days("invalid") == 7
+    assert _safe_period_days(None) == 7
+
+
+def test_empty_state_warning_never_displays_malformed_period():
+    result = {"campaign_rows": 0, "ads_rows": 0, "warnings": []}
+
+    guarded = _with_empty_state_warning("Meta Ads", result, -90)
+
+    assert "selected 1-day period" in guarded["warnings"][0]
+    assert "-90-day" not in guarded["warnings"][0]
