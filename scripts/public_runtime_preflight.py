@@ -55,6 +55,7 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
             blockers.append("deployment_commit_unknown")
 
     private_beta_execution_safe = beta.get("private_beta_execution_safe") is True
+    production_transport_safe = beta.get("production_transport_safe") is True
     external_execution_disabled = beta.get("external_execution_enabled") is False
     autopilot_execution_disabled = beta.get("autopilot_execution_enabled") is False
     meta_execution_scope_disabled = beta.get("meta_execution_scope_enabled") is False
@@ -65,6 +66,8 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
     else:
         if not private_beta_execution_safe:
             blockers.append("private_beta_execution_not_safe")
+        if not production_transport_safe:
+            blockers.append("production_transport_not_safe")
         if not external_execution_disabled:
             blockers.append("external_execution_enabled")
         if not autopilot_execution_disabled:
@@ -95,6 +98,7 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
                 "status_code": beta_status,
                 "reachable": beta_reachable,
                 "private_beta_execution_safe": beta.get("private_beta_execution_safe"),
+                "production_transport_safe": beta.get("production_transport_safe"),
                 "external_execution_enabled": beta.get("external_execution_enabled"),
                 "autopilot_execution_enabled": beta.get("autopilot_execution_enabled"),
                 "meta_execution_scope_enabled": beta.get("meta_execution_scope_enabled"),
