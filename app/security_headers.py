@@ -11,6 +11,7 @@ _API_NO_STORE_HEADERS = {
     "CDN-Cache-Control": "no-store",
     "Vercel-CDN-Cache-Control": "no-store",
 }
+_BASELINE_CSP = "base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
 _SENSITIVE_CAPABILITY_QUERY_KEYS = frozenset({"reset", "invite"})
 _PRODUCT_PATHS = frozenset({"/app", "/app/"})
 _OAUTH_CALLBACK_PATHS = frozenset(
@@ -60,13 +61,14 @@ def _protect_capability_referrer(request: Request, response) -> None:
 
 
 def install_security_headers(app: FastAPI) -> None:
-    """Add browser hardening headers without changing application routing or CSP."""
+    """Add low-risk browser hardening headers at the application boundary."""
 
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
         response = await call_next(request)
         _protect_private_cache(request, response)
         _protect_capability_referrer(request, response)
+        response.headers.setdefault("Content-Security-Policy", _BASELINE_CSP)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")

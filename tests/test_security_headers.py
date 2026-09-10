@@ -18,6 +18,9 @@ def test_vexmera_responses_include_low_risk_browser_hardening(tmp_path, monkeypa
         response = client.get("/health")
 
     assert response.status_code == 200
+    assert response.headers["content-security-policy"] == (
+        "base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
+    )
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
@@ -65,6 +68,7 @@ def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> Non
     @app.get("/")
     def root(response: Response):
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Content-Security-Policy"] = "default-src 'none'"
         return {"ok": True}
 
     install_security_headers(app)
@@ -72,6 +76,7 @@ def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> Non
         response = client.get("/")
 
     assert response.headers["x-frame-options"] == "SAMEORIGIN"
+    assert response.headers["content-security-policy"] == "default-src 'none'"
     assert response.headers["x-content-type-options"] == "nosniff"
 
 
