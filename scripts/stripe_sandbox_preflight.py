@@ -17,6 +17,13 @@ def _field(value: object, name: str, default: object = None) -> object:
     return getattr(value, name, default)
 
 
+def _int_value(value: object, default: int = -1) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _stripe_client_from_env():
     try:
         from stripe import StripeClient
@@ -43,8 +50,8 @@ def _inspect_price(plan: str, price: object, configured_price_id: str) -> dict[s
         "currency_sek": str(_field(price, "currency", "")).lower() == "sek",
         "recurring_type": str(_field(price, "type", "")).lower() == "recurring",
         "monthly_interval": str(_field(recurring, "interval", "")).lower() == "month",
-        "interval_count_one": int(_field(recurring, "interval_count", 0) or 0) == 1,
-        "expected_amount": int(_field(price, "unit_amount", -1) or -1) == EXPECTED_MONTHLY_SEK_ORE[plan],
+        "interval_count_one": _int_value(_field(recurring, "interval_count", 0), 0) == 1,
+        "expected_amount": _int_value(_field(price, "unit_amount", -1)) == EXPECTED_MONTHLY_SEK_ORE[plan],
     }
     return {
         "configured": True,
