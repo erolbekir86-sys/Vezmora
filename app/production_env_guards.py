@@ -32,14 +32,22 @@ def apply_production_env_guards() -> None:
     Local development can still opt into explicit test behavior. On Vercel,
     however, stale or accidental environment overrides must not expose reset or
     invite tokens, unlock external ad mutations, enable autonomous execution,
-    request Meta's ads_management scope, or make the historical Stripe pricing
-    configuration appear current.
+    request Meta's ads_management scope, allow insecure absolute links in email,
+    or make the historical Stripe pricing configuration appear current.
     """
     if not os.getenv("VERCEL"):
         return
 
     for name in _PRIVATE_BETA_DISABLED_FLAGS:
         os.environ[name] = "false"
+
+    # Password-reset and invite emails build absolute URLs from VEZMORA_APP_URL.
+    # Never allow an accidental http:// production value to put bearer-style
+    # tokens onto an insecure transport. Removing the value makes the existing
+    # readiness/preflight checks fail closed instead of silently using it.
+    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip()
+    if app_url and not app_url.lower().startswith("https://"):
+        os.environ.pop("VEZMORA_APP_URL", None)
 
     # The legacy Vercel entrypoint still has a boolean-only Stripe configuration
     # check using STARTER/GROWTH/SCALE variable names. Prevent stale historical

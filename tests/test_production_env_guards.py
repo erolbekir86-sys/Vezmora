@@ -36,6 +36,24 @@ def test_vercel_forces_private_beta_unsafe_flags_off(monkeypatch):
         assert os.getenv(name) == "false"
 
 
+def test_vercel_removes_insecure_app_url_used_for_absolute_email_links(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://example.test")
+
+    apply_production_env_guards()
+
+    assert os.getenv("VEZMORA_APP_URL") is None
+
+
+def test_vercel_preserves_https_app_url(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
+
+    apply_production_env_guards()
+
+    assert os.getenv("VEZMORA_APP_URL") == "https://example.test"
+
+
 def test_vercel_clears_stale_legacy_only_stripe_price_aliases(monkeypatch):
     _clear_stripe(monkeypatch)
     monkeypatch.setenv("VERCEL", "1")
@@ -65,15 +83,17 @@ def test_vercel_maps_current_prices_to_legacy_runtime_check_only_after_version_g
     assert os.getenv("STRIPE_PRICE_SCALE") == "current-pro"
 
 
-def test_local_development_flags_and_stripe_vars_are_not_overridden(monkeypatch):
+def test_local_development_flags_stripe_vars_and_app_url_are_not_overridden(monkeypatch):
     _clear_stripe(monkeypatch)
     monkeypatch.delenv("VERCEL", raising=False)
     for name in _PRIVATE_BETA_DISABLED_FLAGS:
         monkeypatch.setenv(name, "true")
     monkeypatch.setenv("STRIPE_PRICE_STARTER", "legacy-local")
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
 
     apply_production_env_guards()
 
     for name in _PRIVATE_BETA_DISABLED_FLAGS:
         assert os.getenv(name) == "true"
     assert os.getenv("STRIPE_PRICE_STARTER") == "legacy-local"
+    assert os.getenv("VEZMORA_APP_URL") == "http://localhost:8000"
