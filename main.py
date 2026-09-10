@@ -52,8 +52,14 @@ if postgres_url:
     _store.init_db = _verify_database
 
 from app.main import app, main
+from app.security_headers import install_security_headers as _install_security_headers
 import app.main as _app_main
 import app.connectors as _connectors
+
+# Package startup normally installs this policy already. The deployment
+# entrypoint also installs it explicitly because some reload/import paths can
+# reuse app.main without rerunning app/__init__.py. The installer is idempotent.
+_install_security_headers(app)
 
 # Importing app.postgres_compat executes app/__init__.py, which imports app.main
 # before the Postgres startup override above is installed. FastAPI's lifespan
@@ -356,9 +362,8 @@ def _meta_oauth_configured() -> bool:
     return all(_configured(name) for name in ("META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"))
 
 
-# Browser security headers and private cache policy are installed centrally by
-# app.security_headers through app/__init__.py. Keep this deployment entrypoint
-# free of a second, weaker middleware definition so there is one policy source.
+# Browser security headers and private cache policy come from the canonical
+# app.security_headers installer above rather than a second local middleware.
 
 
 @app.get("/health/runtime")
