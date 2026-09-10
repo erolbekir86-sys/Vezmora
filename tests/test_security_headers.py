@@ -38,7 +38,7 @@ def test_hsts_is_added_for_vercel_https_runtime(monkeypatch) -> None:
     with TestClient(app) as client:
         response = client.get("/")
 
-    assert response.headers["strict-transport-security"] == "max-age=31536000"
+    assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
 
 
 def test_https_app_url_enables_hsts_without_vercel(monkeypatch) -> None:
@@ -54,7 +54,7 @@ def test_https_app_url_enables_hsts_without_vercel(monkeypatch) -> None:
     with TestClient(app) as client:
         response = client.get("/")
 
-    assert response.headers["strict-transport-security"] == "max-age=31536000"
+    assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
 
 
 def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> None:
