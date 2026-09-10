@@ -159,7 +159,8 @@ def install_public_routing(app: FastAPI) -> None:
         # bootstrap updates cannot create a mutation storm and freeze the tab.
         html = html.replace(
             '<script src="/static/app-polish.js?v=1"></script>',
-            '<script src="/static/app-polish-safe.js"></script>',
+            '<script src="/static/app-polish-safe.js"></script>\n'
+            '  <script src="/static/billing-return-ui.js"></script>',
         )
         # Keep the legacy app bundle unchanged while enforcing fail-closed onboarding
         # saves, fail-closed dashboard reads and current self-service pricing as
