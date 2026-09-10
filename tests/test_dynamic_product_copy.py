@@ -59,17 +59,30 @@ def test_dynamic_copy_reapplies_after_relevant_async_renders():
     assert "wrapLoader('loadApprovals', enhanceQueue)" in COPY
     assert "wrapLoader('loadCompetitors', enhanceRivals)" in COPY
     assert "wrapLoader('loadBrief', enhanceBrief)" in COPY
+    assert "wrapLoader('loadAutopilot', enhanceAutopilot)" in COPY
     assert "const result = await original.apply(this, args)" in COPY
     assert "queueMicrotask(() =>" in COPY
 
 
-def test_rival_and_brief_system_copy_are_localized():
+def test_rival_brief_and_autopilot_system_copy_are_localized():
     assert "Inte skannad ännu" in COPY
     assert "Kontrollerad " in COPY
     assert "förändring upptäckt" in COPY
     assert " · stabil" in COPY
     assert "Schemaläggaren är aktiverad i den här miljön." in COPY
     assert "Manuell brief fungerar fortfarande." in COPY
+    for target in (
+        "Extern körning",
+        "Autopilot-körning",
+        "Autonoma högriskåtgärder",
+        "AKTIVERAD",
+        "LÅST",
+        "BLOCKERAD I BETA",
+        "Föreslå",
+        "Assisterad",
+        "Autonom",
+    ):
+        assert target in COPY
 
 
 def test_dynamic_copy_guard_contains_no_provider_or_business_mutations():
