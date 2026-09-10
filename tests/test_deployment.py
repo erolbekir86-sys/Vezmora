@@ -102,7 +102,10 @@ def test_deployment_security_headers(monkeypatch):
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
-    assert response.headers["cache-control"] == "no-store"
+    assert "no-store" in response.headers["cache-control"]
+    assert "no-cache" in response.headers["cache-control"]
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
     assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
 
 
