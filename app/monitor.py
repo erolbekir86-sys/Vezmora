@@ -24,6 +24,7 @@ _SPACE_RE = re.compile(r"\s+")
 _TITLE_RE = re.compile(r"<title[^>]*>(.*?)</title>", re.I | re.S)
 _REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 _MAX_REDIRECTS = 4
+_MAX_RESPONSE_BYTES = 2_000_000
 
 
 def _safe_public_url(url: str) -> bool:
@@ -50,12 +51,43 @@ def _safe_public_url(url: str) -> bool:
     return True
 
 
+def _declared_response_too_large(response: httpx.Response) -> bool:
+    raw = response.headers.get("content-length")
+    if not raw:
+        return False
+    try:
+        return int(raw) > _MAX_RESPONSE_BYTES
+    except (TypeError, ValueError):
+        return False
+
+
+async def _buffer_bounded_response(response: httpx.Response) -> httpx.Response:
+    if _declared_response_too_large(response):
+        raise HTTPException(status_code=413, detail="Competitor page is too large to scan")
+
+    body = bytearray()
+    async for chunk in response.aiter_bytes():
+        if len(body) + len(chunk) > _MAX_RESPONSE_BYTES:
+            raise HTTPException(status_code=413, detail="Competitor page is too large to scan")
+        body.extend(chunk)
+
+    return httpx.Response(
+        response.status_code,
+        headers=response.headers,
+        content=bytes(body),
+        request=response.request,
+        extensions=response.extensions,
+    )
+
+
 async def _fetch_public_page(url: str, headers: dict[str, str]) -> httpx.Response:
-    """Fetch one public page while validating every redirect target.
+    """Fetch one bounded public page while validating every redirect target.
 
     Automatic redirects are intentionally disabled. A public competitor URL can
     otherwise redirect Vexmera to localhost, link-local metadata services or
     another private address after the initial SSRF check has already passed.
+    The final response is streamed and capped so a remote site cannot force the
+    serverless worker to buffer an arbitrarily large page in memory.
     """
     current_url = url
     async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
@@ -63,23 +95,22 @@ async def _fetch_public_page(url: str, headers: dict[str, str]) -> httpx.Respons
             if not _safe_public_url(current_url):
                 raise HTTPException(status_code=400, detail="Only public HTTP/HTTPS competitor URLs can be scanned")
             try:
-                response = await client.get(current_url, headers=headers)
+                async with client.stream("GET", current_url, headers=headers) as response:
+                    if response.status_code not in _REDIRECT_STATUSES:
+                        return await _buffer_bounded_response(response)
+
+                    location = response.headers.get("location")
+                    if not location:
+                        raise HTTPException(status_code=502, detail="Competitor page returned an invalid redirect")
+                    if redirect_count >= _MAX_REDIRECTS:
+                        raise HTTPException(status_code=502, detail="Competitor page redirected too many times")
+
+                    next_url = urljoin(str(response.url), location)
+                    if not _safe_public_url(next_url):
+                        raise HTTPException(status_code=400, detail="Competitor page redirected to a non-public URL")
+                    current_url = next_url
             except httpx.HTTPError as exc:
                 raise HTTPException(status_code=502, detail="Competitor page could not be fetched") from exc
-
-            if response.status_code not in _REDIRECT_STATUSES:
-                return response
-
-            location = response.headers.get("location")
-            if not location:
-                raise HTTPException(status_code=502, detail="Competitor page returned an invalid redirect")
-            if redirect_count >= _MAX_REDIRECTS:
-                raise HTTPException(status_code=502, detail="Competitor page redirected too many times")
-
-            next_url = urljoin(str(response.url), location)
-            if not _safe_public_url(next_url):
-                raise HTTPException(status_code=400, detail="Competitor page redirected to a non-public URL")
-            current_url = next_url
 
     raise HTTPException(status_code=502, detail="Competitor page redirected too many times")
 
@@ -110,7 +141,7 @@ async def scan_competitor(workspace_id: int, competitor_id: int) -> dict[str, ob
     content_type = response.headers.get("content-type", "")
     if "text/html" not in content_type.lower():
         raise HTTPException(status_code=415, detail="Competitor monitor currently supports HTML pages only")
-    title, excerpt, digest = normalize_page(response.text[:2_000_000])
+    title, excerpt, digest = normalize_page(response.text)
     previous = latest_competitor_snapshot(competitor_id)
     changed = bool(previous and previous.get("content_hash") != digest)
     snapshot_id = add_competitor_snapshot(workspace_id, competitor_id, digest, title, excerpt, response.status_code, changed)
