@@ -2,7 +2,7 @@
 
 ## Core platform
 - [x] Private Beta application built
-- [x] 104 automated tests passing on the latest verified CI run
+- [x] Automated test suite passing on the latest verified CI runs
 - [x] 14-day Checkout trial implemented
 - [x] Customer Portal + signed webhook flow implemented
 - [x] Vercel FastAPI entrypoint configured
@@ -22,9 +22,9 @@
 - [x] Reject non-HTTPS app URLs or explicitly insecure cookies in production-like preflight checks
 - [x] Verify external execution and Autopilot are blocked by default before external adapters can run
 - [x] Add safe production readiness flags for remaining integrations
-- [x] Add safe Stripe sandbox readiness diagnostics that compare configured test prices without exposing Price IDs or keys
+- [x] Add canonical read-only Stripe sandbox catalog verification without exposing secrets or Price IDs
 - [x] Keep the existing GitHub repository connected while rebranding the product to Vexmera
-- [x] Keep the existing Vercel project/team connection while rebranding the product to Vexmera
+- [x] Keep GitHub-to-Vercel deployment status checks working while rebranding the product to Vexmera
 
 ## Production infrastructure
 - [x] Add `DATABASE_URL` as a Vercel environment variable
@@ -37,7 +37,7 @@
 - [x] Verify production `/health` endpoint responds
 - [x] Verify production app boots with persistent database connection configured
 - [x] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
-- [x] Confirm explicit `database_connection_ok` health ping on the latest deployment
+- [x] Confirm explicit `database_connection_ok` health ping on a verified deployment
 - [x] Confirm explicit `openai_connection_ok` production API connectivity
 - [x] Diagnose Core/Pulse/Launch production blocker as OpenAI `insufficient_quota` (HTTP 429)
 - [x] Activate sufficient OpenAI API billing/quota for the production project
@@ -54,29 +54,35 @@
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
 - [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
-- [ ] Add remaining Vercel Sensitive Environment Variables as required by final launch configuration
+- [x] Fail closed on insecure `http://` `VEZMORA_APP_URL` values in Vercel production
+- [ ] Restore direct Vercel connector visibility for read-only project/log inspection without changing production permissions
+- [ ] Re-run current public runtime/readiness evidence after final environment reconciliation
+- [ ] Add any remaining Vercel Sensitive Environment Variables required by final launch configuration
 
 ## Billing and email
 - [x] 14-day Stripe Checkout trial flow implemented in the application
 - [x] Prevent Checkout from resetting or extending an already-running/expired private-beta trial
 - [x] Customer Portal and signed webhook handling implemented in the application
+- [x] Fail closed on self-service Checkout until billing readiness explicitly reports true
 - [x] Trigger production redeploy after earlier Stripe sandbox environment setup
 - [x] Trigger production redeploy after adding Resend SMTP environment variables
 - [x] Trigger production redeploy after correcting `SMTP_HOST`
 - [x] Configure and verify Resend SMTP/transactional email sender
-- [x] Align Vexmera plan metadata and team limits with Starter 1 / Growth 3 / Scale 10 users
-- [x] Verify the currently connected Stripe test account had no usable Vexmera products/prices before reconciliation
-- [x] Create fresh Vexmera Starter / Growth / Scale products in the connected Stripe test account
-- [x] Create and verify monthly recurring SEK test prices at 1,499 / 2,999 / 5,999 SEK
-- [x] Add safe Stripe catalog verification code and unit tests without exposing secrets
-- [x] Document the verified test-only catalog in `STRIPE_SANDBOX_CATALOG.md`
-- [x] Confirm the currently connected Stripe test account has no webhook endpoint yet
-- [x] Add non-secret `/health/beta-readiness` checks for Stripe key mode, exact verified sandbox catalog match and webhook-secret presence
-- [ ] Point Vercel `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_SCALE` to the newly verified test prices
-- [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same connected Stripe test account
+- [x] Align canonical Vexmera plan metadata with Start / Growth / Pro and team limits 1 / 3 / 10
+- [x] Preserve the previously verified Starter / Growth / Scale Stripe test catalog as historical migration evidence only
+- [x] Document the historical test-only catalog in `STRIPE_SANDBOX_CATALOG.md` with an explicit do-not-reuse warning
+- [x] Add canonical read-only Stripe Price verification using the installed Stripe SDK
+- [x] Verify the catalog checker rejects live-mode Prices, inactive Prices, wrong currency, wrong recurrence and wrong amounts
+- [x] Verify the catalog checker never emits Stripe secrets, configured Price IDs or raw Stripe exceptions
+- [x] Gate final catalog success on the explicit `2026-09-start-growth-pro` pricing-version marker
+- [x] Confirm the previously connected Stripe test account had no webhook endpoint at the time of the historical audit
+- [ ] Create or independently verify current **Start / Growth / Pro** test-mode Prices at 995 / 1,495 / 2,995 SEK monthly
+- [ ] Point Vercel `STRIPE_PRICE_START`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_PRO` to those independently verified current test Prices
+- [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same Stripe test account as all three current Price IDs
+- [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment and require `catalog_ok=true`
+- [ ] Set `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` only after the current catalog verification passes
 - [ ] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
-- [ ] Confirm `/health/beta-readiness` reports `stripe_sandbox_ready=true` in the configured deployment
-- [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment
+- [ ] Confirm `/health/beta-readiness` reports the expected Stripe sandbox readiness state after reconciliation
 - [ ] Run a fresh end-to-end sandbox Checkout + 14-day trial + signed webhook + Customer Portal test
 - [ ] Make a separate VAT/tax decision before any live-mode paid launch
 
@@ -88,14 +94,17 @@
 - [x] Configure GA4 property and web stream
 - [x] Install GA4 tag in production behind explicit analytics consent
 - [x] Confirm Google Analytics sync returns real rows
-- [x] Save Google Ads customer ID `638-343-6270` in Vexmera
-- [x] Create Google Ads Manager account for Vexmera (`944-502-2492`)
+- [x] Save a Google Ads customer ID in Vexmera
+- [x] Create a Google Ads Manager account for Vexmera
 - [x] Create Google Ads API developer token
 - [x] Add `GOOGLE_ADS_DEVELOPER_TOKEN` to Vercel Production and redeploy successfully
 - [x] Submit Google Ads API Basic Access application with Vexmera tool documentation
-- [x] Send manager-account link request from Vexmera MCC to Google Ads account `638-343-6270`
-- [x] Add owner/admin-only Google disconnect endpoint with local credential deletion and best-effort upstream revocation
-- [ ] Accept the pending manager-account link request from Google Ads account `638-343-6270`
+- [x] Send manager-account link request from Vexmera MCC to the target Google Ads account
+- [x] Add owner/admin-only Google disconnect backend with local credential deletion and best-effort upstream revocation
+- [x] Add customer-facing owner/admin Google disconnect control with explicit confirmation
+- [x] Add bounded retries and safe response validation to Google token refresh, Analytics reads and Ads reads
+- [x] Keep Google read reliability underneath diagnostics and customer empty-state wrappers
+- [ ] Accept the pending manager-account link request from the target Google Ads account
 - [ ] Receive Google approval for Basic Access
 - [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required after manager linking is active
 - [ ] Complete Google Ads sync against a real linked account and confirm campaign-level rows
@@ -107,12 +116,16 @@
 - [x] End-to-end test Meta OAuth with a beta test account
 - [x] Connect Meta ad account and verify account-level read access
 - [x] Confirm read-only Meta sync handles an account with no campaigns correctly
-- [x] Add owner/admin-only Meta disconnect endpoint with local credential deletion and best-effort upstream revocation
+- [x] Add bounded retry and bounded read-only Insights pagination
+- [x] Add owner/admin-only Meta disconnect backend with local credential deletion and best-effort upstream revocation
+- [x] Add customer-facing owner/admin Meta disconnect control with explicit confirmation
 
 ## Privacy and data controls
 - [x] Prevent connector secret blobs from appearing in normal API responses
 - [x] Add self-service backend disconnect flow for Google and Meta
 - [x] Add customer-facing disconnect controls in the authenticated UI
+- [x] Restrict disconnect UI to verified owner/admin workspace roles and fail closed if role lookup fails
+- [x] Require explicit confirmation before connector credential removal
 - [x] Delete local encrypted connector credentials even when provider-side revocation cannot be completed
 - [x] Clear saved provider/account identifiers and pending OAuth states on disconnect
 - [x] Keep disconnect idempotent and covered by regression tests
@@ -140,16 +153,22 @@
 
 ## Product and launch
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
+- [x] Replace raw Google/Meta sync JSON with customer-safe summaries
+- [x] Persist connector states across reloads: unsynced, data, warning, healthy zero-data and sync error
+- [x] Remove obsolete Google Analytics “generic clicks” warning after sessions were separated from paid-click semantics
 - [x] Align public marketing and Command Center branding, pricing and private-beta language
 - [x] Complete the current AI Command Center customer-facing polish pass
 - [x] Finish the Swedish dynamic-copy polish for the authenticated app
+- [x] Add keyboard and screen-reader semantics for auth, onboarding, navigation and dynamic status regions
+- [x] Keep mobile touch targets at least 44 px and preserve reduced-motion handling
 - [x] Verify connector-disconnect UI with green CI and successful Vercel deployment status
 - [x] Verify synchronized-history deletion backend and UI with green CI and successful Vercel deployment status
 - [x] Align marketing hero demo to the current 14-day story and harden desktop hero layout against copy clipping
 - [x] Correct the marketing integrations grid so verified GA4 support is no longer labeled “Kommer snart”
 - [x] Add regression tests for marketing demo window, GA4 status and hero clipping guard
-- [x] Raise automated coverage to 104 passing tests across deployment, billing, privacy, integrations, marketing UI and execution safety
+- [x] Keep the expanding automated suite green across deployment, billing, privacy, integrations, marketing UI and execution safety
 - [ ] Perform final authenticated browser QA on the deployed Command Center
+- [ ] Reconfirm production runtime/log observability after direct Vercel connector visibility is restored
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
-- [ ] Purchase/attach `vexmera.com` when the product is production-ready
+- [ ] Confirm the canonical production domain is attached, HTTPS-valid and matches all OAuth/billing return URLs
 - [ ] Run five-company pilot
