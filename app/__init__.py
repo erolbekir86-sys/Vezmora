@@ -10,6 +10,12 @@ _apply_production_env_guards()
 from .kpi_semantics import install_kpi_semantics_guard as _install_kpi_semantics_guard
 _install_kpi_semantics_guard()
 
+# Harden Google read/token requests before diagnostics and connector UX wrappers
+# capture the sync functions. This keeps bounded retry and payload validation at
+# the base of the existing Google wrapper chain.
+from .google_read_reliability import install_google_read_reliability as _install_google_read_reliability
+_install_google_read_reliability()
+
 # Harden the read-only Meta Insights path before app.main imports connector
 # functions so every sync entrypoint gets the same bounded retry/pagination logic.
 from .meta_read_reliability import install_meta_read_reliability as _install_meta_read_reliability
