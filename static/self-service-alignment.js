@@ -78,6 +78,127 @@
     window.loadTeam = guardedLoadTeam;
   }
 
+  function providerSyncSummary(label, result) {
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      return `${label}: synkresultatet kunde inte verifieras.`;
+    }
+    if (result.error) return `${label}: synken kunde inte slutföras.`;
+
+    const rowCandidates = [result.campaign_rows, result.analytics_rows, result.ads_rows]
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value) && value >= 0);
+    const rows = rowCandidates.reduce((total, value) => total + value, 0);
+    const warningCount = Array.isArray(result.warnings) ? result.warnings.length : 0;
+    const rowText = rows > 0 ? ` ${rows} datapunkter mottagna.` : ' Synken slutfördes.';
+    const warningText = warningCount > 0 ? ' Kontrollera anslutningsinställningarna eftersom synken gav en varning.' : '';
+    return `${label}:${rowText}${warningText}`;
+  }
+
+  function summarizeConnectorSync(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return 'Synkningen slutfördes, men resultatet kunde inte verifieras. Uppdatera sidan innan du använder datan.';
+    }
+    return [
+      providerSyncSummary('Google', payload.google),
+      providerSyncSummary('Meta', payload.meta),
+    ].join(' ');
+  }
+
+  function showCustomerSyncMessage(message) {
+    if (typeof window.vexmeraToast === 'function') {
+      window.vexmeraToast(message);
+    } else if (typeof window.alert === 'function') {
+      window.alert(message);
+    }
+  }
+
+  function connectorProviderLabel(provider) {
+    if (provider === 'google') return 'Google';
+    if (provider === 'meta') return 'Meta';
+    return 'Datakällan';
+  }
+
+  async function runIndividualConnectorSync(button) {
+    const provider = String(button?.dataset?.sync || '').toLowerCase();
+    if (!button || !['google', 'meta'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
+
+    button.disabled = true;
+    const previousText = button.textContent;
+    button.textContent = 'Synkar…';
+    try {
+      const result = await api(ws(`/api/connectors/${provider}/sync`), {
+        method: 'POST',
+        body: JSON.stringify({days: typeof selectedSyncDays === 'function' ? selectedSyncDays() : 30}),
+      });
+      showCustomerSyncMessage(providerSyncSummary(connectorProviderLabel(provider), result));
+      if (typeof loadDashboard === 'function') await loadDashboard();
+      if (typeof window.loadConnectors === 'function') await window.loadConnectors();
+    } catch (_) {
+      // Keep provider/API details out of the customer-facing connector state.
+      showCustomerSyncMessage(`${connectorProviderLabel(provider)}: synken kunde inte slutföras. Kontrollera anslutningen och försök igen.`);
+    } finally {
+      // The connector grid may have been re-rendered; only restore this button if
+      // it is still connected to the document.
+      if (button.isConnected) {
+        button.disabled = false;
+        button.textContent = previousText;
+      }
+    }
+  }
+
+  function bindIndividualConnectorSyncFeedback() {
+    document.querySelectorAll('#connectorGrid [data-sync]').forEach((button) => {
+      const provider = String(button.dataset.sync || '').toLowerCase();
+      if (!['google', 'meta'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
+      button.dataset.vexmeraSafeSync = 'true';
+      button.onclick = () => runIndividualConnectorSync(button);
+    });
+  }
+
+  function installConnectorSyncFeedbackGuard() {
+    const originalSyncAll = typeof window.syncAll === 'function' ? window.syncAll : null;
+    if (originalSyncAll && !originalSyncAll.__vexmeraFeedbackGuarded) {
+      async function guardedSyncAll(button) {
+        if (!button || typeof api !== 'function' || typeof ws !== 'function') return;
+        button.disabled = true;
+        const previousText = button.textContent;
+        button.textContent = 'Synkar…';
+        try {
+          const result = await api(ws('/api/connectors/all/sync'), {
+            method: 'POST',
+            body: JSON.stringify({days: typeof selectedSyncDays === 'function' ? selectedSyncDays() : 30}),
+          });
+          showCustomerSyncMessage(summarizeConnectorSync(result));
+          if (typeof loadDashboard === 'function' && typeof loadConnectors === 'function') {
+            await Promise.all([loadDashboard(), loadConnectors()]);
+          }
+        } catch (_) {
+          // Keep raw provider/API details out of customer-facing feedback.
+          showCustomerSyncMessage('Synkningen kunde inte slutföras. Kontrollera anslutningarna och försök igen.');
+        } finally {
+          button.disabled = false;
+          button.textContent = previousText;
+        }
+      }
+
+      guardedSyncAll.__vexmeraFeedbackGuarded = true;
+      window.syncAll = guardedSyncAll;
+    }
+
+    const originalLoadConnectors = typeof window.loadConnectors === 'function' ? window.loadConnectors : null;
+    if (originalLoadConnectors && !originalLoadConnectors.__vexmeraFeedbackGuarded) {
+      async function guardedLoadConnectors(...args) {
+        const result = await originalLoadConnectors.apply(this, args);
+        bindIndividualConnectorSyncFeedback();
+        return result;
+      }
+      guardedLoadConnectors.__vexmeraFeedbackGuarded = true;
+      window.loadConnectors = guardedLoadConnectors;
+    }
+
+    bindIndividualConnectorSyncFeedback();
+  }
+
   function localizeOnboardingProgress() {
     if (typeof renderOnboardingStep !== 'function') return;
     const originalRender = renderOnboardingStep;
@@ -123,6 +244,7 @@
 
   alignBillingPlans();
   installCheckoutReadinessGuard();
+  installConnectorSyncFeedbackGuard();
   localizeOnboardingProgress();
   addOnboardingNextStep();
   routeCompletedOnboardingToConnections();
