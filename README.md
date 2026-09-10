@@ -24,19 +24,21 @@ The customer-facing Command Center is Swedish-first. Core, Pulse, Launch and Aut
 - Marketing-site metrics are illustrative demo data and are labelled accordingly.
 - Live Stripe billing must not be enabled until the public pricing model, backend plan model, Stripe sandbox catalog, webhooks, VAT/tax handling and legal terms have been reconciled and verified.
 
-## Plans and billing migration
+## Plans and billing safety
 
-The public marketing site currently advertises these monthly prices, excluding VAT:
+The current public and backend plan model uses these monthly prices, excluding VAT:
 
-| Plan | Public price |
+| Plan | Current price |
 | --- | ---: |
 | Start | 995 SEK/month |
 | Growth | 1,495 SEK/month |
 | Pro | 2,995 SEK/month |
 
-The backend and historical verified Stripe sandbox catalog still use the older **Starter / Growth / Scale** model. New Stripe Checkout sessions are intentionally blocked by the pricing-reconciliation safety guard until the public pricing, backend plan metadata, tests and Stripe sandbox catalog all describe the same model.
+The codebase now uses **Start / Growth / Pro** as the canonical model while still accepting historical `starter` and `scale` aliases for already-saved beta data. The older **Starter / Growth / Scale** Stripe test catalog documented in `STRIPE_SANDBOX_CATALOG.md` is historical evidence only and must not be reused for new Checkout sessions.
 
-Do not bypass that guard and do not treat the historical Starter / Growth / Scale Price IDs as the current pilot checkout catalog. See `STRIPE_SANDBOX_CATALOG.md`, `PILOT_RUNBOOK.md` and `PRODUCTION_ENVIRONMENT.md` before touching billing configuration.
+New Checkout sessions remain intentionally fail-closed until the configured Stripe **test-mode** Price IDs independently verify as active monthly recurring SEK Prices at exactly 995 / 1,495 / 2,995 SEK and the explicit pricing-version marker matches `2026-09-start-growth-pro`.
+
+Do not bypass that guard. See `STRIPE_SANDBOX_CATALOG.md`, `PILOT_RUNBOOK.md` and `PRODUCTION_ENVIRONMENT.md` before changing billing configuration.
 
 ## Tech stack
 
@@ -90,7 +92,13 @@ Run deployment preflight:
 python scripts/preflight.py
 ```
 
-`python scripts/verify_stripe_catalog.py` verifies the historical sandbox catalog described in `STRIPE_SANDBOX_CATALOG.md`. Do not use that result as evidence that the current public Start / Growth / Pro pricing is checkout-ready; pricing reconciliation must happen first.
+Run the canonical read-only Stripe sandbox catalog verifier in the configured environment:
+
+```bash
+python scripts/verify_stripe_catalog.py
+```
+
+The Stripe verifier checks only the current **Start / Growth / Pro** test catalog. It retrieves the three configured Price objects, validates sandbox mode, active status, SEK monthly recurrence, exact amounts and the current pricing-version marker, and never prints the Stripe secret, Price IDs or raw Stripe errors. A non-zero result means Checkout must remain blocked.
 
 ## Key operational documents
 
@@ -100,7 +108,7 @@ python scripts/preflight.py
 - `PILOT_COMPANY_EVIDENCE_TEMPLATE.md` — safe per-company verification template without storing secrets.
 - `DEPLOY_CHECKLIST.md` — deployment checks and launch blockers.
 - `PRODUCTION_ENVIRONMENT.md` — environment configuration runbook.
-- `STRIPE_SANDBOX_CATALOG.md` — historical verified test-mode catalog; not the current public pricing model.
+- `STRIPE_SANDBOX_CATALOG.md` — historical verified test-mode catalog plus migration warning; not the current Checkout catalog.
 - `PRIVACY_POLICY_DRAFT.md` — privacy draft requiring final legal/entity details and review.
 - `BETA_TERMS_DRAFT.md` — beta terms draft requiring final legal/entity details and review.
 
