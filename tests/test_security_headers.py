@@ -23,6 +23,9 @@ def test_vexmera_responses_include_low_risk_browser_hardening(tmp_path, monkeypa
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
     assert response.headers["x-permitted-cross-domain-policies"] == "none"
+    assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
     assert "strict-transport-security" not in response.headers
 
 
@@ -75,7 +78,7 @@ def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> Non
     assert response.headers["x-content-type-options"] == "nosniff"
 
 
-def test_api_responses_are_no_store_without_changing_public_cache_policy(monkeypatch) -> None:
+def test_api_and_health_responses_are_no_store_without_changing_public_cache_policy(monkeypatch) -> None:
     monkeypatch.delenv("VERCEL", raising=False)
     monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
     app = FastAPI()
@@ -84,6 +87,10 @@ def test_api_responses_are_no_store_without_changing_public_cache_policy(monkeyp
     def private_api():
         return {"secret_adjacent": "workspace-data"}
 
+    @app.get("/health/beta-readiness")
+    def readiness():
+        return {"private_beta_execution_safe": True}
+
     @app.get("/public")
     def public_route():
         return {"ok": True}
@@ -91,13 +98,15 @@ def test_api_responses_are_no_store_without_changing_public_cache_policy(monkeyp
     install_security_headers(app)
     with TestClient(app) as client:
         api_response = client.get("/api/private")
+        health_response = client.get("/health/beta-readiness")
         public_response = client.get("/public")
 
-    assert api_response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
-    assert api_response.headers["pragma"] == "no-cache"
-    assert api_response.headers["expires"] == "0"
-    assert api_response.headers["cdn-cache-control"] == "no-store"
-    assert api_response.headers["vercel-cdn-cache-control"] == "no-store"
+    for protected_response in (api_response, health_response):
+        assert protected_response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+        assert protected_response.headers["pragma"] == "no-cache"
+        assert protected_response.headers["expires"] == "0"
+        assert protected_response.headers["cdn-cache-control"] == "no-store"
+        assert protected_response.headers["vercel-cdn-cache-control"] == "no-store"
     assert "cache-control" not in public_response.headers
     assert "cdn-cache-control" not in public_response.headers
 
