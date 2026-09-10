@@ -67,6 +67,25 @@ def test_http_error_safety_redacts_all_runtime_secret_surfaces(monkeypatch):
     assert rendered.count("[REDACTED]") >= 10
 
 
+def test_http_error_safety_redacts_inline_auth_capabilities():
+    detail = {
+        "message": "reset_token=reset-abc invite_token:invite-def",
+        "nested": [
+            "session_token=session-ghi",
+            "oauth_state=oauth-jkl",
+        ],
+        "safe_context": "workspace_id=42",
+    }
+
+    sanitized = sanitize_http_detail(detail)
+    rendered = str(sanitized)
+
+    for capability in ("reset-abc", "invite-def", "session-ghi", "oauth-jkl"):
+        assert capability not in rendered
+    assert "workspace_id=42" in rendered
+    assert rendered.count("[REDACTED]") >= 4
+
+
 def test_http_error_safety_preserves_actionable_non_secret_meta_context():
     detail = {
         "message": "Meta ad account lookup failed: Unsupported get request",
