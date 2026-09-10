@@ -4,7 +4,7 @@ import json
 from datetime import date
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator
 
 Language = Literal["sv", "en", "de", "es", "fr", "tr"]
 Objective = Literal["awareness", "leads", "sales", "bookings", "retention", "launch"]
@@ -217,21 +217,3 @@ class BetaFeedbackCreate(BaseModel):
     score: int = Field(ge=1, le=5)
     category: Literal["general", "core", "data", "campaigns", "billing", "bug"] = "general"
     message: str = Field(default="", max_length=4000)
-
-
-class BillingCheckoutRequest(BaseModel):
-    plan: BillingPlan
-
-
-class CoreActionCreate(BaseModel):
-    title: str = Field(min_length=3, max_length=180)
-    rationale: str = Field(min_length=3, max_length=2000)
-    action_type: str = Field(min_length=2, max_length=80)
-    provider: str | None = Field(default=None, max_length=60)
-    risk_level: Literal["low", "medium", "high"] = "medium"
-    payload: dict[str, Any] = Field(default_factory=dict)
-
-    @field_validator("payload")
-    @classmethod
-    def validate_payload_size(cls, value: dict[str, Any]) -> dict[str, Any]:
-        return _bounded_opaque_payload(value)
