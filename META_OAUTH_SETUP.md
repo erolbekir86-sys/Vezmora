@@ -51,26 +51,41 @@ Optional:
 
 After OAuth is connected, save the Meta ad account ID in connector settings as `meta_ad_account_id`.
 
-Vexmera accepts either the numeric account ID or an `act_...` ID and normalizes it for the Marketing API.
+Vexmera accepts either the numeric account ID or an `act_...` ID and normalizes it for the Marketing API. When no valid account ID is stored, the production adapter can discover authorized ad accounts and auto-select the account only when exactly one safe candidate is available.
+
+## Current read-only hardening
+
+The private-beta connector already includes:
+
+- bounded retry for transient Meta API failures such as rate limiting and 5xx responses;
+- bounded Insights pagination with loop and page-limit protection;
+- campaign/date deduplication before KPI persistence;
+- safe reconnect guidance for invalid or expired authorization;
+- fail-closed handling for malformed provider responses;
+- customer-facing distinction between a healthy empty account and a provider/API failure.
+
+These controls do not enable any Meta write or campaign-management capability.
 
 ## Production verification
 
 After adding the environment variables, redeploy production and verify:
 
-1. `/health/runtime` returns `meta_oauth_configured: true`.
-2. Meta Connect produces an authorization URL.
-3. The callback returns successfully and the connector shows as connected.
-4. Save a real beta ad account ID.
-5. Run a 7-day Meta sync.
-6. Confirm campaign rows appear and KPI aggregation is correct.
-7. Confirm no write/management permission is requested during private beta.
+1. Run `python scripts/preflight.py` in the configured deployment environment and confirm the Meta OAuth configuration check passes without printing secret values.
+2. Confirm public `/health/runtime` returns only minimal liveness/deployment identity and does not expose OAuth, token, Stripe, SMTP or database configuration booleans.
+3. Meta Connect produces an authorization URL.
+4. The callback returns successfully and the connector shows as connected.
+5. Save or safely discover a real beta ad account ID.
+6. Run a 7-day Meta read-only sync.
+7. Confirm campaign rows appear when the account has data and KPI aggregation is correct.
+8. Confirm empty-data and provider-error states remain distinct.
+9. Confirm no write/management permission is requested during private beta.
 
-## Follow-up hardening before wider launch
+## Follow-up before wider launch
 
 Before enabling Meta for a larger customer base:
 
-- Exchange short-lived user tokens for long-lived tokens and track expiry.
-- Add reconnect/expiry handling.
-- Follow Marketing API pagination for accounts that return more than one Insights page.
-- Add rate-limit/backoff handling.
-- Keep all external write actions behind explicit approvals even after `ads_management` is introduced.
+- verify long-lived token lifecycle and expiry behavior with real accounts;
+- expand ad-account discovery pagination if production accounts exceed the current bounded discovery window;
+- monitor Meta Graph API version migration requirements;
+- preserve bounded retry/pagination and secret-safe diagnostics as provider behavior changes;
+- keep every external write action disabled until a separate, explicit production review authorizes a later execution phase.
