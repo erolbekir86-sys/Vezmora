@@ -11,6 +11,8 @@ _API_NO_STORE_HEADERS = {
     "CDN-Cache-Control": "no-store",
     "Vercel-CDN-Cache-Control": "no-store",
 }
+_SENSITIVE_CAPABILITY_QUERY_KEYS = frozenset({"reset", "invite"})
+_PRODUCT_PATHS = frozenset({"/app", "/app/"})
 
 
 def _https_runtime() -> bool:
@@ -27,6 +29,12 @@ def _protect_api_cache(request: Request, response) -> None:
         response.headers.setdefault(name, value)
 
 
+def _protect_capability_referrer(request: Request, response) -> None:
+    """Keep private app URLs and one-time capability parameters out of Referer headers."""
+    if request.url.path in _PRODUCT_PATHS or _SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(request.query_params.keys()):
+        response.headers["Referrer-Policy"] = "no-referrer"
+
+
 def install_security_headers(app: FastAPI) -> None:
     """Add browser hardening headers without changing application routing or CSP."""
 
@@ -34,6 +42,7 @@ def install_security_headers(app: FastAPI) -> None:
     async def _security_headers(request: Request, call_next):
         response = await call_next(request)
         _protect_api_cache(request, response)
+        _protect_capability_referrer(request, response)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
