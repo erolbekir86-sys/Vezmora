@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+from stripe import StripeClient
+
 from app.pricing import CURRENT_PRICING_VERSION, EXPECTED_MONTHLY_SEK_ORE
 from scripts import stripe_sandbox_preflight as preflight
 
@@ -59,6 +61,12 @@ def _valid_client():
             "price_pro_private": _price("price_pro_private", EXPECTED_MONTHLY_SEK_ORE["pro"]),
         }
     )
+
+
+def test_installed_stripe_sdk_exposes_v1_price_retrieve_without_network_call():
+    client = StripeClient("sk_test_offline_contract_check", max_network_retries=0)
+
+    assert callable(client.v1.prices.retrieve)
 
 
 def test_valid_sandbox_catalog_and_marker_pass(monkeypatch):
