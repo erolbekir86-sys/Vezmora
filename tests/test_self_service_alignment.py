@@ -38,7 +38,6 @@ def test_checkout_buttons_fail_closed_until_billing_explicitly_reports_ready():
     assert "billing?.checkout_ready === true" in ALIGNMENT
     assert "button.disabled = ready !== true" in ALIGNMENT
     assert "button.dataset.checkoutReady = ready === true ? 'true' : 'false'" in ALIGNMENT
-    assert "Never turn a billing-read failure into an enabled Checkout button" in ALIGNMENT
     assert "Betalning öppnas när den verifierade Stripe-miljön är redo." in ALIGNMENT
 
 
@@ -48,6 +47,24 @@ def test_checkout_guard_wraps_team_loading_without_rebinding_checkout_handler():
     assert "const billing = await api(ws('/api/billing'))" in ALIGNMENT
     assert "window.loadTeam = guardedLoadTeam" in ALIGNMENT
     assert "addEventListener('click'" not in ALIGNMENT
+
+
+def test_runtime_status_uses_minimal_public_health_without_inferring_missing_secrets():
+    assert "const payload = await api('/health')" in ALIGNMENT
+    assert "payload?.ok === true" in ALIGNMENT
+    assert "status.textContent = `System online${version}`" in ALIGNMENT
+    assert "Systemstatus kunde inte verifieras." in ALIGNMENT
+    assert "api_key_configured" not in ALIGNMENT
+    assert "API-nyckel saknas" not in ALIGNMENT
+    assert "window.loadSystemStatus = guardedLoadSystemStatus" in ALIGNMENT
+
+
+def test_brief_scheduler_status_does_not_treat_redacted_field_as_disabled():
+    assert "Object.prototype.hasOwnProperty.call(health || {}, 'scheduler_enabled')" in ALIGNMENT
+    assert "Schemaläggarstatus hanteras i drift och visas inte i den publika produktvyn." in ALIGNMENT
+    assert "Schemaläggarstatus kunde inte verifieras." in ALIGNMENT
+    assert "window.loadBrief = guardedLoadBrief" in ALIGNMENT
+    assert "scheduler_enabled?'" not in ALIGNMENT
 
 
 def test_connector_sync_feedback_replaces_raw_json_with_provider_summaries():
@@ -69,8 +86,6 @@ def test_individual_connector_sync_buttons_use_safe_feedback_and_refresh_state()
 
 
 def test_connector_sync_feedback_does_not_surface_raw_provider_exception_text():
-    assert "Keep raw provider/API details out of customer-facing feedback" in ALIGNMENT
-    assert "Keep provider/API details out of the customer-facing connector state" in ALIGNMENT
     assert "${err.message}" not in ALIGNMENT
     assert ".textContent = err.message" not in ALIGNMENT
     assert "Synkningen kunde inte slutföras. Kontrollera anslutningarna och försök igen." in ALIGNMENT

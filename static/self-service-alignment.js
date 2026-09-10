@@ -43,16 +43,12 @@
       if (label) label.textContent = plan.label;
       if (price) price.textContent = plan.price;
       if (button) {
-        // app.js reads dataset.plan at click time, so updating it here also
-        // updates the existing Checkout handler without rebinding listeners.
         button.dataset.plan = plan.key;
         button.textContent = plan.button;
         button.setAttribute('aria-label', `${plan.button}, ${plan.price} per månad exklusive moms`);
       }
     });
 
-    // Self-service billing is fail-closed until the billing endpoint explicitly
-    // confirms that the reconciled Stripe environment is ready.
     setCheckoutAvailability(false);
   }
 
@@ -69,13 +65,67 @@
         const billing = await api(ws('/api/billing'));
         setCheckoutAvailability(billing?.checkout_ready === true);
       } catch (_) {
-        // Never turn a billing-read failure into an enabled Checkout button.
         setCheckoutAvailability(false);
       }
     }
 
     guardedLoadTeam.__vexmeraCheckoutGuarded = true;
     window.loadTeam = guardedLoadTeam;
+  }
+
+  function renderRuntimeStatus(payload) {
+    const status = document.getElementById('status');
+    if (!status) return;
+
+    if (payload?.ok === true) {
+      const version = payload.version ? ` · v${payload.version}` : '';
+      status.textContent = `System online${version}`;
+      status.style.color = 'var(--ok)';
+      return;
+    }
+
+    status.textContent = 'Systemstatus kunde inte verifieras.';
+    status.style.color = 'var(--danger)';
+  }
+
+  function installRuntimeStatusGuard() {
+    if (typeof api !== 'function') return;
+
+    async function guardedLoadSystemStatus() {
+      try {
+        const payload = await api('/health');
+        renderRuntimeStatus(payload);
+      } catch (_) {
+        renderRuntimeStatus(null);
+      }
+    }
+
+    guardedLoadSystemStatus.__vexmeraMinimalHealthAware = true;
+    window.loadSystemStatus = guardedLoadSystemStatus;
+  }
+
+  function installBriefSchedulerStatusGuard() {
+    const originalLoadBrief = typeof window.loadBrief === 'function' ? window.loadBrief : null;
+    if (!originalLoadBrief || originalLoadBrief.__vexmeraMinimalHealthAware || typeof api !== 'function') return;
+
+    async function guardedLoadBrief(...args) {
+      const result = await originalLoadBrief.apply(this, args);
+      const state = document.getElementById('briefSchedulerState');
+      if (!state) return result;
+
+      try {
+        const health = await api('/health');
+        if (!Object.prototype.hasOwnProperty.call(health || {}, 'scheduler_enabled')) {
+          state.textContent = 'Schemaläggarstatus hanteras i drift och visas inte i den publika produktvyn.';
+        }
+      } catch (_) {
+        state.textContent = 'Schemaläggarstatus kunde inte verifieras.';
+      }
+      return result;
+    }
+
+    guardedLoadBrief.__vexmeraMinimalHealthAware = true;
+    window.loadBrief = guardedLoadBrief;
   }
 
   function providerSyncSummary(label, result) {
@@ -134,11 +184,8 @@
       if (typeof loadDashboard === 'function') await loadDashboard();
       if (typeof window.loadConnectors === 'function') await window.loadConnectors();
     } catch (_) {
-      // Keep provider/API details out of the customer-facing connector state.
       showCustomerSyncMessage(`${connectorProviderLabel(provider)}: synken kunde inte slutföras. Kontrollera anslutningen och försök igen.`);
     } finally {
-      // The connector grid may have been re-rendered; only restore this button if
-      // it is still connected to the document.
       if (button.isConnected) {
         button.disabled = false;
         button.textContent = previousText;
@@ -173,7 +220,6 @@
             await Promise.all([loadDashboard(), loadConnectors()]);
           }
         } catch (_) {
-          // Keep raw provider/API details out of customer-facing feedback.
           showCustomerSyncMessage('Synkningen kunde inte slutföras. Kontrollera anslutningarna och försök igen.');
         } finally {
           button.disabled = false;
@@ -244,6 +290,8 @@
 
   alignBillingPlans();
   installCheckoutReadinessGuard();
+  installRuntimeStatusGuard();
+  installBriefSchedulerStatusGuard();
   installConnectorSyncFeedbackGuard();
   localizeOnboardingProgress();
   addOnboardingNextStep();
