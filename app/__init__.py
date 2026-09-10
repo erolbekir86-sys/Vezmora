@@ -30,6 +30,7 @@ from .csrf_guard import install_csrf_guard as _install_csrf_guard
 from .http_error_safety import install_http_error_safety as _install_http_error_safety
 from .main import app as _app
 from .production_docs_guard import install_production_docs_guard as _install_production_docs_guard
+from .production_execution_guard import install_production_execution_guard as _install_production_execution_guard
 from .public_health import install_public_health_guard as _install_public_health_guard
 from .public_routing import install_public_routing as _install_public_routing
 from .runtime_diagnostics import install_runtime_diagnostics as _install_runtime_diagnostics
@@ -41,6 +42,7 @@ _install_public_health_guard(_app)
 _install_runtime_diagnostics(_app)
 _install_static_entrypoint_guard(_app)
 _install_production_docs_guard(_app)
+_install_production_execution_guard(_app)
 _install_public_routing(_app)
 
 __all__ = []
