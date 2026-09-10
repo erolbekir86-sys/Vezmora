@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
+
 from app import connector_empty_states
 from app import connectors
 from app import google_ads_diagnostics
@@ -22,7 +24,7 @@ class FakeResponse:
 
 
 class FakeClient:
-    def __init__(self, responses: list[FakeResponse]):
+    def __init__(self, responses: list[object]):
         self.responses = list(responses)
         self.calls: list[dict[str, object]] = []
 
@@ -30,7 +32,10 @@ class FakeClient:
         self.calls.append({"url": str(url), "headers": headers, "json": json, "data": data})
         if not self.responses:
             raise AssertionError("Unexpected extra Google request")
-        return self.responses.pop(0)
+        item = self.responses.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
 
 
 def test_google_post_retries_transient_statuses_then_succeeds(monkeypatch):
@@ -61,6 +66,27 @@ def test_google_post_retries_transient_statuses_then_succeeds(monkeypatch):
     assert len(client.calls) == 3
     assert slept == [1.0, 1.0]
     assert all(call["json"] == {"read": True} for call in client.calls)
+
+
+def test_google_post_retries_transport_error_then_succeeds(monkeypatch):
+    slept: list[float] = []
+
+    async def no_sleep(delay: float):
+        slept.append(delay)
+
+    monkeypatch.setattr(reliability.asyncio, "sleep", no_sleep)
+    client = FakeClient(
+        [
+            httpx.ConnectError("temporary network failure"),
+            FakeResponse(200, {"rows": []}),
+        ]
+    )
+
+    response = asyncio.run(reliability._google_post(client, "https://google.example/read", max_attempts=3))
+
+    assert response.status_code == 200
+    assert len(client.calls) == 2
+    assert slept == [0.5]
 
 
 def test_google_post_does_not_retry_non_transient_client_error(monkeypatch):
