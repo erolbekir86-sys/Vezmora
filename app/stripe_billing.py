@@ -18,6 +18,9 @@ from .store import (
 )
 
 
+MAX_WEBHOOK_PAYLOAD_BYTES = 1_000_000
+
+
 def stripe_configured() -> bool:
     return bool(os.getenv("STRIPE_SECRET_KEY"))
 
@@ -141,6 +144,9 @@ def create_portal(workspace_id: int) -> dict[str, Any]:
 
 
 def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
+    if len(payload) > MAX_WEBHOOK_PAYLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Stripe webhook payload is too large")
+
     client = _stripe_client()
     secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     if not secret:
