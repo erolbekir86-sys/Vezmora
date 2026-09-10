@@ -27,6 +27,15 @@
     ['Inga actions i denna vy.', 'Inga åtgärder i den här vyn.'],
     ['Scheduler is enabled in this runtime.', 'Schemaläggaren är aktiverad i den här miljön.'],
     ['Scheduler is disabled in this runtime; manual brief still works.', 'Schemaläggaren är avstängd i den här miljön. Manuell brief fungerar fortfarande.'],
+    ['External execution', 'Extern körning'],
+    ['Autopilot worker execution', 'Autopilot-körning'],
+    ['High-risk autonomous actions', 'Autonoma högriskåtgärder'],
+    ['ENABLED', 'AKTIVERAD'],
+    ['LOCKED', 'LÅST'],
+    ['BLOCKED IN BETA', 'BLOCKERAD I BETA'],
+    ['Suggest', 'Föreslå'],
+    ['Assisted', 'Assisterad'],
+    ['Autonomous', 'Autonom'],
   ]);
 
   function translateExact(node) {
@@ -122,6 +131,12 @@
     translateExact(document.getElementById('briefSchedulerState'));
   }
 
+  function enhanceAutopilot() {
+    document.querySelectorAll('#autopilotRuntime .safety-row span, #autopilotRuntime .safety-row strong')
+      .forEach(translateExact);
+    translateExact(document.getElementById('autopilotModeBadge'));
+  }
+
   function wrapLoader(name, enhancer) {
     const original = window[name];
     if (typeof original !== 'function' || original.__vexmeraDynamicCopyGuard) return;
@@ -142,12 +157,14 @@
     wrapLoader('loadApprovals', enhanceQueue);
     wrapLoader('loadCompetitors', enhanceRivals);
     wrapLoader('loadBrief', enhanceBrief);
+    wrapLoader('loadAutopilot', enhanceAutopilot);
 
     queueMicrotask(() => {
       enhanceConnect();
       enhanceQueue();
       enhanceRivals();
       enhanceBrief();
+      enhanceAutopilot();
     });
   }
 
