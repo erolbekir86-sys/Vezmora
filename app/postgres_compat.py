@@ -12,13 +12,26 @@ from datetime import date, datetime
 from typing import Any
 
 
+_RELATIVE_DATETIME_RE = re.compile(
+    r"datetime\('now','(?P<sign>[+-])(?P<amount>\d+) (?P<unit>minutes?|hours?|days?)'\)",
+    re.IGNORECASE,
+)
+
+
+def _translate_relative_datetime(match: re.Match[str]) -> str:
+    """Translate a constrained SQLite relative datetime expression to PostgreSQL."""
+    sign = "+" if match.group("sign") == "+" else "-"
+    amount = int(match.group("amount"))
+    unit = match.group("unit").lower()
+    return f"CURRENT_TIMESTAMP {sign} INTERVAL '{amount} {unit}'"
+
+
 def _sql(sql: str) -> str:
     statement = sql.strip()
     if statement.upper() == "BEGIN IMMEDIATE":
         return "BEGIN"
 
-    statement = statement.replace("datetime('now','-20 minutes')", "CURRENT_TIMESTAMP - INTERVAL '20 minutes'")
-    statement = statement.replace("datetime('now','+5 minutes')", "CURRENT_TIMESTAMP + INTERVAL '5 minutes'")
+    statement = _RELATIVE_DATETIME_RE.sub(_translate_relative_datetime, statement)
     statement = statement.replace("datetime('now','start of month')", "date_trunc('month', CURRENT_TIMESTAMP)")
     statement = statement.replace("datetime('now','start of day')", "date_trunc('day', CURRENT_TIMESTAMP)")
     statement = statement.replace("datetime(run_after)", "run_after")
