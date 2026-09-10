@@ -63,6 +63,12 @@ _install_workspace_billing_defaults()
 from .billing_event_minimization import install_billing_event_minimization as _install_billing_event_minimization
 _install_billing_event_minimization()
 
+# Stripe signature verification remains the trust boundary. After verification,
+# bound event id/type before app.main binds parse_webhook so pathological signed
+# identifiers cannot be persisted into billing audit rows.
+from .stripe_event_safety import install_stripe_event_safety as _install_stripe_event_safety
+_install_stripe_event_safety()
+
 # Harden Google read/token requests before diagnostics and connector UX wrappers
 # capture the sync functions. This keeps bounded retry and payload validation at
 # the base of the existing Google wrapper chain.
