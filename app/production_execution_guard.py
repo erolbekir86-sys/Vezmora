@@ -6,6 +6,8 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from .auth import SESSION_COOKIE
+
 _EXECUTION_RUN_RE = re.compile(r"^/api/executions/\d+/run/?$")
 _AUTOPILOT_RUN_PATHS = frozenset({"/api/autopilot/run-once", "/api/autopilot/run-once/"})
 
@@ -20,9 +22,10 @@ def _is_blocked_execution_request(request: Request) -> bool:
 def install_production_execution_guard(app: FastAPI) -> None:
     """Hard-lock external execution endpoints on Vercel during Private Beta.
 
-    This is intentionally independent of runtime environment feature flags. The
-    lower-level execution helpers also fail closed on Vercel, so an accidental
-    future flag change cannot make the production mutation endpoints executable.
+    The existing production environment guard already forces execution feature
+    flags off before app import. This request-time guard is a second independent
+    barrier for authenticated browser sessions, so an accidental future runtime
+    flag change cannot make the production mutation endpoints executable.
     Preview/read endpoints remain available for human review.
     """
     if getattr(app.state, "vexmera_production_execution_guard_installed", False):
@@ -30,7 +33,11 @@ def install_production_execution_guard(app: FastAPI) -> None:
 
     @app.middleware("http")
     async def production_execution_guard(request: Request, call_next):
-        if os.getenv("VERCEL") and _is_blocked_execution_request(request):
+        if (
+            os.getenv("VERCEL")
+            and request.cookies.get(SESSION_COOKIE)
+            and _is_blocked_execution_request(request)
+        ):
             return JSONResponse(
                 status_code=409,
                 content={
