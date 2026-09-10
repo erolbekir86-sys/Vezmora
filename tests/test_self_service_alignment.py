@@ -59,12 +59,22 @@ def test_connector_sync_feedback_replaces_raw_json_with_provider_summaries():
     assert "Kontrollera anslutningsinställningarna eftersom synken gav en varning" in ALIGNMENT
 
 
+def test_individual_connector_sync_buttons_use_safe_feedback_and_refresh_state():
+    assert "document.querySelectorAll('#connectorGrid [data-sync]')" in ALIGNMENT
+    assert "button.onclick = () => runIndividualConnectorSync(button)" in ALIGNMENT
+    assert "await api(ws(`/api/connectors/${provider}/sync`)" in ALIGNMENT
+    assert "showCustomerSyncMessage(providerSyncSummary(connectorProviderLabel(provider), result))" in ALIGNMENT
+    assert "await window.loadConnectors()" in ALIGNMENT
+    assert "window.loadConnectors = guardedLoadConnectors" in ALIGNMENT
+
+
 def test_connector_sync_feedback_does_not_surface_raw_provider_exception_text():
-    assert "catch (_)" in ALIGNMENT
     assert "Keep raw provider/API details out of customer-facing feedback" in ALIGNMENT
+    assert "Keep provider/API details out of the customer-facing connector state" in ALIGNMENT
     assert "${err.message}" not in ALIGNMENT
     assert ".textContent = err.message" not in ALIGNMENT
     assert "Synkningen kunde inte slutföras. Kontrollera anslutningarna och försök igen." in ALIGNMENT
+    assert "Kontrollera anslutningen och försök igen." in ALIGNMENT
 
 
 def test_completed_onboarding_routes_to_connections_and_preserves_read_only_beta_message():
