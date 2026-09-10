@@ -108,11 +108,20 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
 
         # Small read-only probe. It performs no mutation and requests no campaign changes.
         async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(
-                f"https://googleads.googleapis.com/{api_version}/customers/{customer_id}/googleAds:searchStream",
-                headers=headers,
-                json={"query": "SELECT customer.id FROM customer LIMIT 1"},
-            )
+            reliable_post = getattr(_connectors, "_google_read_post", None)
+            if callable(reliable_post):
+                response = await reliable_post(
+                    client,
+                    f"https://googleads.googleapis.com/{api_version}/customers/{customer_id}/googleAds:searchStream",
+                    headers=headers,
+                    json_body={"query": "SELECT customer.id FROM customer LIMIT 1"},
+                )
+            else:
+                response = await client.post(
+                    f"https://googleads.googleapis.com/{api_version}/customers/{customer_id}/googleAds:searchStream",
+                    headers=headers,
+                    json={"query": "SELECT customer.id FROM customer LIMIT 1"},
+                )
         if response.status_code < 400:
             return None
         return _google_ads_error_summary(response)
