@@ -31,11 +31,13 @@ def _https_runtime() -> bool:
 
 def _protect_private_cache(request: Request, response) -> None:
     path = request.url.path
+    query_keys = request.query_params.keys()
     protected = (
         path == "/api"
         or path.startswith("/api/")
         or path == "/health"
         or path.startswith("/health/")
+        or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys))
     )
     if not protected:
         return
