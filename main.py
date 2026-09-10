@@ -327,10 +327,6 @@ def _openai_connection_ok() -> bool:
         return False
 
 
-def _https_runtime() -> bool:
-    return bool(os.getenv("VERCEL")) or (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
-
-
 def _internal_secrets_configured() -> bool:
     return all(_configured(name) for name in ("VEZMORA_APP_URL", "VEZMORA_SECRET_KEY", "CRON_SECRET"))
 
@@ -360,19 +356,9 @@ def _meta_oauth_configured() -> bool:
     return all(_configured(name) for name in ("META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"))
 
 
-@app.middleware("http")
-async def production_security_headers(request, call_next):
-    """Apply low-risk browser security defaults to every Vexmera response."""
-    response = await call_next(request)
-    response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "DENY")
-    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-    if request.url.path.startswith("/api/") or request.url.path.startswith("/health"):
-        response.headers.setdefault("Cache-Control", "no-store")
-    if _https_runtime():
-        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-    return response
+# Browser security headers and private cache policy are installed centrally by
+# app.security_headers through app/__init__.py. Keep this deployment entrypoint
+# free of a second, weaker middleware definition so there is one policy source.
 
 
 @app.get("/health/runtime")
