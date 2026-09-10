@@ -40,6 +40,19 @@ def _row_count(result: dict[str, object], key: str) -> int:
         return 0
 
 
+def _safe_period_days(days: object) -> int:
+    """Return a bounded display period for customer-facing connector messages.
+
+    The sync route owns validation for the actual provider request. This guard only
+    prevents malformed or extreme values from leaking into confusing empty-state copy.
+    """
+    try:
+        parsed = int(days)
+    except (TypeError, ValueError):
+        return 7
+    return min(365, max(1, parsed))
+
+
 def _is_error_result(result: dict[str, object]) -> bool:
     """Avoid presenting a provider failure as a healthy empty account."""
     if result.get("error"):
@@ -101,8 +114,9 @@ def _with_empty_state_warning(provider_label: str, result: dict[str, object], da
         return result
 
     if not has_provider_rows and not any("no campaign data" in str(w).lower() for w in warnings):
+        display_days = _safe_period_days(days)
         warnings.append(
-            f"No campaign data found for {provider_label} in the selected {days}-day period. "
+            f"No campaign data found for {provider_label} in the selected {display_days}-day period. "
             "The connection can still be healthy; the account may have no campaigns or no activity in this period."
         )
     return result
