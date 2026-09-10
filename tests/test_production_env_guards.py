@@ -68,7 +68,7 @@ def test_vercel_clears_stale_legacy_only_stripe_price_aliases(monkeypatch):
     assert os.getenv("STRIPE_PRICE_SCALE") is None
 
 
-def test_vercel_maps_current_prices_to_legacy_runtime_check_only_after_version_gate(monkeypatch):
+def test_vercel_preserves_current_prices_without_synthesizing_legacy_aliases(monkeypatch):
     _clear_stripe(monkeypatch)
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("STRIPE_PRICE_START", "current-start")
@@ -78,9 +78,12 @@ def test_vercel_maps_current_prices_to_legacy_runtime_check_only_after_version_g
 
     apply_production_env_guards()
 
-    assert os.getenv("STRIPE_PRICE_STARTER") == "current-start"
+    assert os.getenv("STRIPE_PRICE_START") == "current-start"
     assert os.getenv("STRIPE_PRICE_GROWTH") == "current-growth"
-    assert os.getenv("STRIPE_PRICE_SCALE") == "current-pro"
+    assert os.getenv("STRIPE_PRICE_PRO") == "current-pro"
+    assert os.getenv("STRIPE_PRICE_STARTER") is None
+    assert os.getenv("STRIPE_PRICE_SCALE") is None
+    assert os.getenv("VEZMORA_STRIPE_PRICING_VERSION") == "2026-09-start-growth-pro"
 
 
 def test_local_development_flags_stripe_vars_and_app_url_are_not_overridden(monkeypatch):
