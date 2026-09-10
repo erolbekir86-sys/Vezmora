@@ -170,7 +170,8 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/onboarding-save-guard.js"></script>\n'
             '  <script src="/static/dashboard-read-guard.js"></script>\n'
             '  <script src="/static/self-service-alignment.js"></script>\n'
-            '  <script src="/static/app-accessibility-guard.js"></script>',
+            '  <script src="/static/app-accessibility-guard.js"></script>\n'
+            '  <script src="/static/connector-state-ui.js"></script>',
             1,
         )
         html = _inject_before_head_end(
