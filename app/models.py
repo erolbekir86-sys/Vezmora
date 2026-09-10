@@ -77,9 +77,9 @@ class CompanyProfile(BaseModel):
     brand_voice: str = Field(default="clear, trustworthy, useful", max_length=500)
     language: Language = "sv"
 
-    @field_validator("name", mode="before")
+    @field_validator("name", "industry", "audience", "offer", mode="before")
     @classmethod
-    def normalize_name(cls, value: Any) -> Any:
+    def normalize_required_context(cls, value: Any) -> Any:
         return _strip_human_text(value)
 
 
@@ -233,9 +233,9 @@ class OnboardingProfile(BaseModel):
     timezone: str = Field(default="Europe/Stockholm", min_length=3, max_length=80)
     team_size: int = Field(default=1, ge=1, le=100_000)
 
-    @field_validator("company_name", mode="before")
+    @field_validator("company_name", "industry", "audience", "offer", mode="before")
     @classmethod
-    def normalize_company_name(cls, value: Any) -> Any:
+    def normalize_required_context(cls, value: Any) -> Any:
         return _strip_human_text(value)
 
 
