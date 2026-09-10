@@ -22,6 +22,12 @@ _install_one_time_token_safety()
 from .queue_claim_safety import install_queue_claim_safety as _install_queue_claim_safety
 _install_queue_claim_safety()
 
+# New workspaces should use the current Start plan and a bounded 14-day trial.
+# Install this before app.main binds create_user/create_workspace. Historical
+# workspace rows remain untouched and continue through the compatibility reader.
+from .workspace_billing_defaults import install_workspace_billing_defaults as _install_workspace_billing_defaults
+_install_workspace_billing_defaults()
+
 # Harden Google read/token requests before diagnostics and connector UX wrappers
 # capture the sync functions. This keeps bounded retry and payload validation at
 # the base of the existing Google wrapper chain.
