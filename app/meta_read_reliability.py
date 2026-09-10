@@ -24,8 +24,8 @@ _RETRYABLE_META_STATUS = {429, 500, 502, 503, 504}
 _META_RATE_LIMIT_CODES = {4, 17, 32, 613}
 
 
-def _retry_delay(response: httpx.Response, attempt: int) -> float:
-    raw = response.headers.get("Retry-After") if response.headers else None
+def _retry_delay(response: Any | None, attempt: int) -> float:
+    raw = response.headers.get("Retry-After") if response is not None and getattr(response, "headers", None) else None
     if raw:
         try:
             return min(max(float(raw), 0.0), 8.0)
@@ -41,11 +41,24 @@ async def _meta_get(
     params: dict[str, Any] | None = None,
     max_attempts: int = 4,
 ) -> Any:
-    """GET a Meta read endpoint with bounded retry for transient responses only."""
+    """GET a Meta read endpoint with bounded retry for transient HTTP/network failures."""
     attempts = max(1, min(int(max_attempts), 6))
     response = None
     for attempt in range(attempts):
-        response = await client.get(url, params=params)
+        try:
+            response = await client.get(url, params=params)
+        except httpx.TransportError:
+            if attempt == attempts - 1:
+                # Transport exceptions can include the request URL. Meta requests
+                # may carry access tokens in query parameters, so never surface or
+                # retain the raw exception as user-visible diagnostic context.
+                raise HTTPException(
+                    status_code=502,
+                    detail="Meta request failed after bounded network retries",
+                ) from None
+            await asyncio.sleep(_retry_delay(None, attempt))
+            continue
+
         if response.status_code not in _RETRYABLE_META_STATUS or attempt == attempts - 1:
             return response
         await asyncio.sleep(_retry_delay(response, attempt))
