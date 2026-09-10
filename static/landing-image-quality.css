@@ -17,6 +17,22 @@ html body .hero-visual .dash-nav svg {
   flex: 0 0 20px !important;
   filter: none !important;
 }
+/* Use the supplied Vexmera mark in the compact app navigation. */
+html body .hero-visual .mini-brand {
+  color: transparent !important;
+  font-size: 0 !important;
+  background: #11151c url('/static/brand/vexmera-v-mark.png') center / 88% 88% no-repeat !important;
+  border-color: rgba(213, 174, 114, .58) !important;
+}
+html body .hero-visual .dash-nav .vex-premium-icon,
+html body .hero-visual .dash-nav .ux-icon,
+html body .hero-visual .dash-nav svg {
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px !important;
+  display: block !important;
+  filter: none !important;
+}
 html body .hero-visual .dash-nav {
   min-height: 30px !important;
   height: auto !important;
