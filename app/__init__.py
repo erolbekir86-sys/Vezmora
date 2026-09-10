@@ -32,11 +32,13 @@ from .main import app as _app
 from .public_health import install_public_health_guard as _install_public_health_guard
 from .public_routing import install_public_routing as _install_public_routing
 from .runtime_diagnostics import install_runtime_diagnostics as _install_runtime_diagnostics
+from .static_entrypoint_guard import install_static_entrypoint_guard as _install_static_entrypoint_guard
 
 _install_http_error_safety(_app)
 _install_csrf_guard(_app)
 _install_public_health_guard(_app)
 _install_runtime_diagnostics(_app)
+_install_static_entrypoint_guard(_app)
 _install_public_routing(_app)
 
 __all__ = []
