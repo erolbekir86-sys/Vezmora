@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
 import pytest
 from fastapi import HTTPException
 
@@ -22,7 +23,7 @@ class FakeResponse:
 
 
 class FakeClient:
-    def __init__(self, responses: list[FakeResponse]):
+    def __init__(self, responses: list[object]):
         self.responses = list(responses)
         self.calls: list[tuple[str, object]] = []
 
@@ -30,7 +31,15 @@ class FakeClient:
         self.calls.append((str(url), params))
         if not self.responses:
             raise AssertionError("Unexpected extra Meta request")
-        return self.responses.pop(0)
+        result = self.responses.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+
+def _transport_error(secret: str = "private-access-token") -> httpx.ConnectError:
+    request = httpx.Request("GET", f"https://graph.facebook.com/read?access_token={secret}")
+    return httpx.ConnectError("connection failed", request=request)
 
 
 def test_meta_insights_follows_all_pages_and_does_not_reappend_first_page_params(monkeypatch):
@@ -82,6 +91,40 @@ def test_meta_get_retries_429_then_succeeds_without_unbounded_loop(monkeypatch):
     assert response.status_code == 200
     assert len(client.calls) == 3
     assert slept == [1.0, 1.0]
+
+
+def test_meta_get_retries_transport_failures_then_succeeds(monkeypatch):
+    slept: list[float] = []
+
+    async def no_sleep(delay: float):
+        slept.append(delay)
+
+    monkeypatch.setattr(reliability.asyncio, "sleep", no_sleep)
+    client = FakeClient([_transport_error(), _transport_error(), FakeResponse(200, {"data": []})])
+
+    response = asyncio.run(reliability._meta_get(client, "https://graph.facebook.com/read", max_attempts=4))
+
+    assert response.status_code == 200
+    assert len(client.calls) == 3
+    assert slept == [0.5, 1.0]
+
+
+def test_meta_transport_failure_is_sanitized_after_bounded_retries(monkeypatch):
+    async def no_sleep(_: float):
+        return None
+
+    monkeypatch.setattr(reliability.asyncio, "sleep", no_sleep)
+    secret = "meta-token-that-must-not-render"
+    client = FakeClient([_transport_error(secret), _transport_error(secret)])
+
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(reliability._meta_get(client, "https://graph.facebook.com/read", max_attempts=2))
+
+    assert len(client.calls) == 2
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.detail == "Meta request failed after bounded network retries"
+    assert secret not in str(exc_info.value.detail)
+    assert exc_info.value.__cause__ is None
 
 
 def test_meta_error_mapping_is_actionable_and_does_not_surface_raw_provider_message():
