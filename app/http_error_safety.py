@@ -6,13 +6,13 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from .google_ads_diagnostics import _redact_sensitive_text
+from .secret_redaction import redact_sensitive_text
 
 
 def sanitize_http_detail(value: Any) -> Any:
     """Redact credential-like text while preserving FastAPI's error shape."""
     if isinstance(value, str):
-        return _redact_sensitive_text(value)
+        return redact_sensitive_text(value)
     if isinstance(value, Mapping):
         return {str(key): sanitize_http_detail(item) for key, item in value.items()}
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
