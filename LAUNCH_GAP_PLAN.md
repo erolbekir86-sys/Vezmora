@@ -17,6 +17,7 @@ Do not use a hard-coded commit SHA in this document as a release pointer. Before
 - Public beta-readiness output is limited to the small safety surface needed to prove the private-beta execution posture. Full configuration checks belong in operator preflight.
 - Google and Meta read-only connector paths have bounded retry and malformed-response hardening. Meta also has bounded Insights pagination, loop/page-limit protection and campaign/date deduplication.
 - Google Analytics sessions are separated from paid-click semantics so website sessions cannot inflate paid CPC/CTR calculations.
+- Google Ads manager-to-client relationship is accepted and active. Google Ads Basic Access approval still requires external verification.
 - Stripe code and customer-facing pricing use Start / Growth / Pro at 995 / 1,495 / 2,995 SEK monthly. Checkout remains fail-closed until the current test-mode catalog and explicit pricing-version marker are verified.
 - Production environment guards no longer synthesize historical `STRIPE_PRICE_STARTER` or `STRIPE_PRICE_SCALE` aliases from the current pricing model.
 - Flexible persisted approval/job/Core-action payloads are bounded to 64 KiB of compact UTF-8 JSON before persistence.
