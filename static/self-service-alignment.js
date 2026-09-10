@@ -104,6 +104,30 @@
     window.loadSystemStatus = guardedLoadSystemStatus;
   }
 
+  function installBriefSchedulerStatusGuard() {
+    const originalLoadBrief = typeof window.loadBrief === 'function' ? window.loadBrief : null;
+    if (!originalLoadBrief || originalLoadBrief.__vexmeraMinimalHealthAware || typeof api !== 'function') return;
+
+    async function guardedLoadBrief(...args) {
+      const result = await originalLoadBrief.apply(this, args);
+      const state = document.getElementById('briefSchedulerState');
+      if (!state) return result;
+
+      try {
+        const health = await api('/health');
+        if (!Object.prototype.hasOwnProperty.call(health || {}, 'scheduler_enabled')) {
+          state.textContent = 'Schemaläggarstatus hanteras i drift och visas inte i den publika produktvyn.';
+        }
+      } catch (_) {
+        state.textContent = 'Schemaläggarstatus kunde inte verifieras.';
+      }
+      return result;
+    }
+
+    guardedLoadBrief.__vexmeraMinimalHealthAware = true;
+    window.loadBrief = guardedLoadBrief;
+  }
+
   function providerSyncSummary(label, result) {
     if (!result || typeof result !== 'object' || Array.isArray(result)) {
       return `${label}: synkresultatet kunde inte verifieras.`;
@@ -267,6 +291,7 @@
   alignBillingPlans();
   installCheckoutReadinessGuard();
   installRuntimeStatusGuard();
+  installBriefSchedulerStatusGuard();
   installConnectorSyncFeedbackGuard();
   localizeOnboardingProgress();
   addOnboardingNextStep();
