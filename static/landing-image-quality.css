@@ -1,0 +1,51 @@
+/* Keep the product preview on the pixel grid, without perspective or motion. */
+.vex-section-art[data-vex-art="data"] { background-image: url('/static/backgrounds/data.webp') !important; }
+.vex-section-art[data-vex-art="decision"] { background-image: url('/static/backgrounds/decision.webp') !important; }
+.vex-section-art[data-vex-art="how"] { background-image: url('/static/backgrounds/how.webp') !important; }
+.vex-section-art[data-vex-art="workflow"] { background-image: url('/static/backgrounds/workflow.webp') !important; }
+.vex-section-art[data-vex-art="security"] { background-image: url('/static/backgrounds/security.webp') !important; }
+
+html body .hero-visual .dashboard-window,
+html body .hero-visual:hover .dashboard-window {
+  transform: none !important;
+  animation: none !important;
+  transition: box-shadow .3s ease !important;
+}
+html body .hero-visual .dash-nav svg {
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px !important;
+  filter: none !important;
+}
+html body .hero-visual .dash-nav {
+  min-height: 30px !important;
+  height: auto !important;
+}
+/* Do not magnify backgrounds further during hover. */
+html body .vex-art-section > .vex-section-art,
+html body .vex-art-section:hover > .vex-section-art {
+  transform: none !important;
+  transition: none !important;
+}
+@media (max-width: 760px) {
+  html body .hero-visual .dashboard-window {
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+  }
+  html body .hero-visual .dash-sidebar {
+    padding-inline: 10px !important;
+    align-items: stretch;
+  }
+  html body .hero-visual .dash-nav {
+    justify-content: center !important;
+    padding-inline: 0 !important;
+  }
+  html body .hero-visual .mini-brand { align-self: center; }
+  /* Tall stacked sections must not stretch one photo over several screens. */
+  html body .vex-art-section > .vex-section-art {
+    bottom: auto !important;
+    height: min(100%, 480px) !important;
+    background-position: center top !important;
+    mask-image: linear-gradient(#000 0%, #000 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(#000 0%, #000 72%, transparent 100%);
+  }
+}
