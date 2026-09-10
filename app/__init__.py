@@ -28,6 +28,12 @@ _install_queue_claim_safety()
 from .workspace_billing_defaults import install_workspace_billing_defaults as _install_workspace_billing_defaults
 _install_workspace_billing_defaults()
 
+# Stripe webhooks still use the full verified event in memory, but future audit
+# rows only need a small non-customer summary for idempotence/troubleshooting.
+# Install before any module can bind store.record_billing_event.
+from .billing_event_minimization import install_billing_event_minimization as _install_billing_event_minimization
+_install_billing_event_minimization()
+
 # Harden Google read/token requests before diagnostics and connector UX wrappers
 # capture the sync functions. This keeps bounded retry and payload validation at
 # the base of the existing Google wrapper chain.
