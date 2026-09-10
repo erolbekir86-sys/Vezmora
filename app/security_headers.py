@@ -13,6 +13,14 @@ _API_NO_STORE_HEADERS = {
 }
 _SENSITIVE_CAPABILITY_QUERY_KEYS = frozenset({"reset", "invite"})
 _PRODUCT_PATHS = frozenset({"/app", "/app/"})
+_OAUTH_CALLBACK_PATHS = frozenset(
+    {
+        "/api/connectors/google/callback",
+        "/api/connectors/google/callback/",
+        "/api/connectors/meta/callback",
+        "/api/connectors/meta/callback/",
+    }
+)
 
 
 def _https_runtime() -> bool:
@@ -37,7 +45,15 @@ def _protect_private_cache(request: Request, response) -> None:
 
 def _protect_capability_referrer(request: Request, response) -> None:
     """Keep private app URLs and one-time capability parameters out of Referer headers."""
-    if request.url.path in _PRODUCT_PATHS or _SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(request.query_params.keys()):
+    query_keys = request.query_params.keys()
+    sensitive_oauth_callback = request.url.path in _OAUTH_CALLBACK_PATHS and (
+        "code" in query_keys or "state" in query_keys
+    )
+    if (
+        request.url.path in _PRODUCT_PATHS
+        or _SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys)
+        or sensitive_oauth_callback
+    ):
         response.headers["Referrer-Policy"] = "no-referrer"
 
 
