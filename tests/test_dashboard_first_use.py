@@ -18,7 +18,8 @@ def test_dashboard_first_use_asset_is_reachable_and_loaded_after_view_guard():
     assert page.status_code == 200
     assert asset.status_code == 200
     assert "/static/view-loading-state.js?build=" in page.text
-    assert "`/static/dashboard-first-use.js?build=${build}`" in LOADING
+    assert "loadGuardAsset('/static/dashboard-first-use.js'" in LOADING
+    assert "script.src = `${path}?build=${build}`" in LOADING
     assert "window.__VEXMERA_BUILD__" in LOADING
 
 
