@@ -23,8 +23,8 @@ from .store import (
 _RETRYABLE_GOOGLE_STATUS = {429, 500, 502, 503, 504}
 
 
-def _retry_delay(response: Any, attempt: int) -> float:
-    raw = response.headers.get("Retry-After") if getattr(response, "headers", None) else None
+def _retry_delay(response: Any | None, attempt: int) -> float:
+    raw = response.headers.get("Retry-After") if response is not None and getattr(response, "headers", None) else None
     if raw:
         try:
             return min(max(float(raw), 0.0), 8.0)
@@ -42,15 +42,22 @@ async def _google_post(
     data: dict[str, object] | None = None,
     max_attempts: int = 4,
 ) -> Any:
-    """POST a Google read/token endpoint with bounded retry for transient responses."""
+    """POST a Google read/token endpoint with bounded retry for transient failures."""
     attempts = max(1, min(int(max_attempts), 6))
-    response = None
     for attempt in range(attempts):
-        response = await client.post(url, headers=headers, json=json_body, data=data)
+        try:
+            response = await client.post(url, headers=headers, json=json_body, data=data)
+        except httpx.TransportError:
+            if attempt == attempts - 1:
+                raise
+            await asyncio.sleep(_retry_delay(None, attempt))
+            continue
+
         if response.status_code not in _RETRYABLE_GOOGLE_STATUS or attempt == attempts - 1:
             return response
         await asyncio.sleep(_retry_delay(response, attempt))
-    return response
+
+    raise RuntimeError("Google request retry loop exited unexpectedly")
 
 
 def _safe_dict_payload(response: Any) -> dict[str, object] | None:
