@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from contextvars import ContextVar
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -11,6 +12,8 @@ _DEFAULT_STALE_JOB_MINUTES = 30
 _MIN_STALE_JOB_MINUTES = 10
 _MAX_STALE_JOB_MINUTES = 24 * 60
 _MAX_JOB_ATTEMPTS = 3
+_ORIGINAL_QUEUE_EMAIL = _store.queue_email
+_INLINE_EMAIL_TARGETS: ContextVar[tuple[int, ...]] = ContextVar("vexmera_inline_email_targets", default=())
 
 
 def _stale_job_minutes() -> int:
@@ -70,11 +73,45 @@ def claim_job_atomic() -> dict[str, Any] | None:
     return data
 
 
+def _inline_email_delivery_expected() -> bool:
+    serverless = (os.getenv("VEZMORA_SERVERLESS") or "").lower() in {"1", "true", "yes", "on"}
+    return serverless and bool((os.getenv("SMTP_HOST") or "").strip()) and bool((os.getenv("SMTP_FROM") or "").strip())
+
+
+def queue_email_with_inline_target(
+    workspace_id: int | None,
+    recipient: str,
+    subject: str,
+    body_text: str,
+) -> int:
+    """Remember newly queued serverless mail so the route's inline send claims that row."""
+    email_id = _ORIGINAL_QUEUE_EMAIL(workspace_id, recipient, subject, body_text)
+    if _inline_email_delivery_expected():
+        targets = _INLINE_EMAIL_TARGETS.get()
+        _INLINE_EMAIL_TARGETS.set((*targets, email_id))
+    return email_id
+
+
+def _pop_inline_email_target() -> int | None:
+    targets = _INLINE_EMAIL_TARGETS.get()
+    if not targets:
+        return None
+    _INLINE_EMAIL_TARGETS.set(targets[1:])
+    return int(targets[0])
+
+
 def claim_email_atomic() -> dict[str, Any] | None:
-    """Claim one queued email only when this worker wins the conditional update."""
+    """Claim targeted inline mail when present, otherwise preserve FIFO queue behavior."""
+    target_id = _pop_inline_email_target()
     with _store._connect() as con:
         con.execute("BEGIN IMMEDIATE")
-        row = con.execute("SELECT * FROM email_outbox WHERE status='queued' ORDER BY id LIMIT 1").fetchone()
+        if target_id is None:
+            row = con.execute("SELECT * FROM email_outbox WHERE status='queued' ORDER BY id LIMIT 1").fetchone()
+        else:
+            row = con.execute(
+                "SELECT * FROM email_outbox WHERE id=? AND status='queued'",
+                (target_id,),
+            ).fetchone()
         if not row:
             return None
 
@@ -90,10 +127,11 @@ def claim_email_atomic() -> dict[str, Any] | None:
 
 
 def install_queue_claim_safety() -> None:
-    """Install atomic queue claims before jobs/emailer bind store helpers."""
+    """Install atomic queue claims and targeted serverless email delivery before callers bind helpers."""
     if getattr(_store, "_vexmera_queue_claim_safety_installed", False):
         return
 
     _store.claim_job = claim_job_atomic
     _store.claim_email = claim_email_atomic
+    _store.queue_email = queue_email_with_inline_target
     _store._vexmera_queue_claim_safety_installed = True
