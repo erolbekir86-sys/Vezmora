@@ -104,6 +104,11 @@ class AgentRequest(BaseModel):
     company: CompanyProfile | None = None
     message: str = Field(min_length=2, max_length=5000)
 
+    @field_validator("message", mode="before")
+    @classmethod
+    def normalize_message(cls, value: Any) -> Any:
+        return _strip_human_text(value)
+
 
 class AgentResponse(BaseModel):
     output: str
