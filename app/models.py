@@ -104,7 +104,7 @@ class AgentResponse(BaseModel):
 
 class KPIEntry(BaseModel):
     date: date
-    currency: str = Field(default="SEK", min_length=3, max_length=3)
+    currency: str = Field(default="SEK", min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
     impressions: int = Field(default=0, ge=0)
     clicks: int = Field(default=0, ge=0)
     leads: int = Field(default=0, ge=0)
@@ -160,11 +160,11 @@ class ApprovalDecision(BaseModel):
 
 
 class WorkspaceSettings(BaseModel):
-    base_currency: str = Field(default="SEK", min_length=3, max_length=3)
+    base_currency: str = Field(default="SEK", min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
 
 
 class FXRateUpsert(BaseModel):
-    quote_currency: str = Field(min_length=3, max_length=3)
+    quote_currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
     rate_to_base: float = Field(gt=0, le=1_000_000)
 
 
