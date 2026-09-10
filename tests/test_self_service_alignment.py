@@ -59,6 +59,14 @@ def test_runtime_status_uses_minimal_public_health_without_inferring_missing_sec
     assert "window.loadSystemStatus = guardedLoadSystemStatus" in ALIGNMENT
 
 
+def test_brief_scheduler_status_does_not_treat_redacted_field_as_disabled():
+    assert "Object.prototype.hasOwnProperty.call(health || {}, 'scheduler_enabled')" in ALIGNMENT
+    assert "Schemaläggarstatus hanteras i drift och visas inte i den publika produktvyn." in ALIGNMENT
+    assert "Schemaläggarstatus kunde inte verifieras." in ALIGNMENT
+    assert "window.loadBrief = guardedLoadBrief" in ALIGNMENT
+    assert "scheduler_enabled?'" not in ALIGNMENT
+
+
 def test_connector_sync_feedback_replaces_raw_json_with_provider_summaries():
     assert "providerSyncSummary('Google', payload.google)" in ALIGNMENT
     assert "providerSyncSummary('Meta', payload.meta)" in ALIGNMENT
