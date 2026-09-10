@@ -16,7 +16,6 @@ def install_security_headers(app: FastAPI) -> None:
 
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
-        del request
         response = await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
