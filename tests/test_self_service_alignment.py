@@ -50,6 +50,23 @@ def test_checkout_guard_wraps_team_loading_without_rebinding_checkout_handler():
     assert "addEventListener('click'" not in ALIGNMENT
 
 
+def test_connector_sync_feedback_replaces_raw_json_with_provider_summaries():
+    assert "providerSyncSummary('Google', payload.google)" in ALIGNMENT
+    assert "providerSyncSummary('Meta', payload.meta)" in ALIGNMENT
+    assert "showCustomerSyncMessage(summarizeConnectorSync(result))" in ALIGNMENT
+    assert "alert(JSON.stringify" not in ALIGNMENT
+    assert "synken kunde inte slutföras" in ALIGNMENT
+    assert "Kontrollera anslutningsinställningarna eftersom synken gav en varning" in ALIGNMENT
+
+
+def test_connector_sync_feedback_does_not_surface_raw_provider_exception_text():
+    assert "catch (_)" in ALIGNMENT
+    assert "Keep raw provider/API details out of customer-facing feedback" in ALIGNMENT
+    assert "${err.message}" not in ALIGNMENT
+    assert ".textContent = err.message" not in ALIGNMENT
+    assert "Synkningen kunde inte slutföras. Kontrollera anslutningarna och försök igen." in ALIGNMENT
+
+
 def test_completed_onboarding_routes_to_connections_and_preserves_read_only_beta_message():
     assert "activateView('connect')" in ALIGNMENT
     assert "await loadConnectors()" in ALIGNMENT
