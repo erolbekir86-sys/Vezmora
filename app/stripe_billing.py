@@ -217,6 +217,15 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
             workspace_id = int(metadata["workspace_id"])
         except (TypeError, ValueError):
             workspace_id = None
+
+    # Checkout sessions created by Vexmera carry the workspace in two independent
+    # Stripe fields. Reject a signed event when both are present but disagree,
+    # before recording the event or mutating local billing state. Keeping the
+    # check conditional preserves compatibility with historical sandbox events.
+    if event_type == "checkout.session.completed" and workspace_id is not None and obj.get("client_reference_id") is not None:
+        if str(obj.get("client_reference_id")) != str(workspace_id):
+            raise HTTPException(status_code=400, detail="Stripe checkout workspace reference mismatch")
+
     customer = obj.get("customer")
     if workspace_id is None and customer:
         workspace_id = workspace_id_by_stripe_customer(str(customer))
