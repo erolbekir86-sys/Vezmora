@@ -1,4 +1,4 @@
-from app.connector_empty_states import _with_empty_state_warning
+from app.connector_empty_states import _normalize_sync_result, _with_empty_state_warning
 
 
 def test_zero_row_sync_gets_actionable_non_failure_warning():
@@ -142,3 +142,29 @@ def test_google_analytics_metric_semantics_warning_is_idempotent():
 
     matching = [warning for warning in result["warnings"] if "generic clicks KPI" in warning]
     assert len(matching) == 1
+
+
+def test_invalid_provider_result_becomes_safe_actionable_failure():
+    guarded = _normalize_sync_result("Meta Ads", None)
+
+    assert guarded["ok"] is False
+    assert "invalid response" in str(guarded["error"])
+    assert len(guarded["warnings"]) == 1
+    assert "Retry the sync" in guarded["warnings"][0]
+    assert "reconnect the provider" in guarded["warnings"][0]
+
+
+def test_invalid_provider_result_is_not_reframed_as_empty_account():
+    guarded = _normalize_sync_result("Google Ads", ["unexpected", "payload"])
+    guarded = _with_empty_state_warning("Google Ads", guarded, 7)
+
+    assert guarded["ok"] is False
+    assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
+
+
+def test_valid_provider_result_is_preserved_by_normalizer():
+    result = {"campaign_rows": 2, "ads_rows": 1, "warnings": []}
+
+    guarded = _normalize_sync_result("Google Ads", result)
+
+    assert guarded is result

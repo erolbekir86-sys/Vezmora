@@ -12,6 +12,26 @@ _original_sync_google: Syncer = _connectors.sync_google
 _original_sync_meta: Syncer = _connectors.sync_meta
 
 
+def _normalize_sync_result(provider_label: str, result: object) -> dict[str, object]:
+    """Return a safe sync payload even when a provider adapter misbehaves.
+
+    Connector adapters are expected to return dictionaries. Treat any other value as
+    a provider failure instead of letting the customer-facing sync route crash while
+    trying to add empty-state metadata.
+    """
+    if isinstance(result, dict):
+        return result
+
+    return {
+        "ok": False,
+        "error": f"{provider_label} sync returned an invalid response.",
+        "warnings": [
+            "The provider connection did not return usable sync metadata. "
+            "Retry the sync; if the problem persists, reconnect the provider."
+        ],
+    }
+
+
 def _row_count(result: dict[str, object], key: str) -> int:
     """Return a safe non-negative row count for provider sync metadata."""
     try:
@@ -89,14 +109,16 @@ def _with_empty_state_warning(provider_label: str, result: dict[str, object], da
 
 
 async def sync_google_with_empty_state(workspace_id: int, days: int = 7) -> dict[str, object]:
-    result = await _original_sync_google(workspace_id, days)
+    raw_result = await _original_sync_google(workspace_id, days)
+    result = _normalize_sync_result("Google Ads", raw_result)
     result = _with_empty_state_warning("Google Ads", result, days)
     _connectors.update_connector_metadata(workspace_id, "google", {"last_sync": result})
     return result
 
 
 async def sync_meta_with_empty_state(workspace_id: int, days: int = 7) -> dict[str, object]:
-    result = await _original_sync_meta(workspace_id, days)
+    raw_result = await _original_sync_meta(workspace_id, days)
+    result = _normalize_sync_result("Meta Ads", raw_result)
     result = _with_empty_state_warning("Meta Ads", result, days)
     _connectors.update_connector_metadata(workspace_id, "meta", {"last_sync": result})
     return result
