@@ -10,7 +10,9 @@ Run the consolidated read-only check against production:
 python scripts/pilot_go_no_go.py --base-url https://vexmera.com
 ```
 
-This performs machine-checkable configuration checks plus GET-only public checks for execution locks, production runtime health and legal-page discoverability. The runtime gate verifies that the deployed service identifies as Vercel production, the database connection is healthy, required internal security configuration is present, and a deployment commit is identifiable. Only allowlisted non-secret booleans/metadata are surfaced. The command does not send credentials, mutate provider data, or approve the pilot.
+This combines machine-checkable local configuration checks with GET-only public checks for execution locks, production deployment identity and legal-page discoverability. The public runtime gate verifies that the deployed service identifies as Vercel production and exposes an identifiable deployment revision. The local configuration section verifies non-secret facts such as whether persistent remote storage and required internal security configuration are configured; it does **not** claim that a live database connection or third-party account access has been proven. No secret values are returned.
+
+The command does not send credentials, mutate provider data, change campaigns, or approve the pilot.
 
 Interpretation:
 
@@ -18,7 +20,7 @@ Interpretation:
 - non-zero exit code / `status: blocked`: stop onboarding and resolve the reported blocker first.
 - `pilot_ready` remains intentionally unset because final pilot approval requires human verification.
 
-Common runtime blockers include `runtime_unreachable`, `runtime_not_production`, `database_connection_unhealthy`, `internal_secrets_not_configured`, and `deployment_commit_unknown`. Treat each as a stop condition until the underlying deployment issue is understood and fixed. Never copy secret values into pilot evidence while investigating.
+Common public runtime blockers include `runtime_unreachable`, `runtime_not_vercel`, `runtime_not_production`, `deployment_revision_unknown` and any failed Private Beta execution lock. Configuration blockers are reported separately. Treat each blocker as a stop condition until the underlying issue is understood and fixed. Never copy secret values into pilot evidence while investigating.
 
 ## Manual gates that still matter
 
@@ -29,7 +31,8 @@ Before company 1, confirm the current runbook evidence for:
 - Google Ads external approval / manager linking if required,
 - pricing/backend/Stripe sandbox reconciliation before any checkout test,
 - production transport, remote database, transactional email and OAuth configuration,
-- live read-only connector verification for the providers included in the pilot.
+- live read-only connector verification for the providers included in the pilot,
+- production observability/log review when the Vercel project is visible to the connected operator tooling.
 
 Do not bypass a safety gate simply to make the pilot pass.
 
@@ -49,6 +52,6 @@ For each company, verify:
 
 ## Immediate stop conditions
 
-Stop onboarding if any execution lock is unexpectedly enabled, tenant isolation looks wrong, provider scopes become broader than expected, a secret/token is exposed, live billing is reached unexpectedly, production runtime health fails, or production data is presented misleadingly.
+Stop onboarding if any execution lock is unexpectedly enabled, tenant isolation looks wrong, provider scopes become broader than expected, a secret/token is exposed, live billing is reached unexpectedly, production runtime identity cannot be verified, or production data is presented misleadingly.
 
 For full evidence capture, billing-sandbox rules, privacy/deletion checks, completion criteria and the five-company roster, use `FIVE_COMPANY_PILOT_RUNBOOK.md`.
