@@ -19,6 +19,7 @@ from .store import (
 
 
 MAX_WEBHOOK_PAYLOAD_BYTES = 1_000_000
+MAX_STRIPE_SIGNATURE_CHARS = 8_192
 
 
 def stripe_configured() -> bool:
@@ -146,6 +147,8 @@ def create_portal(workspace_id: int) -> dict[str, Any]:
 def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
     if len(payload) > MAX_WEBHOOK_PAYLOAD_BYTES:
         raise HTTPException(status_code=413, detail="Stripe webhook payload is too large")
+    if signature is not None and len(signature) > MAX_STRIPE_SIGNATURE_CHARS:
+        raise HTTPException(status_code=400, detail="Stripe-Signature header is too large")
 
     client = _stripe_client()
     secret = os.getenv("STRIPE_WEBHOOK_SECRET")
@@ -155,8 +158,8 @@ def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Stripe-Signature header is required")
     try:
         event = client.construct_event(payload, signature, secret)
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail="Invalid Stripe webhook signature") from exc
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook signature") from None
     return dict(event)
 
 
