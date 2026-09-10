@@ -25,7 +25,8 @@ _SENSITIVE_INLINE_PATTERNS = (
     re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
     re.compile(
         r"(?i)((?:developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
-        r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token)\s*[:=]\s*)[^\s,;|]+"
+        r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
+        r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state)\s*[:=]\s*)[^\s,;|]+"
     ),
 )
 
