@@ -13,6 +13,7 @@ from .store import create_session, get_session_user, revoke_session
 
 SESSION_COOKIE = "vezmora_session"
 SESSION_DAYS = 14
+SESSION_TOKEN_MAX_LENGTH = 128
 
 
 def hash_password(password: str, salt: bytes | None = None) -> tuple[str, str]:
@@ -45,6 +46,17 @@ def _secure_cookie() -> bool:
     return (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
 
 
+def _session_token_hash(raw_token: str | None) -> str | None:
+    """Hash only plausible session-cookie input and fail closed otherwise."""
+    if not raw_token or len(raw_token) > SESSION_TOKEN_MAX_LENGTH:
+        return None
+    try:
+        encoded = raw_token.encode("ascii")
+    except UnicodeEncodeError:
+        return None
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def start_session(response: Response, user_id: int) -> None:
     raw = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -62,8 +74,8 @@ def start_session(response: Response, user_id: int) -> None:
 
 
 def end_session(response: Response, raw_token: str | None) -> None:
-    if raw_token:
-        token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+    token_hash = _session_token_hash(raw_token)
+    if token_hash:
         revoke_session(token_hash)
     response.delete_cookie(SESSION_COOKIE, path="/")
 
@@ -71,7 +83,9 @@ def end_session(response: Response, raw_token: str | None) -> None:
 def require_user(vezmora_session: str | None = Cookie(default=None)) -> dict[str, Any]:
     if not vezmora_session:
         raise HTTPException(status_code=401, detail="Authentication required")
-    token_hash = hashlib.sha256(vezmora_session.encode("utf-8")).hexdigest()
+    token_hash = _session_token_hash(vezmora_session)
+    if not token_hash:
+        raise HTTPException(status_code=401, detail="Session expired or invalid")
     user = get_session_user(token_hash)
     if not user:
         raise HTTPException(status_code=401, detail="Session expired or invalid")
