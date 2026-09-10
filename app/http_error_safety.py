@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
@@ -21,7 +22,7 @@ def sanitize_http_detail(value: Any) -> Any:
 
 
 def install_http_error_safety(app: FastAPI) -> None:
-    """Install a defense-in-depth HTTPException handler for user-visible errors."""
+    """Install defense-in-depth handlers for user-visible/provider transport errors."""
 
     @app.exception_handler(HTTPException)
     async def _safe_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
@@ -30,4 +31,16 @@ def install_http_error_safety(app: FastAPI) -> None:
             status_code=exc.status_code,
             content={"detail": sanitize_http_detail(exc.detail)},
             headers=exc.headers,
+        )
+
+    @app.exception_handler(httpx.TransportError)
+    async def _safe_transport_error_handler(request: Request, exc: httpx.TransportError) -> JSONResponse:
+        # httpx transport exceptions may stringify a request URL. Provider URLs
+        # can contain OAuth access tokens in query parameters, so neither the raw
+        # exception nor request details belong in a customer-visible response.
+        del request, exc
+        return JSONResponse(
+            status_code=502,
+            content={"detail": "Upstream provider connection failed. Try again later."},
+            headers={"Cache-Control": "no-store"},
         )
