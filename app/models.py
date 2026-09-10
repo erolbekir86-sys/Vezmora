@@ -201,7 +201,7 @@ class AutopilotSettings(BaseModel):
         "google.set_daily_budget",
         "meta.pause_campaign",
         "meta.activate_campaign",
-    ]] = Field(default_factory=list)
+    ]] = Field(default_factory=list, max_length=5)
 
 
 class PasswordResetRequest(BaseModel):
