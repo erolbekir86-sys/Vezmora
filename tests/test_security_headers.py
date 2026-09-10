@@ -120,6 +120,32 @@ def test_api_no_store_preserves_explicit_route_cache_control(monkeypatch) -> Non
     assert response.headers["vercel-cdn-cache-control"] == "no-store"
 
 
+def test_private_product_and_capability_urls_never_emit_referrers(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/app")
+    def product():
+        return {"ok": True}
+
+    @app.get("/public")
+    def public():
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        product_response = client.get("/app")
+        reset_response = client.get("/public?reset=one-time-secret")
+        invite_response = client.get("/public?invite=one-time-secret")
+        public_response = client.get("/public")
+
+    assert product_response.headers["referrer-policy"] == "no-referrer"
+    assert reset_response.headers["referrer-policy"] == "no-referrer"
+    assert invite_response.headers["referrer-policy"] == "no-referrer"
+    assert public_response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+
+
 def test_vexmera_auth_errors_are_no_store(tmp_path, monkeypatch) -> None:
     monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
     monkeypatch.delenv("VERCEL", raising=False)
