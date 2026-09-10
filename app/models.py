@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from datetime import date
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 Language = Literal["sv", "en", "de", "es", "fr", "tr"]
 Objective = Literal["awareness", "leads", "sales", "bookings", "retention", "launch"]
@@ -13,6 +14,19 @@ WorkspaceRole = Literal["owner", "admin", "marketer", "viewer"]
 # accepted at the API boundary during the private-beta migration and are
 # normalized before billing or Stripe persistence.
 BillingPlan = Literal["start", "growth", "pro", "starter", "scale"]
+
+_MAX_OPAQUE_PAYLOAD_BYTES = 64 * 1024
+
+
+def _bounded_opaque_payload(value: dict[str, Any]) -> dict[str, Any]:
+    """Keep persisted opaque action/job payloads small and JSON-safe."""
+    try:
+        encoded = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    except (TypeError, ValueError, RecursionError) as exc:
+        raise ValueError("payload must be JSON serializable") from exc
+    if len(encoded) > _MAX_OPAQUE_PAYLOAD_BYTES:
+        raise ValueError("payload is too large")
+    return value
 
 
 class RegisterRequest(BaseModel):
@@ -110,6 +124,11 @@ class ApprovalCreate(BaseModel):
     risk_level: Literal["low", "medium", "high"] = "medium"
     payload: dict[str, Any] = Field(default_factory=dict)
 
+    @field_validator("payload")
+    @classmethod
+    def validate_payload_size(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _bounded_opaque_payload(value)
+
 
 class ApprovalDecision(BaseModel):
     note: str = Field(default="", max_length=1500)
@@ -140,6 +159,11 @@ class ApprovalExecuteRequest(BaseModel):
 class JobCreateRequest(BaseModel):
     kind: Literal["sync_all", "sync_google", "sync_meta", "scan_rivals", "detect_anomalies", "daily_brief", "autopilot_tick", "initial_strategy"]
     payload: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("payload")
+    @classmethod
+    def validate_payload_size(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _bounded_opaque_payload(value)
 
 
 class BillingPlanUpdate(BaseModel):
@@ -206,3 +230,8 @@ class CoreActionCreate(BaseModel):
     provider: str | None = Field(default=None, max_length=60)
     risk_level: Literal["low", "medium", "high"] = "medium"
     payload: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("payload")
+    @classmethod
+    def validate_payload_size(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _bounded_opaque_payload(value)
