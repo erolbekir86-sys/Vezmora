@@ -16,6 +16,12 @@ _install_kpi_semantics_guard()
 from .one_time_token_safety import install_one_time_token_safety as _install_one_time_token_safety
 _install_one_time_token_safety()
 
+# Jobs and queued transactional emails must also be claimed once. SQLite's
+# BEGIN IMMEDIATE provided serialization locally, but the PostgreSQL compatibility
+# layer translates it to BEGIN, so require a winning conditional UPDATE as well.
+from .queue_claim_safety import install_queue_claim_safety as _install_queue_claim_safety
+_install_queue_claim_safety()
+
 # Harden Google read/token requests before diagnostics and connector UX wrappers
 # capture the sync functions. This keeps bounded retry and payload validation at
 # the base of the existing Google wrapper chain.
