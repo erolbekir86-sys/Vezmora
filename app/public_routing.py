@@ -11,7 +11,7 @@ from fastapi.routing import APIRoute
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
 CANONICAL_ORIGIN = "https://vexmera.com"
-PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing"})
+PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing", "connected", "view"})
 
 _raw_build_id = (os.getenv("VERCEL_GIT_COMMIT_SHA") or "local").strip()
 BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
@@ -84,9 +84,9 @@ def install_public_routing(app: FastAPI) -> None:
     ]
 
     async def marketing_home(request: Request) -> Response:
-        # Existing private-beta email, invite, and Stripe return links were built
-        # against the old product-at-root layout. Preserve those links while the
-        # canonical base URL remains the apex domain.
+        # Existing private-beta reset/invite links plus connector and billing
+        # return URLs were built against the old product-at-root layout. Preserve
+        # those links while the canonical marketing URL remains the apex domain.
         if PRODUCT_QUERY_KEYS.intersection(request.query_params.keys()):
             target = "/app"
             if request.url.query:
