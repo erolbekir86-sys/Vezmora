@@ -16,6 +16,12 @@ _install_kpi_semantics_guard()
 from .one_time_token_safety import install_one_time_token_safety as _install_one_time_token_safety
 _install_one_time_token_safety()
 
+# OAuth state is also a one-time capability. Consume it with one atomic database
+# statement before connector modules bind the helper so concurrent callbacks
+# cannot reuse the same Google/Meta state value.
+from .oauth_state_safety import install_oauth_state_safety as _install_oauth_state_safety
+_install_oauth_state_safety()
+
 # Jobs and queued transactional emails must also be claimed once. SQLite's
 # BEGIN IMMEDIATE provided serialization locally, but the PostgreSQL compatibility
 # layer translates it to BEGIN, so require a winning conditional UPDATE as well.
