@@ -31,8 +31,10 @@ def test_disconnect_control_is_fail_closed_to_owner_and_admin_roles():
     assert "Fail closed" in DISCONNECT_UI
 
 
-def test_disconnect_requires_explicit_confirmation_and_preserves_history_copy():
-    assert "window.confirm(" in DISCONNECT_UI
+def test_disconnect_requires_explicit_fail_closed_confirmation_and_preserves_history_copy():
+    assert "if (typeof window.confirm !== 'function') return;" in DISCONNECT_UI
+    assert "const confirmed = window.confirm(" in DISCONNECT_UI
+    assert "if (!confirmed) return;" in DISCONNECT_UI
     assert "Tidigare synkad historik behålls" in DISCONNECT_UI
     assert "method: 'POST'" in DISCONNECT_UI
     assert "ws(`/api/connectors/${provider}/disconnect`)" in DISCONNECT_UI
