@@ -56,6 +56,14 @@ def _job_claim_sql(connection: FakeConnection) -> str:
     )
 
 
+def _email_claim_sql(connection: FakeConnection) -> str:
+    return next(
+        sql
+        for sql, _ in connection.calls
+        if "UPDATE email_outbox SET status='sending'" in sql and "WHERE id=?" in sql
+    )
+
+
 def test_job_claim_returns_only_when_worker_wins_conditional_update(monkeypatch):
     row = {"id": 3, "workspace_id": 1, "kind": "sync_google", "payload_json": '{"days": 30}', "attempts": 1}
     after = {**row, "status": "running", "payload_json": '{"days": 30}', "attempts": 2}
@@ -81,7 +89,7 @@ def test_email_claim_returns_only_when_worker_wins_conditional_update(monkeypatc
     monkeypatch.setattr(store, "_connect", lambda: won)
     result = claim_email_atomic()
     assert result["id"] == 8
-    assert "status='queued'" in won.calls[2][0]
+    assert "status='queued'" in _email_claim_sql(won)
 
     lost = FakeConnection(row, 0, after)
     monkeypatch.setattr(store, "_connect", lambda: lost)

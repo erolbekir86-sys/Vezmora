@@ -14,6 +14,9 @@ _MAX_STALE_JOB_MINUTES = 24 * 60
 _MAX_JOB_ATTEMPTS = 3
 _ORIGINAL_QUEUE_EMAIL = _store.queue_email
 _INLINE_EMAIL_TARGETS: ContextVar[tuple[int, ...]] = ContextVar("vexmera_inline_email_targets", default=())
+_RESET_EMAIL_SUBJECT = "Reset your Vexmera password"
+_INVITE_EMAIL_SUBJECT = "You're invited to Vexmera"
+_STALE_CAPABILITY_ERROR = "Delivery window expired before send"
 
 
 def _stale_job_minutes() -> int:
@@ -100,11 +103,31 @@ def _pop_inline_email_target() -> int | None:
     return int(targets[0])
 
 
+def _expire_stale_capability_emails(con: Any) -> None:
+    """Never deliver reset/invite mail after its underlying capability window elapsed."""
+    windows = (
+        (_RESET_EMAIL_SUBJECT, "datetime('now','-1 hour')"),
+        (_INVITE_EMAIL_SUBJECT, "datetime('now','-7 days')"),
+    )
+    for subject, cutoff_sql in windows:
+        con.execute(
+            "UPDATE email_outbox SET status='failed',error_text=?,body_text='' "
+            f"WHERE status='queued' AND subject=? AND created_at<{cutoff_sql}",
+            (_STALE_CAPABILITY_ERROR, subject),
+        )
+        con.execute(
+            "UPDATE email_outbox SET body_text='' "
+            f"WHERE status='failed' AND subject=? AND created_at<{cutoff_sql}",
+            (subject,),
+        )
+
+
 def claim_email_atomic() -> dict[str, Any] | None:
     """Claim targeted inline mail when present, otherwise preserve FIFO queue behavior."""
     target_id = _pop_inline_email_target()
     with _store._connect() as con:
         con.execute("BEGIN IMMEDIATE")
+        _expire_stale_capability_emails(con)
         if target_id is None:
             row = con.execute("SELECT * FROM email_outbox WHERE status='queued' ORDER BY id LIMIT 1").fetchone()
         else:

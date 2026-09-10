@@ -109,6 +109,108 @@ def test_password_reset_inline_send_delivers_the_reset_not_an_older_message(tmp_
         assert reset_row["body_text"] == ""
 
 
+def test_stale_reset_is_failed_and_scrubbed_before_next_mail_is_claimed(tmp_path, monkeypatch) -> None:
+    _prepare_db(tmp_path, monkeypatch, "stale-reset.db")
+    reset_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(
+        None,
+        "reset@example.test",
+        queue_claim_safety._RESET_EMAIL_SUBJECT,
+        "https://example.test/app?reset=secret-reset-token",
+    )
+    normal_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(None, "normal@example.test", "Normal mail", "hello")
+    with store._connect() as con:
+        con.execute("UPDATE email_outbox SET created_at='2000-01-01 00:00:00' WHERE id=?", (reset_id,))
+
+    claimed = queue_claim_safety.claim_email_atomic()
+
+    assert claimed is not None
+    assert claimed["id"] == normal_id
+    with store._connect() as con:
+        stale = con.execute(
+            "SELECT status,error_text,body_text FROM email_outbox WHERE id=?",
+            (reset_id,),
+        ).fetchone()
+    assert stale["status"] == "failed"
+    assert stale["error_text"] == queue_claim_safety._STALE_CAPABILITY_ERROR
+    assert stale["body_text"] == ""
+
+
+def test_fresh_reset_email_remains_deliverable(tmp_path, monkeypatch) -> None:
+    _prepare_db(tmp_path, monkeypatch, "fresh-reset.db")
+    reset_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(
+        None,
+        "reset@example.test",
+        queue_claim_safety._RESET_EMAIL_SUBJECT,
+        "fresh reset body",
+    )
+
+    claimed = queue_claim_safety.claim_email_atomic()
+
+    assert claimed is not None
+    assert claimed["id"] == reset_id
+    assert claimed["status"] == "sending"
+
+
+def test_stale_invite_is_failed_and_scrubbed(tmp_path, monkeypatch) -> None:
+    _prepare_db(tmp_path, monkeypatch, "stale-invite.db")
+    invite_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(
+        None,
+        "invite@example.test",
+        queue_claim_safety._INVITE_EMAIL_SUBJECT,
+        "https://example.test/app?invite=secret-invite-token",
+    )
+    with store._connect() as con:
+        con.execute("UPDATE email_outbox SET created_at='2000-01-01 00:00:00' WHERE id=?", (invite_id,))
+
+    assert queue_claim_safety.claim_email_atomic() is None
+    with store._connect() as con:
+        stale = con.execute(
+            "SELECT status,error_text,body_text FROM email_outbox WHERE id=?",
+            (invite_id,),
+        ).fetchone()
+    assert stale["status"] == "failed"
+    assert stale["error_text"] == queue_claim_safety._STALE_CAPABILITY_ERROR
+    assert stale["body_text"] == ""
+
+
+def test_stale_failed_capability_body_is_scrubbed_without_requeue(tmp_path, monkeypatch) -> None:
+    _prepare_db(tmp_path, monkeypatch, "stale-failed.db")
+    reset_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(
+        None,
+        "reset@example.test",
+        queue_claim_safety._RESET_EMAIL_SUBJECT,
+        "sensitive reset body",
+    )
+    with store._connect() as con:
+        con.execute(
+            "UPDATE email_outbox SET status='failed',error_text='temporary smtp error',created_at='2000-01-01 00:00:00' WHERE id=?",
+            (reset_id,),
+        )
+
+    assert queue_claim_safety.claim_email_atomic() is None
+    with store._connect() as con:
+        stale = con.execute(
+            "SELECT status,error_text,body_text FROM email_outbox WHERE id=?",
+            (reset_id,),
+        ).fetchone()
+    assert stale["status"] == "failed"
+    assert stale["error_text"] == "temporary smtp error"
+    assert stale["body_text"] == ""
+
+
+def test_old_non_capability_mail_is_still_claimable(tmp_path, monkeypatch) -> None:
+    _prepare_db(tmp_path, monkeypatch, "old-normal.db")
+    mail_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(None, "old@example.test", "Normal mail", "still useful")
+    with store._connect() as con:
+        con.execute("UPDATE email_outbox SET created_at='2000-01-01 00:00:00' WHERE id=?", (mail_id,))
+
+    claimed = queue_claim_safety.claim_email_atomic()
+
+    assert claimed is not None
+    assert claimed["id"] == mail_id
+    assert claimed["body_text"] == "still useful"
+
+
 def test_queue_and_emailer_bind_targeted_atomic_helpers() -> None:
     assert store.queue_email is queue_claim_safety.queue_email_with_inline_target
     assert store.claim_email is queue_claim_safety.claim_email_atomic
