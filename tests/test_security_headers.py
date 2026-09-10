@@ -143,11 +143,13 @@ def test_private_product_and_capability_urls_never_emit_referrers(monkeypatch) -
         product_response = client.get("/app")
         reset_response = client.get("/public?reset=one-time-secret")
         invite_response = client.get("/public?invite=one-time-secret")
+        stripe_session_response = client.get("/public?billing=success&session_id=cs_test_private_session")
         public_response = client.get("/public")
 
     assert product_response.headers["referrer-policy"] == "no-referrer"
     assert reset_response.headers["referrer-policy"] == "no-referrer"
     assert invite_response.headers["referrer-policy"] == "no-referrer"
+    assert stripe_session_response.headers["referrer-policy"] == "no-referrer"
     assert public_response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
 
 
@@ -164,9 +166,10 @@ def test_capability_urls_are_no_store_without_disabling_normal_public_caching(mo
     with TestClient(app) as client:
         reset_response = client.get("/public?reset=one-time-secret")
         invite_response = client.get("/public?invite=one-time-secret")
+        stripe_session_response = client.get("/public?billing=success&session_id=cs_test_private_session")
         public_response = client.get("/public")
 
-    for response in (reset_response, invite_response):
+    for response in (reset_response, invite_response, stripe_session_response):
         assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
         assert response.headers["pragma"] == "no-cache"
         assert response.headers["expires"] == "0"
