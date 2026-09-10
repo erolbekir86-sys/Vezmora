@@ -25,6 +25,7 @@ def _safe_beta_payload() -> dict[str, object]:
         "ok": True,
         "phase": "private_beta",
         "private_beta_execution_safe": True,
+        "production_transport_safe": True,
         "external_execution_enabled": False,
         "autopilot_execution_enabled": False,
         "meta_execution_scope_enabled": False,
@@ -58,6 +59,7 @@ def test_public_runtime_preflight_passes_safe_runtime_and_execution_lock(monkeyp
     beta = result["checks"]["beta_readiness"]
     assert beta["reachable"] is True
     assert beta["private_beta_execution_safe"] is True
+    assert beta["production_transport_safe"] is True
     assert beta["external_execution_enabled"] is False
     assert beta["autopilot_execution_enabled"] is False
 
@@ -106,6 +108,18 @@ def test_public_runtime_preflight_blocks_if_execution_lock_is_unsafe(monkeypatch
     assert "autopilot_execution_enabled" in result["blockers"]
     assert "meta_execution_scope_enabled" in result["blockers"]
     assert "dev_show_tokens_enabled" in result["blockers"]
+
+
+def test_public_runtime_preflight_blocks_if_production_transport_is_unsafe(monkeypatch):
+    beta = _safe_beta_payload()
+    beta["production_transport_safe"] = False
+    monkeypatch.setattr(public_runtime_preflight, "_get_text", _response_map(beta=beta))
+
+    result = public_runtime_preflight.build_public_runtime_preflight("https://vexmera.com")
+
+    assert result["ok"] is False
+    assert "production_transport_not_safe" in result["blockers"]
+    assert result["checks"]["beta_readiness"]["production_transport_safe"] is False
 
 
 def test_public_runtime_preflight_distinguishes_unreachable_runtime_endpoint(monkeypatch):
