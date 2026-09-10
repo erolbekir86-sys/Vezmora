@@ -177,34 +177,18 @@ After any environment change, redeploy Vercel and inspect:
 - `/health/runtime`
 - `/health/beta-readiness`
 
-`/health/runtime` exposes non-secret infrastructure booleans such as:
+In production, `/health/runtime` is intentionally minimal. It exposes only liveness/deployment identity fields needed to prove which build is serving traffic, such as service/version, platform/environment and deployment revision. It must not expose database, OpenAI, Stripe, SMTP, OAuth, token or secret-configuration booleans.
 
-- `database_connection_ok`
-- `openai_connection_ok`
-- `internal_secrets_configured`
-- `stripe_configured`
-- `smtp_configured`
-- `google_oauth_configured`
-- `meta_oauth_configured`
+In production, `/health/beta-readiness` exposes only the small private-beta safety surface required by public preflight, including whether external execution, Autopilot execution and Meta execution scope are disabled as intended. Fuller configuration diagnostics remain an operator/local concern rather than a public HTTP contract.
 
-`/health/beta-readiness` exposes private-beta safety/readiness booleans including:
-
-- whether external execution is enabled
-- whether Autopilot execution is enabled
-- whether Meta execution scope is enabled
-- whether the private-beta execution posture is safe
-- whether Stripe catalog/webhook variables are present
-- whether Google/Meta OAuth and SMTP minimum configuration are present
-- which privacy controls are implemented, including connector disconnect, synchronized-history deletion and full account deletion
-
-Both endpoints are designed not to expose secret values.
+Use `python scripts/preflight.py` in the configured deployment environment for database, Stripe, email, Google and Meta configuration checks. Use `python scripts/verify_stripe_catalog.py` for the current Stripe sandbox catalog. Neither public health endpoint should be treated as proof of third-party approval, account access, webhook delivery, billing correctness or end-to-end behavior.
 
 Important limitations:
 
-- configuration booleans do not prove third-party approval, account access, webhook delivery or end-to-end behavior;
-- `stripe_configured` only confirms that expected environment variables are present;
+- liveness and safety booleans do not prove third-party approval, account access, webhook delivery or end-to-end behavior;
 - Google Ads Basic Access and manager-account linking require separate verification;
-- use `scripts/verify_stripe_catalog.py` for the Stripe sandbox catalog and run an actual test-mode Checkout/webhook/Portal flow before paid launch.
+- use `scripts/verify_stripe_catalog.py` for the Stripe sandbox catalog and run an actual test-mode Checkout/webhook/Portal flow before paid launch;
+- use controlled real-account read-only syncs to prove Google/Meta integration behavior after external access is available.
 
 ## Privacy controls in the private beta
 
