@@ -115,7 +115,7 @@ def test_google_ads_missing_configuration_is_not_reframed_as_healthy_empty_state
     assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
 
 
-def test_google_analytics_rows_get_metric_semantics_warning():
+def test_google_analytics_rows_do_not_get_obsolete_click_semantics_warning():
     result = {
         "analytics_rows": 4,
         "campaign_rows": 2,
@@ -125,23 +125,9 @@ def test_google_analytics_rows_get_metric_semantics_warning():
 
     guarded = _with_empty_state_warning("Google Ads", result, 7)
 
-    assert any("generic clicks KPI" in warning for warning in guarded["warnings"])
-    assert any("sessions, not ad clicks" in warning for warning in guarded["warnings"])
-
-
-def test_google_analytics_metric_semantics_warning_is_idempotent():
-    result = {
-        "analytics_rows": 1,
-        "campaign_rows": 1,
-        "ads_rows": 1,
-        "warnings": [],
-    }
-
-    _with_empty_state_warning("Google Ads", result, 7)
-    _with_empty_state_warning("Google Ads", result, 7)
-
-    matching = [warning for warning in result["warnings"] if "generic clicks KPI" in warning]
-    assert len(matching) == 1
+    assert guarded["warnings"] == []
+    assert not any("generic clicks KPI" in warning for warning in guarded["warnings"])
+    assert not any("sessions, not ad clicks" in warning for warning in guarded["warnings"])
 
 
 def test_invalid_provider_result_becomes_safe_actionable_failure():
