@@ -23,5 +23,5 @@ def install_security_headers(app: FastAPI) -> None:
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
         if _https_runtime():
-            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
