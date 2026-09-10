@@ -50,11 +50,10 @@ def _has_valid_session(request: Request) -> bool:
     if not raw_session:
         return False
     try:
-        require_user(raw_session)
+        return bool(require_user(raw_session))
     except Exception:
         # Health must fail closed to the anonymous payload if auth/storage is unavailable.
         return False
-    return True
 
 
 def install_public_health_guard(app: FastAPI) -> None:
