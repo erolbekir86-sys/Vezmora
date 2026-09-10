@@ -10,21 +10,20 @@ _ORIGINAL_FINISH_EMAIL = _store.finish_email
 
 @wraps(_ORIGINAL_FINISH_EMAIL)
 def finish_email_with_body_scrub(email_id: int, error: str | None = None) -> None:
-    """Sanitize delivery errors and erase body text after successful delivery.
+    """Sanitize delivery errors and erase body text once delivery is terminal.
 
     Transactional email bodies can contain one-time invite or password-reset URLs.
-    Once SMTP delivery succeeds, Vexmera no longer needs that body in its outbox
-    audit row. Failed messages retain their body so a future explicit retry flow
-    can still be implemented without silently discarding undelivered content.
+    The current outbox only claims `queued` rows; both `sent` and `failed` are
+    terminal states. Keeping a failed body therefore does not enable retry today
+    and needlessly retains a bearer-style capability. Recipient, subject, status
+    and a redacted error remain available for operational diagnosis.
     """
     safe_error = redact_sensitive_text(error) if error else error
     _ORIGINAL_FINISH_EMAIL(email_id, safe_error)
-    if error:
-        return
 
     with _store._connect() as con:
         con.execute(
-            "UPDATE email_outbox SET body_text='' WHERE id=? AND status='sent'",
+            "UPDATE email_outbox SET body_text='' WHERE id=? AND status IN ('sent','failed')",
             (email_id,),
         )
 
