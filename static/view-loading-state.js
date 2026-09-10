@@ -105,15 +105,16 @@
     Object.entries(LOADERS).forEach(([name, viewId]) => wrapLoader(name, viewId));
   }
 
-  function loadDashboardFirstUseGuide() {
-    if (document.querySelector('script[data-vexmera-dashboard-first-use]')) return;
+  function loadGuardAsset(path, datasetKey, selector) {
+    if (document.querySelector(selector)) return;
     const script = document.createElement('script');
     const build = encodeURIComponent(String(window.__VEXMERA_BUILD__ || 'local'));
-    script.src = `/static/dashboard-first-use.js?build=${build}`;
-    script.dataset.vexmeraDashboardFirstUse = '1';
+    script.src = `${path}?build=${build}`;
+    script.dataset[datasetKey] = '1';
     document.head.appendChild(script);
   }
 
   installViewLoadingStates();
-  loadDashboardFirstUseGuide();
+  loadGuardAsset('/static/dashboard-first-use.js', 'vexmeraDashboardFirstUse', 'script[data-vexmera-dashboard-first-use]');
+  loadGuardAsset('/static/dynamic-product-copy.js', 'vexmeraDynamicProductCopy', 'script[data-vexmera-dynamic-product-copy]');
 })();
