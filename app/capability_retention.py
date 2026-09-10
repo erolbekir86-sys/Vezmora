@@ -46,6 +46,14 @@ def create_workspace_invite_with_retention(
     expires_at: str,
 ) -> int:
     _prune_expired("workspace_invites")
+    # Re-inviting the same address to the same workspace supersedes any older
+    # outstanding capability for that membership. Accepted invites remain as
+    # audit history, and invites for other workspaces/addresses are untouched.
+    with _store._connect() as con:
+        con.execute(
+            "DELETE FROM workspace_invites WHERE workspace_id=? AND email=? COLLATE NOCASE AND accepted_at IS NULL",
+            (workspace_id, email),
+        )
     return _ORIGINAL_CREATE_WORKSPACE_INVITE(
         workspace_id,
         email,

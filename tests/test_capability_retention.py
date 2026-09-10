@@ -144,6 +144,81 @@ def test_new_workspace_invite_prunes_expired_invites_but_keeps_active(tmp_path, 
     assert new_row["id"] == new_id
 
 
+def test_new_workspace_invite_supersedes_outstanding_invite_for_same_address(tmp_path, monkeypatch) -> None:
+    user_id, workspace_id = _prepare_db(tmp_path, monkeypatch)
+    with store._connect() as con:
+        con.execute(
+            "INSERT INTO workspace_invites(workspace_id,email,role,token_hash,invited_by,expires_at) VALUES(?,?,?,?,?,?)",
+            (workspace_id, "Pilot@Example.com", "viewer", "older-invite", user_id, _iso(timedelta(days=1))),
+        )
+
+    capability_retention.create_workspace_invite_with_retention(
+        workspace_id,
+        "pilot@example.com",
+        "marketer",
+        "latest-invite",
+        user_id,
+        _iso(timedelta(days=7)),
+    )
+
+    with store._connect() as con:
+        rows = con.execute(
+            "SELECT token_hash,role FROM workspace_invites WHERE workspace_id=? AND email=? COLLATE NOCASE",
+            (workspace_id, "pilot@example.com"),
+        ).fetchall()
+    assert [(row["token_hash"], row["role"]) for row in rows] == [("latest-invite", "marketer")]
+
+
+def test_new_workspace_invite_preserves_accepted_invite_audit_history(tmp_path, monkeypatch) -> None:
+    user_id, workspace_id = _prepare_db(tmp_path, monkeypatch)
+    with store._connect() as con:
+        con.execute(
+            "INSERT INTO workspace_invites(workspace_id,email,role,token_hash,invited_by,expires_at,accepted_at) VALUES(?,?,?,?,?,?,CURRENT_TIMESTAMP)",
+            (workspace_id, "pilot@example.com", "viewer", "accepted-invite", user_id, _iso(timedelta(days=1))),
+        )
+
+    capability_retention.create_workspace_invite_with_retention(
+        workspace_id,
+        "pilot@example.com",
+        "marketer",
+        "latest-invite",
+        user_id,
+        _iso(timedelta(days=7)),
+    )
+
+    with store._connect() as con:
+        hashes = {
+            row["token_hash"]
+            for row in con.execute(
+                "SELECT token_hash FROM workspace_invites WHERE workspace_id=? AND email=? COLLATE NOCASE",
+                (workspace_id, "pilot@example.com"),
+            ).fetchall()
+        }
+    assert hashes == {"accepted-invite", "latest-invite"}
+
+
+def test_new_workspace_invite_does_not_touch_other_address(tmp_path, monkeypatch) -> None:
+    user_id, workspace_id = _prepare_db(tmp_path, monkeypatch)
+    with store._connect() as con:
+        con.execute(
+            "INSERT INTO workspace_invites(workspace_id,email,role,token_hash,invited_by,expires_at) VALUES(?,?,?,?,?,?)",
+            (workspace_id, "other@example.com", "viewer", "other-invite", user_id, _iso(timedelta(days=1))),
+        )
+
+    capability_retention.create_workspace_invite_with_retention(
+        workspace_id,
+        "pilot@example.com",
+        "marketer",
+        "latest-invite",
+        user_id,
+        _iso(timedelta(days=7)),
+    )
+
+    with store._connect() as con:
+        hashes = {row["token_hash"] for row in con.execute("SELECT token_hash FROM workspace_invites").fetchall()}
+    assert hashes == {"other-invite", "latest-invite"}
+
+
 def test_retention_table_name_is_fixed_allowlist() -> None:
     try:
         capability_retention._prune_expired("users")
