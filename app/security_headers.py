@@ -21,6 +21,7 @@ _OAUTH_CALLBACK_PATHS = frozenset(
         "/api/connectors/meta/callback/",
     }
 )
+_INSTALL_STATE_ATTR = "_vexmera_security_headers_installed"
 
 
 def _https_runtime() -> bool:
@@ -58,7 +59,16 @@ def _protect_capability_referrer(request: Request, response) -> None:
 
 
 def install_security_headers(app: FastAPI) -> None:
-    """Add browser hardening headers without changing application routing or CSP."""
+    """Add browser hardening headers without changing application routing or CSP.
+
+    The installer is intentionally idempotent because both the package bootstrap
+    and the deployment entrypoint may install the canonical policy depending on
+    import order. A single app instance must never accumulate duplicate security
+    middleware layers.
+    """
+    if getattr(app.state, _INSTALL_STATE_ATTR, False):
+        return
+    setattr(app.state, _INSTALL_STATE_ATTR, True)
 
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
