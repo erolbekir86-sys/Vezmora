@@ -154,7 +154,7 @@ def test_fresh_reset_email_remains_deliverable(tmp_path, monkeypatch) -> None:
 def test_stale_invite_is_failed_and_scrubbed(tmp_path, monkeypatch) -> None:
     _prepare_db(tmp_path, monkeypatch, "stale-invite.db")
     invite_id = queue_claim_safety._ORIGINAL_QUEUE_EMAIL(
-        1,
+        None,
         "invite@example.test",
         queue_claim_safety._INVITE_EMAIL_SUBJECT,
         "https://example.test/app?invite=secret-invite-token",
