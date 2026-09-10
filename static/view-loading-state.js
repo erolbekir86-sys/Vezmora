@@ -105,5 +105,15 @@
     Object.entries(LOADERS).forEach(([name, viewId]) => wrapLoader(name, viewId));
   }
 
+  function loadDashboardFirstUseGuide() {
+    if (document.querySelector('script[data-vexmera-dashboard-first-use]')) return;
+    const script = document.createElement('script');
+    const build = encodeURIComponent(String(window.__VEXMERA_BUILD__ || 'local'));
+    script.src = `/static/dashboard-first-use.js?build=${build}`;
+    script.dataset.vexmeraDashboardFirstUse = '1';
+    document.head.appendChild(script);
+  }
+
   installViewLoadingStates();
+  loadDashboardFirstUseGuide();
 })();
