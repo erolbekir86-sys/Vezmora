@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from app.http_error_safety import sanitize_http_detail
+import httpx
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from app.http_error_safety import install_http_error_safety, sanitize_http_detail
 
 
 def test_http_error_safety_redacts_meta_and_generic_token_patterns(monkeypatch):
@@ -94,3 +98,27 @@ def test_http_error_safety_preserves_actionable_non_secret_meta_context():
     }
 
     assert sanitize_http_detail(detail) == detail
+
+
+def test_unhandled_httpx_transport_error_becomes_secret_safe_502():
+    app = FastAPI()
+    secret = "meta-access-token-must-not-render"
+
+    @app.get("/provider")
+    def provider():
+        request = httpx.Request(
+            "GET",
+            f"https://graph.facebook.com/v24.0/me/adaccounts?access_token={secret}",
+        )
+        raise httpx.ConnectError("connection failed", request=request)
+
+    install_http_error_safety(app)
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.get("/provider")
+
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Upstream provider connection failed. Try again later."}
+    assert response.headers["cache-control"] == "no-store"
+    assert secret not in response.text
+    assert "graph.facebook.com" not in response.text
