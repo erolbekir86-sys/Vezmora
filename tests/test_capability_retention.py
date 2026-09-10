@@ -62,6 +62,57 @@ def test_new_password_reset_prunes_expired_reset_rows(tmp_path, monkeypatch) -> 
     assert fresh["token_hash"] == "new-reset"
 
 
+def test_new_password_reset_invalidates_older_active_reset_for_same_user(tmp_path, monkeypatch) -> None:
+    user_id, _ = _prepare_db(tmp_path, monkeypatch)
+    with store._connect() as con:
+        con.execute(
+            "INSERT INTO password_reset_tokens(user_id,token_hash,expires_at) VALUES(?,?,?)",
+            (user_id, "older-active-reset", _iso(timedelta(minutes=30))),
+        )
+
+    capability_retention.create_password_reset_with_retention(
+        user_id,
+        "latest-reset",
+        _iso(timedelta(hours=1)),
+    )
+
+    with store._connect() as con:
+        hashes = [
+            row["token_hash"]
+            for row in con.execute(
+                "SELECT token_hash FROM password_reset_tokens WHERE user_id=? ORDER BY id",
+                (user_id,),
+            ).fetchall()
+        ]
+    assert hashes == ["latest-reset"]
+
+
+def test_new_password_reset_does_not_invalidate_another_users_reset(tmp_path, monkeypatch) -> None:
+    user_id, _ = _prepare_db(tmp_path, monkeypatch)
+    with store._connect() as con:
+        other_user_id = con.execute(
+            "INSERT INTO users(email,password_salt,password_hash) VALUES(?,?,?) RETURNING id",
+            ("other@example.com", "salt", "hash"),
+        ).fetchone()["id"]
+        con.execute(
+            "INSERT INTO password_reset_tokens(user_id,token_hash,expires_at) VALUES(?,?,?)",
+            (other_user_id, "other-reset", _iso(timedelta(minutes=30))),
+        )
+
+    capability_retention.create_password_reset_with_retention(
+        user_id,
+        "latest-reset",
+        _iso(timedelta(hours=1)),
+    )
+
+    with store._connect() as con:
+        hashes = {
+            row["token_hash"]
+            for row in con.execute("SELECT token_hash FROM password_reset_tokens").fetchall()
+        }
+    assert hashes == {"other-reset", "latest-reset"}
+
+
 def test_new_workspace_invite_prunes_expired_invites_but_keeps_active(tmp_path, monkeypatch) -> None:
     user_id, workspace_id = _prepare_db(tmp_path, monkeypatch)
     with store._connect() as con:

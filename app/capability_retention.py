@@ -28,6 +28,11 @@ def create_session_with_retention(user_id: int, token_hash: str, expires_at: str
 @wraps(_ORIGINAL_CREATE_PASSWORD_RESET)
 def create_password_reset_with_retention(user_id: int, token_hash: str, expires_at: str) -> int:
     _prune_expired("password_reset_tokens")
+    # A newly requested reset link supersedes every older reset capability for
+    # the same account. This bounds the number of simultaneously valid links
+    # without changing the public reset flow or token lifetime.
+    with _store._connect() as con:
+        con.execute("DELETE FROM password_reset_tokens WHERE user_id=?", (user_id,))
     return _ORIGINAL_CREATE_PASSWORD_RESET(user_id, token_hash, expires_at)
 
 
