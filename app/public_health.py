@@ -11,6 +11,13 @@ _PUBLIC_HEALTH = {
     "service": "vexmera",
     "version": "0.6.1",
 }
+_NO_STORE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    "CDN-Cache-Control": "no-store",
+    "Vercel-CDN-Cache-Control": "no-store",
+}
 
 
 def _public_runtime_payload() -> dict[str, object]:
@@ -39,9 +46,9 @@ def install_public_health_guard(app: FastAPI) -> None:
     async def minimal_public_health(request: Request, call_next):
         if os.getenv("VERCEL") and request.method == "GET":
             if request.url.path == "/health":
-                return JSONResponse(_PUBLIC_HEALTH)
+                return JSONResponse(_PUBLIC_HEALTH, headers=_NO_STORE_HEADERS)
             if request.url.path == "/health/runtime":
-                return JSONResponse(_public_runtime_payload())
+                return JSONResponse(_public_runtime_payload(), headers=_NO_STORE_HEADERS)
         return await call_next(request)
 
     app.state.vexmera_public_health_guard_installed = True
