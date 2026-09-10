@@ -20,25 +20,30 @@ Optional/defaulted by the Vercel bootstrap:
 
 ## Stripe billing
 
-Required before enabling production billing:
+Required for the current private-beta **sandbox** billing verification:
 
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
-- `STRIPE_PRICE_STARTER`
+- `STRIPE_PRICE_START`
 - `STRIPE_PRICE_GROWTH`
-- `STRIPE_PRICE_SCALE`
+- `STRIPE_PRICE_PRO`
+- `VEZMORA_STRIPE_PRICING_VERSION`
 
-The three Price IDs must exist in the same Stripe account and mode as `STRIPE_SECRET_KEY` and must be monthly recurring SEK prices with these exact unit amounts before VAT:
+The three configured Price IDs must belong to the same Stripe **test-mode** account as `STRIPE_SECRET_KEY` and must be active monthly recurring SEK prices with these exact unit amounts before VAT:
 
-- Starter: `149900` öre = 1,499 SEK/month
-- Growth: `299900` öre = 2,999 SEK/month
-- Scale: `599900` öre = 5,999 SEK/month
+- Start: `99500` öre = 995 SEK/month
+- Growth: `149500` öre = 1,495 SEK/month
+- Pro: `299500` öre = 2,995 SEK/month
+
+`VEZMORA_STRIPE_PRICING_VERSION` must remain blank until the current sandbox catalog has been independently verified. After verification, the only accepted marker for this pricing model is:
+
+- `2026-09-start-growth-pro`
 
 Optional:
 
 - `VEZMORA_TRIAL_DAYS` — defaults to `14`.
 
-Production webhook route:
+Sandbox webhook route:
 
 - `<VEZMORA_APP_URL>/api/billing/webhook`
 
@@ -50,15 +55,28 @@ Expected event types:
 - `customer.subscription.deleted`
 - `invoice.payment_failed`
 
-Do not mix Stripe test-mode IDs/keys with live-mode IDs/keys. Never assume a historical Price ID is still valid in the active Stripe account.
+Do not mix Stripe test-mode IDs/keys with live-mode IDs/keys. Never reuse the historical Starter/Growth/Scale Price IDs for the current Start/Growth/Pro model.
 
-Before enabling paid Checkout, run:
+Before opening private-beta Checkout, run in the configured deployment environment:
 
 ```bash
 python scripts/verify_stripe_catalog.py
 ```
 
-The catalog verifier checks active monthly SEK prices and expected amounts without printing the Stripe secret or any Price IDs. A non-zero exit status means billing must remain blocked until the catalog is reconciled.
+The canonical catalog verifier is read-only. It retrieves only the three configured Price objects and verifies:
+
+- configured Price ID matches the returned Price;
+- `active=true`;
+- `livemode=false`;
+- currency is `sek`;
+- Price type is recurring;
+- interval is one month;
+- amount exactly matches 995 / 1,495 / 2,995 SEK;
+- the explicit current pricing-version marker matches.
+
+The verifier never prints the Stripe secret, configured Price IDs, Product IDs, raw Stripe payloads or raw Stripe exceptions. A non-zero exit status means Checkout must remain blocked until the sandbox catalog and marker are reconciled.
+
+Live-mode paid billing is a separate future launch decision. The private-beta sandbox verifier intentionally rejects live-mode Price objects.
 
 ## Transactional email
 
@@ -186,7 +204,7 @@ Important limitations:
 - configuration booleans do not prove third-party approval, account access, webhook delivery or end-to-end behavior;
 - `stripe_configured` only confirms that expected environment variables are present;
 - Google Ads Basic Access and manager-account linking require separate verification;
-- use `scripts/verify_stripe_catalog.py` for the Stripe catalog and run an actual test-mode Checkout/webhook/Portal flow before paid launch.
+- use `scripts/verify_stripe_catalog.py` for the Stripe sandbox catalog and run an actual test-mode Checkout/webhook/Portal flow before paid launch.
 
 ## Privacy controls in the private beta
 
@@ -206,7 +224,7 @@ Account deletion does not promise deletion of third-party billing/compliance rec
 3. Transactional email.
 4. Google/Meta read-only OAuth.
 5. Run `scripts/preflight.py` and confirm private-beta execution locks are SAFE.
-6. Reconcile and verify the Stripe test catalog, then run a full test-mode Checkout/webhook/Portal flow.
+6. Reconcile and verify the current Start/Growth/Pro Stripe test catalog with `scripts/verify_stripe_catalog.py`, then run a full test-mode Checkout/webhook/Portal flow.
 7. Complete authenticated browser QA including connector disconnect, synchronized-history deletion, account deletion and analytics-consent controls.
 8. Finalize legal entity details, privacy/terms, retention/subprocessor disclosures, VAT/tax treatment and canonical domain.
 9. Stripe live billing only after the preceding launch blockers are resolved.
