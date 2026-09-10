@@ -27,6 +27,10 @@ def _request_origin(request: Request) -> tuple[str, str]:
     return request.url.scheme.lower(), request.url.netloc.lower()
 
 
+def _is_api_path(path: str) -> bool:
+    return path == "/api" or path.startswith("/api/")
+
+
 def install_csrf_guard(app: FastAPI) -> None:
     """Reject cross-site browser mutations that carry a Vexmera session cookie.
 
@@ -43,7 +47,7 @@ def install_csrf_guard(app: FastAPI) -> None:
     async def authenticated_mutation_origin_guard(request: Request, call_next):
         if (
             request.method.upper() in _UNSAFE_METHODS
-            and request.url.path.startswith("/api/")
+            and _is_api_path(request.url.path)
             and request.cookies.get(SESSION_COOKIE)
         ):
             fetch_site = (request.headers.get("sec-fetch-site") or "").strip().lower()

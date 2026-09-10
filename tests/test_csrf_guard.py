@@ -8,6 +8,10 @@ from app.csrf_guard import install_csrf_guard
 def _client() -> TestClient:
     app = FastAPI()
 
+    @app.post("/api")
+    def api_root_write() -> dict[str, bool]:
+        return {"ok": True}
+
     @app.post("/api/write")
     def api_write() -> dict[str, bool]:
         return {"ok": True}
@@ -36,6 +40,19 @@ def test_cross_origin_authenticated_api_mutation_is_blocked():
     assert response.status_code == 403
     assert response.json() == {"detail": "Cross-site authenticated request blocked"}
     assert "attacker.example" not in response.text
+
+
+def test_cross_origin_authenticated_root_api_mutation_is_blocked():
+    client = _client()
+    client.cookies.set(SESSION_COOKIE, "session-token")
+
+    response = client.post(
+        "/api",
+        headers={"Origin": "https://attacker.example"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Cross-site authenticated request blocked"}
 
 
 def test_fetch_metadata_blocks_cross_site_authenticated_mutation_without_origin():
