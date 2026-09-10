@@ -12,7 +12,7 @@ _API_NO_STORE_HEADERS = {
     "Vercel-CDN-Cache-Control": "no-store",
 }
 _BASELINE_CSP = "base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
-_SENSITIVE_CAPABILITY_QUERY_KEYS = frozenset({"reset", "invite"})
+_SENSITIVE_CAPABILITY_QUERY_KEYS = frozenset({"reset", "invite", "session_id"})
 _PRODUCT_PATHS = frozenset({"/app", "/app/"})
 _OAUTH_CALLBACK_PATHS = frozenset(
     {
