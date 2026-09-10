@@ -80,9 +80,15 @@ Use one row per company. Do not store credentials, tokens, account secrets, paym
 
 - [ ] Signup/login succeeds
 - [ ] Verification/password-reset flow works if used
+- [ ] When password reset is exercised, requesting a newer reset link makes the older outstanding reset link unusable
+- [ ] A successful password reset invalidates previously issued authenticated sessions for that account
+- [ ] Reset/invite capability URLs are not retained by browser/CDN caches and do not leak through the `Referer` header
+- [ ] When a workspace invitation is resent to the same email address for the same workspace, the older outstanding invite becomes unusable while accepted invite history remains intact
 - [ ] Command Center loads without blank or partially hidden sections
 - [ ] Navigation to Connections, Overview, Insights and Settings works
 - [ ] Mobile viewport receives a basic smoke check
+
+Use a dedicated test account for reset/session invalidation checks. Do not disrupt an active pilot user's session merely to satisfy the checklist.
 
 ### 3. Connector onboarding
 
@@ -156,6 +162,9 @@ Pause onboarding for the affected company if any of the following occurs:
 - pilot preflight reports `configuration_blocked` or a live-check blocker
 - the app shows another company's data
 - authentication or tenant isolation appears incorrect
+- a reset link remains valid after a newer reset link is issued for the same account
+- an old authenticated session survives a successful password reset
+- an older outstanding workspace invite remains valid after the same address is re-invited to the same workspace
 - a connector requests unexpectedly broad/write permissions
 - live billing is reached unexpectedly
 - a secret or token appears in UI, logs, diagnostics, screenshots, or error output
