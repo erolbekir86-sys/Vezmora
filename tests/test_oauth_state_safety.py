@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 
 from app import connectors, oauth_state_safety, postgres_compat, store
@@ -20,7 +21,7 @@ def _oauth_db() -> sqlite3.Connection:
     return con
 
 
-def test_saving_fresh_state_prunes_only_expired_rows(monkeypatch) -> None:
+def test_saving_fresh_state_prunes_only_expired_rows_and_hashes_new_state(monkeypatch) -> None:
     con = _oauth_db()
     con.execute(
         """INSERT INTO oauth_states(state,user_id,workspace_id,provider,created_at)
@@ -37,28 +38,33 @@ def test_saving_fresh_state_prunes_only_expired_rows(monkeypatch) -> None:
 
     oauth_state_safety.save_oauth_state_with_cleanup("new_state", 3, 30, "google")
 
+    hashed = hashlib.sha256(b"new_state").hexdigest()
     states = {
         row[0]
         for row in con.execute("SELECT state FROM oauth_states ORDER BY state").fetchall()
     }
-    assert states == {"active_state", "new_state"}
+    assert states == {"active_state", hashed}
+    assert "new_state" not in states
     new_row = con.execute(
-        "SELECT user_id,workspace_id,provider FROM oauth_states WHERE state='new_state'"
+        "SELECT user_id,workspace_id,provider FROM oauth_states WHERE state=?",
+        (hashed,),
     ).fetchone()
     assert tuple(new_row) == (3, 30, "google")
 
 
-def test_oauth_state_can_only_be_consumed_once(monkeypatch) -> None:
+def test_hashed_oauth_state_can_only_be_consumed_once(monkeypatch) -> None:
     con = _oauth_db()
+    raw_state = "safe_state_123"
+    stored_state = hashlib.sha256(raw_state.encode()).hexdigest()
     con.execute(
         "INSERT INTO oauth_states(state,user_id,workspace_id,provider) VALUES(?,?,?,?)",
-        ("safe_state_123", 7, 42, "google"),
+        (stored_state, 7, 42, "google"),
     )
     con.commit()
     monkeypatch.setattr(oauth_state_safety._store, "_connect", lambda: con)
 
-    first = oauth_state_safety.consume_oauth_state_atomic("safe_state_123", "google")
-    second = oauth_state_safety.consume_oauth_state_atomic("safe_state_123", "google")
+    first = oauth_state_safety.consume_oauth_state_atomic(raw_state, "google")
+    second = oauth_state_safety.consume_oauth_state_atomic(raw_state, "google")
 
     assert first is not None
     assert first["user_id"] == 7
@@ -68,17 +74,35 @@ def test_oauth_state_can_only_be_consumed_once(monkeypatch) -> None:
     assert con.execute("SELECT COUNT(*) FROM oauth_states").fetchone()[0] == 0
 
 
-def test_wrong_provider_does_not_destroy_valid_state(monkeypatch) -> None:
+def test_legacy_raw_oauth_state_remains_consumable_during_rollout(monkeypatch) -> None:
     con = _oauth_db()
     con.execute(
         "INSERT INTO oauth_states(state,user_id,workspace_id,provider) VALUES(?,?,?,?)",
-        ("provider_scoped_state", 8, 43, "meta"),
+        ("legacy_raw_state", 6, 41, "google"),
     )
     con.commit()
     monkeypatch.setattr(oauth_state_safety._store, "_connect", lambda: con)
 
-    assert oauth_state_safety.consume_oauth_state_atomic("provider_scoped_state", "google") is None
-    valid = oauth_state_safety.consume_oauth_state_atomic("provider_scoped_state", "meta")
+    row = oauth_state_safety.consume_oauth_state_atomic("legacy_raw_state", "google")
+
+    assert row is not None
+    assert row["user_id"] == 6
+    assert con.execute("SELECT COUNT(*) FROM oauth_states").fetchone()[0] == 0
+
+
+def test_wrong_provider_does_not_destroy_valid_hashed_state(monkeypatch) -> None:
+    con = _oauth_db()
+    raw_state = "provider_scoped_state"
+    stored_state = hashlib.sha256(raw_state.encode()).hexdigest()
+    con.execute(
+        "INSERT INTO oauth_states(state,user_id,workspace_id,provider) VALUES(?,?,?,?)",
+        (stored_state, 8, 43, "meta"),
+    )
+    con.commit()
+    monkeypatch.setattr(oauth_state_safety._store, "_connect", lambda: con)
+
+    assert oauth_state_safety.consume_oauth_state_atomic(raw_state, "google") is None
+    valid = oauth_state_safety.consume_oauth_state_atomic(raw_state, "meta")
 
     assert valid is not None
     assert valid["provider"] == "meta"
@@ -86,24 +110,27 @@ def test_wrong_provider_does_not_destroy_valid_state(monkeypatch) -> None:
 
 def test_expired_oauth_state_is_not_consumed(monkeypatch) -> None:
     con = _oauth_db()
+    raw_state = "expired_state"
+    stored_state = hashlib.sha256(raw_state.encode()).hexdigest()
     con.execute(
         """INSERT INTO oauth_states(state,user_id,workspace_id,provider,created_at)
            VALUES(?,?,?,?,datetime('now','-21 minutes'))""",
-        ("expired_state", 9, 44, "google"),
+        (stored_state, 9, 44, "google"),
     )
     con.commit()
     monkeypatch.setattr(oauth_state_safety._store, "_connect", lambda: con)
 
-    assert oauth_state_safety.consume_oauth_state_atomic("expired_state", "google") is None
+    assert oauth_state_safety.consume_oauth_state_atomic(raw_state, "google") is None
     assert con.execute(
-        "SELECT COUNT(*) FROM oauth_states WHERE state='expired_state'"
+        "SELECT COUNT(*) FROM oauth_states WHERE state=?",
+        (stored_state,),
     ).fetchone()[0] == 1
 
 
 def test_postgres_compat_translates_oauth_expiry_expressions() -> None:
     consume_sql = postgres_compat._sql(
         """DELETE FROM oauth_states
-           WHERE state=? AND provider=?
+           WHERE (state=? OR state=?) AND provider=?
              AND created_at >= datetime('now','-20 minutes')
            RETURNING *"""
     )
@@ -112,7 +139,7 @@ def test_postgres_compat_translates_oauth_expiry_expressions() -> None:
     )
 
     assert "CURRENT_TIMESTAMP - INTERVAL '20 minutes'" in consume_sql
-    assert consume_sql.count("%s") == 2
+    assert consume_sql.count("%s") == 3
     assert "RETURNING *" in consume_sql
     assert "CURRENT_TIMESTAMP - INTERVAL '20 minutes'" in cleanup_sql
 

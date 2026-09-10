@@ -1,36 +1,43 @@
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 from . import store as _store
 
 
+def _state_hash(state: str) -> str:
+    return hashlib.sha256(state.encode("utf-8")).hexdigest()
+
+
 def save_oauth_state_with_cleanup(state: str, user_id: int, workspace_id: int, provider: str) -> None:
-    """Prune expired OAuth capabilities before saving one fresh state row."""
+    """Prune expired OAuth capabilities and persist only a hash of new state values."""
     with _store._connect() as con:
         con.execute(
             "DELETE FROM oauth_states WHERE created_at < datetime('now','-20 minutes')"
         )
         con.execute(
             "INSERT INTO oauth_states(state,user_id,workspace_id,provider) VALUES(?,?,?,?)",
-            (state, user_id, workspace_id, provider),
+            (_state_hash(state), user_id, workspace_id, provider),
         )
 
 
 def consume_oauth_state_atomic(state: str, provider: str) -> dict[str, Any] | None:
     """Consume one fresh provider-scoped OAuth state in a single database claim.
 
-    DELETE ... RETURNING makes the state a true one-time capability on both
-    SQLite and PostgreSQL. A concurrent callback that loses the claim receives
-    no row instead of reusing a state that another request already accepted.
+    New states are stored as SHA-256 hashes so the live bearer-style capability
+    is not retained in the database. During the short rollout window, raw state
+    matching remains accepted for states issued by the previous release. DELETE
+    ... RETURNING keeps either representation single-use on SQLite/PostgreSQL.
     """
+    hashed_state = _state_hash(state)
     with _store._connect() as con:
         row = con.execute(
             """DELETE FROM oauth_states
-               WHERE state=? AND provider=?
+               WHERE (state=? OR state=?) AND provider=?
                  AND created_at >= datetime('now','-20 minutes')
                RETURNING *""",
-            (state, provider),
+            (hashed_state, state, provider),
         ).fetchone()
     return dict(row) if row else None
 
