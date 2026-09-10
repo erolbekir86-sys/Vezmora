@@ -213,7 +213,31 @@ def beta_safety_snapshot() -> dict[str, object]:
     }
 
 
+def _public_beta_safety_snapshot(snapshot: dict[str, object]) -> dict[str, object]:
+    """Expose only the public execution-lock evidence needed by live preflight checks.
+
+    Detailed configuration diagnostics remain available to local/operator tooling via
+    beta_safety_snapshot(), but production callers do not need an inventory of which
+    database, billing, OAuth, SMTP, or internal-secret settings are configured.
+    """
+    public_keys = (
+        "ok",
+        "brand",
+        "phase",
+        "external_execution_enabled",
+        "autopilot_execution_enabled",
+        "meta_execution_scope_enabled",
+        "dev_show_tokens_enabled",
+        "private_beta_execution_safe",
+        "production_transport_safe",
+    )
+    return {key: snapshot[key] for key in public_keys}
+
+
 @_app.get("/health/beta-readiness")
 def beta_readiness() -> dict[str, object]:
-    """Safe, non-secret private-beta readiness and execution-lock diagnostics."""
-    return beta_safety_snapshot()
+    """Return minimal production safety evidence and fuller local diagnostics."""
+    snapshot = beta_safety_snapshot()
+    if _production_like():
+        return _public_beta_safety_snapshot(snapshot)
+    return snapshot
