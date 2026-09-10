@@ -14,9 +14,20 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Stripe Customer Portal integration
 - verified **test-mode** Vexmera Starter, Growth and Scale catalog for the currently connected Stripe sandbox
 - safe Stripe catalog preflight that validates active monthly SEK prices and expected amounts without printing secrets or IDs
+- Stripe webhook payload and signature-input bounds before signature verification
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
+- bounded provider transport handling with customer-visible transport errors sanitized before rendering
+- baseline runtime CSP plus HSTS, no-store, referrer, frame, MIME-sniffing and browser capability hardening
+- server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies
+- API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
+- repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
+- a minimal public production health/privacy contract that exposes deployment identity without provider, database, billing, SMTP, OAuth or secret-configuration inventory
+- CI supply-chain hardening and removal of the obsolete write workflow
+- release-version consistency checks so package/app/release metadata cannot drift silently
 - premium Vexmera marketing-site and Command Center polish aligned to the same pricing, product names and private-beta language
 - Swedish-first Command Center customer copy with Core, Pulse, Launch and Autopilot retained as product names
+- explicit first-use dashboard guidance and clear empty-state handling for customers without connected KPI data
+- consolidated five-company pilot go/no-go documentation separating machine-checkable safety from required human/manual evidence
 - Python 3.12+ deployment target
 - automated Python tests plus syntax validation for all shipped frontend JavaScript in GitHub Actions
 
@@ -26,6 +37,18 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
+- The Stripe webhook acknowledgement/order path still requires the tracked retry-safety follow-up before billing reliability should be considered fully closed; do not work around it by changing live Stripe configuration.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access and the five-company pilot remain launch work.
+- Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
 
-Secrets and credentials are never committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require the correct environment configuration in the active deployment.
+## Current release verification posture
+
+The repository now distinguishes three different kinds of evidence:
+
+1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
+2. **Deployment evidence** — a successful Vercel Preview/Production deployment for runtime-affecting changes.
+3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, and the documented five-company pilot checklist.
+
+A green CI run alone does not substitute for deployment or pilot/manual evidence.
+
+Secrets and credentials are never intentionally committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require the correct environment configuration in the active deployment.
