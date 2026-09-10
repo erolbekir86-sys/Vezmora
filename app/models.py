@@ -23,6 +23,14 @@ def _strip_human_text(value: Any) -> Any:
     return value.strip() if isinstance(value, str) else value
 
 
+def _strip_optional_identifier(value: Any) -> Any:
+    """Trim copy-pasted provider identifiers and map blank values to unset."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    return stripped or None
+
+
 def _bounded_opaque_payload(value: dict[str, Any]) -> dict[str, Any]:
     """Keep intentionally flexible persisted payloads small and JSON-safe."""
     try:
@@ -129,6 +137,11 @@ class ConnectorSettings(BaseModel):
     analytics_property_id: str | None = Field(default=None, max_length=80)
     ads_customer_id: str | None = Field(default=None, max_length=80)
     meta_ad_account_id: str | None = Field(default=None, max_length=100)
+
+    @field_validator("analytics_property_id", "ads_customer_id", "meta_ad_account_id", mode="before")
+    @classmethod
+    def normalize_provider_identifier(cls, value: Any) -> Any:
+        return _strip_optional_identifier(value)
 
 
 class SyncRequest(BaseModel):
