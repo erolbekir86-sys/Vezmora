@@ -38,6 +38,7 @@ def _protect_private_cache(request: Request, response) -> None:
         or path.startswith("/api/")
         or path == "/health"
         or path.startswith("/health/")
+        or path in _PRODUCT_PATHS
         or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys))
     )
     if not protected:

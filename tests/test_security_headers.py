@@ -147,10 +147,15 @@ def test_private_product_and_capability_urls_never_emit_referrers(monkeypatch) -
         public_response = client.get("/public")
 
     assert product_response.headers["referrer-policy"] == "no-referrer"
+    assert product_response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+    assert product_response.headers["cdn-cache-control"] == "no-store"
+    assert product_response.headers["vercel-cdn-cache-control"] == "no-store"
     assert reset_response.headers["referrer-policy"] == "no-referrer"
     assert invite_response.headers["referrer-policy"] == "no-referrer"
     assert stripe_session_response.headers["referrer-policy"] == "no-referrer"
     assert public_response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert "cache-control" not in public_response.headers
+    assert "cdn-cache-control" not in public_response.headers
 
 
 def test_capability_urls_are_no_store_without_disabling_normal_public_caching(monkeypatch) -> None:
