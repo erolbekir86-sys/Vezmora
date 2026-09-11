@@ -51,9 +51,6 @@ async def _meta_get(
             response = await client.get(url, params=params)
         except httpx.TransportError:
             if attempt == attempts - 1:
-                # Transport exceptions can include the request URL. Meta requests
-                # may carry access tokens in query parameters, so never surface or
-                # retain the raw exception as user-visible diagnostic context.
                 raise HTTPException(
                     status_code=502,
                     detail="Meta request failed after bounded network retries",
@@ -150,8 +147,6 @@ async def _meta_insight_rows(
             raise HTTPException(status_code=502, detail="Meta insights pagination returned a repeated page")
         seen_next.add(candidate)
         next_url = candidate
-        # Meta's paging URL contains the cursor and its own query values. Do not
-        # append the first-page params again on subsequent requests.
         next_params = None
 
     if next_url:
@@ -195,7 +190,9 @@ async def sync_meta_reliable(workspace_id: int, days: int = 7) -> dict[str, obje
         "limit": 100,
     }
 
-    async with httpx.AsyncClient(timeout=40) as client:
+    # Keep redirects disabled explicitly. Meta read requests carry access tokens
+    # in query parameters, so an unexpected redirect must never forward them.
+    async with httpx.AsyncClient(timeout=40, follow_redirects=False) as client:
         account_response = await _meta_get(
             client,
             f"https://graph.facebook.com/{graph_version}/{ad_account}",
