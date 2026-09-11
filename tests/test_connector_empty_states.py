@@ -115,6 +115,19 @@ def test_google_ads_missing_configuration_is_not_reframed_as_healthy_empty_state
     assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
 
 
+def test_invalid_google_ads_response_is_not_reframed_as_healthy_empty_state():
+    result = {
+        "campaign_rows": 0,
+        "ads_rows": 0,
+        "warnings": ["Google Ads sync returned an invalid response"],
+    }
+
+    guarded = _with_empty_state_warning("Google Ads", result, 7)
+
+    assert guarded["warnings"] == ["Google Ads sync returned an invalid response"]
+    assert not any("connection can still be healthy" in warning for warning in guarded["warnings"])
+
+
 def test_google_analytics_rows_do_not_get_obsolete_click_semantics_warning():
     result = {
         "analytics_rows": 4,
