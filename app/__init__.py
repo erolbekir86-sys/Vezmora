@@ -80,6 +80,11 @@ _install_google_read_reliability()
 from .meta_read_reliability import install_meta_read_reliability as _install_meta_read_reliability
 _install_meta_read_reliability()
 
+# Bind the initial Google authorization-code exchange to the same explicit
+# non-redirecting transport posture before app.main imports google_callback.
+from .google_oauth_transport_safety import install_google_oauth_transport_safety as _install_google_oauth_transport_safety
+_install_google_oauth_transport_safety()
+
 from . import google_ads_diagnostics as _google_ads_diagnostics
 from . import connector_empty_states as _connector_empty_states
 from . import connector_privacy_controls as _connector_privacy_controls
