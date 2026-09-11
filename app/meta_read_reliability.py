@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
@@ -24,6 +25,23 @@ from .store import (
 _RETRYABLE_META_STATUS = {429, 500, 502, 503, 504}
 _META_RATE_LIMIT_CODES = {4, 17, 32, 613}
 _META_GRAPH_HOST = "graph.facebook.com"
+_META_AD_ACCOUNT_RE = re.compile(r"^(?:act_)?([0-9]+)$")
+_META_GRAPH_VERSION_RE = re.compile(r"^v[0-9]+\.[0-9]+$")
+
+
+def _validated_meta_ad_account_id(value: object) -> str:
+    raw = str(value or "").strip()
+    match = _META_AD_ACCOUNT_RE.fullmatch(raw)
+    if not match:
+        raise ValueError("invalid Meta ad account ID")
+    return f"act_{match.group(1)}"
+
+
+def _validated_meta_graph_version(value: object) -> str:
+    raw = str(value or "v24.0").strip()
+    if not _META_GRAPH_VERSION_RE.fullmatch(raw):
+        raise ValueError("invalid Meta Graph version")
+    return raw
 
 
 def _retry_delay(response: Any | None, attempt: int) -> float:
@@ -51,9 +69,6 @@ async def _meta_get(
             response = await client.get(url, params=params)
         except httpx.TransportError:
             if attempt == attempts - 1:
-                # Transport exceptions can include the request URL. Meta requests
-                # may carry access tokens in query parameters, so never surface or
-                # retain the raw exception as user-visible diagnostic context.
                 raise HTTPException(
                     status_code=502,
                     detail="Meta request failed after bounded network retries",
@@ -150,8 +165,6 @@ async def _meta_insight_rows(
             raise HTTPException(status_code=502, detail="Meta insights pagination returned a repeated page")
         seen_next.add(candidate)
         next_url = candidate
-        # Meta's paging URL contains the cursor and its own query values. Do not
-        # append the first-page params again on subsequent requests.
         next_params = None
 
     if next_url:
@@ -172,18 +185,24 @@ async def sync_meta_reliable(workspace_id: int, days: int = 7) -> dict[str, obje
     if not connector or connector.get("status") != "connected" or not connector.get("secret_blob"):
         raise HTTPException(status_code=409, detail="Connect Meta before syncing")
     metadata = connector.get("metadata") or {}
-    ad_account = str(metadata.get("ad_account_id") or "").strip()
-    if not ad_account:
+    raw_ad_account = metadata.get("ad_account_id")
+    if not str(raw_ad_account or "").strip():
         raise HTTPException(status_code=409, detail="Meta ad account ID is missing")
-    if not ad_account.startswith("act_"):
-        ad_account = f"act_{ad_account}"
+    try:
+        ad_account = _validated_meta_ad_account_id(raw_ad_account)
+    except ValueError:
+        raise HTTPException(status_code=409, detail="Meta ad account ID is invalid") from None
 
     token = _connectors.decrypt_json(connector["secret_blob"])
     access_token = token.get("access_token")
     if not access_token:
         raise HTTPException(status_code=409, detail="Meta connector has no access token")
 
-    graph_version = os.getenv("META_GRAPH_VERSION", "v24.0")
+    try:
+        graph_version = _validated_meta_graph_version(os.getenv("META_GRAPH_VERSION", "v24.0"))
+    except ValueError:
+        raise HTTPException(status_code=503, detail="Meta Graph version configuration is invalid") from None
+
     base_currency = str(get_workspace_settings(workspace_id).get("base_currency") or "SEK").upper()
     start_date, end_date = _connectors._date_range(days)
     params = {
@@ -195,7 +214,7 @@ async def sync_meta_reliable(workspace_id: int, days: int = 7) -> dict[str, obje
         "limit": 100,
     }
 
-    async with httpx.AsyncClient(timeout=40) as client:
+    async with httpx.AsyncClient(timeout=40, follow_redirects=False) as client:
         account_response = await _meta_get(
             client,
             f"https://graph.facebook.com/{graph_version}/{ad_account}",
