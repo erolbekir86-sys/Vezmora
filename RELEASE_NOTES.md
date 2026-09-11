@@ -15,6 +15,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - verified **test-mode** Vexmera Starter, Growth and Scale catalog for the currently connected Stripe sandbox
 - safe Stripe catalog preflight that validates active monthly SEK prices and expected amounts without printing secrets or IDs
 - Stripe webhook payload and signature-input bounds before signature verification
+- Stripe webhook retry safety that keeps completed event IDs idempotent while leaving transient billing-state failures retryable until the local projection succeeds
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
 - baseline runtime CSP plus HSTS, no-store, referrer, frame, MIME-sniffing and browser capability hardening
@@ -38,7 +39,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
-- The Stripe webhook acknowledgement/order path still requires the tracked retry-safety follow-up before billing reliability should be considered fully closed; do not work around it by changing live Stripe configuration.
+- Stripe webhook retry safety is code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access and the five-company pilot remain launch work.
 - Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
 
