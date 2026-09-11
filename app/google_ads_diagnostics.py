@@ -17,8 +17,12 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
         payload = response.json() or {}
     except Exception:
         return None
+    if not isinstance(payload, dict):
+        return None
 
     error = payload.get("error") or {}
+    if not isinstance(error, dict):
+        return None
     parts: list[str] = []
 
     status = error.get("status")
@@ -31,12 +35,15 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
     request_id = None
     google_error_code = None
     google_error_message = None
-    for detail in error.get("details") or []:
+    details = error.get("details") or []
+    if not isinstance(details, list):
+        details = []
+    for detail in details:
         if not isinstance(detail, dict):
             continue
         request_id = request_id or detail.get("requestId")
         errors = detail.get("errors") or []
-        if errors and isinstance(errors[0], dict):
+        if isinstance(errors, list) and errors and isinstance(errors[0], dict):
             first = errors[0]
             error_code = first.get("errorCode") or {}
             if isinstance(error_code, dict) and error_code:
