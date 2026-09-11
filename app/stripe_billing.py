@@ -210,6 +210,9 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
 
     event_type = str(event.get("type") or "")
+    if not event_type:
+        raise HTTPException(status_code=400, detail="Stripe webhook event type is required")
+
     obj, metadata = _webhook_object(event)
     workspace_id: int | None = None
     if metadata.get("workspace_id"):
