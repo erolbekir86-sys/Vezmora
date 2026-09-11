@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from fastapi import HTTPException
@@ -22,6 +23,7 @@ from .store import (
 
 _RETRYABLE_META_STATUS = {429, 500, 502, 503, 504}
 _META_RATE_LIMIT_CODES = {4, 17, 32, 613}
+_META_GRAPH_HOST = "graph.facebook.com"
 
 
 def _retry_delay(response: Any | None, attempt: int) -> float:
@@ -83,6 +85,24 @@ def _meta_error_detail(response: Any, action: str) -> str:
     return f"{action} failed ({response.status_code})"
 
 
+def _validated_meta_paging_url(value: object) -> str:
+    """Accept only HTTPS Meta Graph paging URLs so provider tokens cannot leave the trusted host."""
+    candidate = str(value or "").strip()
+    try:
+        parsed = urlsplit(candidate)
+    except ValueError:
+        parsed = None
+    if (
+        not parsed
+        or parsed.scheme.lower() != "https"
+        or (parsed.hostname or "").lower() != _META_GRAPH_HOST
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise HTTPException(status_code=502, detail="Meta insights returned an invalid pagination URL")
+    return candidate
+
+
 def _max_meta_pages() -> int:
     raw = (os.getenv("VEZMORA_META_MAX_INSIGHTS_PAGES") or "50").strip()
     try:
@@ -125,7 +145,7 @@ async def _meta_insight_rows(
         if not candidate:
             next_url = None
             break
-        candidate = str(candidate)
+        candidate = _validated_meta_paging_url(candidate)
         if candidate in seen_next:
             raise HTTPException(status_code=502, detail="Meta insights pagination returned a repeated page")
         seen_next.add(candidate)
