@@ -37,6 +37,15 @@ def test_connector_states_distinguish_unsynced_data_empty_warning_and_error():
     assert "Synkfel" in STATE_UI
 
 
+def test_blocking_provider_warnings_cannot_render_as_healthy_empty_state():
+    assert "text.includes('sync failed')" in STATE_UI
+    assert "text.includes('returned an invalid response')" in STATE_UI
+    assert "text.includes(' is missing')" in STATE_UI
+    assert "if (blockingWarning && rows === 0) return 'error'" in STATE_UI
+    assert "if (rows > 0 && hasWarning) return 'data-warning'" in STATE_UI
+    assert "text.includes('no campaign data found')" in STATE_UI
+
+
 def test_persistent_state_uses_saved_last_sync_metadata_read_only():
     assert "connection?.metadata?.last_sync" in STATE_UI
     assert "const data = await api(ws('/api/connectors'))" in STATE_UI
