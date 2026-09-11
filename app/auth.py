@@ -77,7 +77,15 @@ def end_session(response: Response, raw_token: str | None) -> None:
     token_hash = _session_token_hash(raw_token)
     if token_hash:
         revoke_session(token_hash)
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    # Keep deletion attributes aligned with the session cookie. This avoids
+    # leaving a stale auth cookie behind when production uses Secure cookies.
+    response.delete_cookie(
+        SESSION_COOKIE,
+        path="/",
+        httponly=True,
+        secure=_secure_cookie(),
+        samesite="lax",
+    )
 
 
 def require_user(vezmora_session: str | None = Cookie(default=None)) -> dict[str, Any]:
