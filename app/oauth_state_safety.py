@@ -6,12 +6,22 @@ from typing import Any
 from . import store as _store
 
 
+MAX_OAUTH_STATE_CHARS = 256
+
+
 def _state_hash(state: str) -> str:
     return hashlib.sha256(state.encode("utf-8")).hexdigest()
 
 
+def _valid_state_input(state: object) -> bool:
+    """Accept only plausible OAuth state values before hashing or database work."""
+    return isinstance(state, str) and 0 < len(state) <= MAX_OAUTH_STATE_CHARS
+
+
 def save_oauth_state_with_cleanup(state: str, user_id: int, workspace_id: int, provider: str) -> None:
     """Prune expired OAuth capabilities and persist only a hash of new state values."""
+    if not _valid_state_input(state):
+        raise ValueError("OAuth state is empty or too large")
     with _store._connect() as con:
         con.execute(
             "DELETE FROM oauth_states WHERE created_at < datetime('now','-20 minutes')"
@@ -29,7 +39,10 @@ def consume_oauth_state_atomic(state: str, provider: str) -> dict[str, Any] | No
     is not retained in the database. During the short rollout window, raw state
     matching remains accepted for states issued by the previous release. DELETE
     ... RETURNING keeps either representation single-use on SQLite/PostgreSQL.
+    Implausibly large callback input fails closed before hashing or database work.
     """
+    if not _valid_state_input(state):
+        return None
     hashed_state = _state_hash(state)
     with _store._connect() as con:
         row = con.execute(
