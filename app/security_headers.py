@@ -30,9 +30,14 @@ def _https_runtime() -> bool:
     return (os.getenv("VEZMORA_APP_URL") or "").strip().lower().startswith("https://")
 
 
+def _query_keys(request: Request) -> frozenset[str]:
+    """Normalize query parameter names before applying capability safeguards."""
+    return frozenset(key.casefold() for key in request.query_params.keys())
+
+
 def _protect_private_cache(request: Request, response) -> None:
     path = request.url.path
-    query_keys = request.query_params.keys()
+    query_keys = _query_keys(request)
     protected = (
         path == "/api"
         or path.startswith("/api/")
@@ -49,7 +54,7 @@ def _protect_private_cache(request: Request, response) -> None:
 
 def _protect_capability_referrer(request: Request, response) -> None:
     """Keep private app URLs and one-time capability parameters out of Referer headers."""
-    query_keys = request.query_params.keys()
+    query_keys = _query_keys(request)
     sensitive_oauth_callback = request.url.path in _OAUTH_CALLBACK_PATHS and (
         "code" in query_keys or "state" in query_keys
     )

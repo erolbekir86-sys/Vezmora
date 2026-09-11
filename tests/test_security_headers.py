@@ -158,6 +158,30 @@ def test_private_product_and_capability_urls_never_emit_referrers(monkeypatch) -
     assert "cdn-cache-control" not in public_response.headers
 
 
+def test_capability_query_safeguards_are_case_insensitive(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/public")
+    def public():
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        responses = [
+            client.get("/public?RESET=one-time-secret"),
+            client.get("/public?Invite=one-time-secret"),
+            client.get("/public?SESSION_ID=cs_test_private_session"),
+        ]
+
+    for response in responses:
+        assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+        assert response.headers["cdn-cache-control"] == "no-store"
+        assert response.headers["vercel-cdn-cache-control"] == "no-store"
+        assert response.headers["referrer-policy"] == "no-referrer"
+
+
 def test_capability_urls_are_no_store_without_disabling_normal_public_caching(monkeypatch) -> None:
     monkeypatch.delenv("VERCEL", raising=False)
     monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
