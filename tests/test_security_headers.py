@@ -125,6 +125,27 @@ def test_api_no_store_preserves_explicit_route_cache_control(monkeypatch) -> Non
     assert response.headers["vercel-cdn-cache-control"] == "no-store"
 
 
+def test_private_route_preserves_explicit_no_referrer_and_cache_headers(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/app")
+    def product(response: Response):
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Cache-Control"] = "private, no-store"
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        response = client.get("/app")
+
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["cache-control"] == "private, no-store"
+    assert response.headers["cdn-cache-control"] == "no-store"
+    assert response.headers["vercel-cdn-cache-control"] == "no-store"
+
+
 def test_private_product_and_capability_urls_never_emit_referrers(monkeypatch) -> None:
     monkeypatch.delenv("VERCEL", raising=False)
     monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
