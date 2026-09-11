@@ -11,6 +11,7 @@ from fastapi import HTTPException
 
 from .pricing import STRIPE_PRICE_ENV, checkout_pricing_reconciled, normalize_plan
 from .store import (
+    _connect,
     get_workspace_settings,
     record_billing_event,
     set_workspace_billing,
@@ -204,6 +205,16 @@ def _webhook_object(event: dict[str, Any]) -> tuple[dict[str, Any], dict[str, An
     return obj, metadata
 
 
+def _billing_event_processed(provider_event_id: str) -> bool:
+    """Read the idempotency ledger without mutating billing or claiming the event."""
+    with _connect() as con:
+        row = con.execute(
+            "SELECT 1 FROM billing_events WHERE provider_event_id=? LIMIT 1",
+            (provider_event_id,),
+        ).fetchone()
+    return row is not None
+
+
 def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     event_id = str(event.get("id") or "")
     if not event_id:
@@ -233,9 +244,14 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     if workspace_id is None and customer:
         workspace_id = workspace_id_by_stripe_customer(str(customer))
 
-    if not record_billing_event(workspace_id, event_id, event_type, event):
+    # Sequential duplicate deliveries remain side-effect free. The final unique
+    # insert below still protects the ledger if two deliveries race; the billing
+    # projection itself is an idempotent assignment in that case.
+    if _billing_event_processed(event_id):
         return {"ok": True, "duplicate": True}
 
+    # Apply the local billing projection before claiming the Stripe event as
+    # processed. If the local write raises, Stripe can retry the same event.
     if event_type == "checkout.session.completed" and workspace_id is not None:
         plan = _event_plan(metadata.get("plan"))
         try:
@@ -263,4 +279,7 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
         set_workspace_billing(workspace_id, billing_status="canceled", subscription_id=str(obj.get("id") or "") or None)
     elif event_type == "invoice.payment_failed" and workspace_id is not None:
         set_workspace_billing(workspace_id, billing_status="past_due")
+
+    if not record_billing_event(workspace_id, event_id, event_type, event):
+        return {"ok": True, "duplicate": True}
     return {"ok": True, "workspace_id": workspace_id, "type": event_type}
