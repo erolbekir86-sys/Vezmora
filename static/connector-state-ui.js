@@ -33,7 +33,12 @@
     const hasWarning = warnings.length > 0;
     const explicitEmpty = warnings.some((text) => text.includes('no campaign data found'));
     const blockingWarning = warnings.some(
-      (text) => text.includes('sync failed') || text.includes('access token') || text.includes('reconnect')
+      (text) =>
+        text.includes('sync failed') ||
+        text.includes('access token') ||
+        text.includes('reconnect') ||
+        text.includes('returned an invalid response') ||
+        text.includes(' is missing')
     );
 
     if (blockingWarning && rows === 0) return 'error';
