@@ -233,9 +233,9 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
     if workspace_id is None and customer:
         workspace_id = workspace_id_by_stripe_customer(str(customer))
 
-    if not record_billing_event(workspace_id, event_id, event_type, event):
-        return {"ok": True, "duplicate": True}
-
+    # Apply the idempotent local billing projection before claiming the Stripe
+    # event as processed. If the local write raises, Stripe can retry the same
+    # event instead of being permanently short-circuited by the event ledger.
     if event_type == "checkout.session.completed" and workspace_id is not None:
         plan = _event_plan(metadata.get("plan"))
         try:
@@ -263,4 +263,7 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
         set_workspace_billing(workspace_id, billing_status="canceled", subscription_id=str(obj.get("id") or "") or None)
     elif event_type == "invoice.payment_failed" and workspace_id is not None:
         set_workspace_billing(workspace_id, billing_status="past_due")
+
+    if not record_billing_event(workspace_id, event_id, event_type, event):
+        return {"ok": True, "duplicate": True}
     return {"ok": True, "workspace_id": workspace_id, "type": event_type}
