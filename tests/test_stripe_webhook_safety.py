@@ -57,13 +57,19 @@ def test_apply_webhook_rejects_missing_event_type_before_side_effects(monkeypatc
 
 
 def test_apply_webhook_keeps_duplicate_event_idempotency(monkeypatch):
-    recorded = []
+    touched = {"recorded": False, "billing": False}
 
-    def fake_record(workspace_id, event_id, event_type, event):
-        recorded.append((workspace_id, event_id, event_type))
-        return False
-
-    monkeypatch.setattr(stripe_billing, "record_billing_event", fake_record)
+    monkeypatch.setattr(stripe_billing, "_billing_event_processed", lambda event_id: event_id == "evt_test_duplicate")
+    monkeypatch.setattr(
+        stripe_billing,
+        "record_billing_event",
+        lambda *args, **kwargs: touched.__setitem__("recorded", True),
+    )
+    monkeypatch.setattr(
+        stripe_billing,
+        "set_workspace_billing",
+        lambda *args, **kwargs: touched.__setitem__("billing", True),
+    )
 
     event = {
         "id": "evt_test_duplicate",
@@ -74,7 +80,7 @@ def test_apply_webhook_keeps_duplicate_event_idempotency(monkeypatch):
     result = stripe_billing.apply_webhook(event)
 
     assert result == {"ok": True, "duplicate": True}
-    assert recorded == [(7, "evt_test_duplicate", "invoice.payment_failed")]
+    assert touched == {"recorded": False, "billing": False}
 
 
 @pytest.mark.parametrize(
@@ -112,6 +118,7 @@ def test_apply_webhook_rejects_malformed_signed_event_shapes_before_side_effects
 def test_checkout_completed_treats_invalid_trial_days_as_non_trialing(monkeypatch):
     billing_calls = []
 
+    monkeypatch.setattr(stripe_billing, "_billing_event_processed", lambda event_id: False)
     monkeypatch.setattr(stripe_billing, "record_billing_event", lambda *args, **kwargs: True)
     monkeypatch.setattr(stripe_billing, "set_workspace_billing", lambda *args, **kwargs: billing_calls.append(kwargs))
 
