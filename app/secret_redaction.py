@@ -21,13 +21,18 @@ SENSITIVE_ENV_NAMES = (
     "VEZMORA_ENCRYPTION_KEY",
 )
 
+_SENSITIVE_FIELD_NAMES = (
+    r"developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
+    r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
+    r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state"
+)
+
 _SENSITIVE_INLINE_PATTERNS = (
     re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
-    re.compile(
-        r"(?i)((?:developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
-        r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
-        r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state)\s*[:=]\s*)[^\s,;|]+"
-    ),
+    # JSON and Python-dict style diagnostics are common provider-error shapes.
+    # Keep the key/quote formatting while replacing only the sensitive value.
+    re.compile(rf"(?i)([\"']?(?:{_SENSITIVE_FIELD_NAMES})[\"']?\s*:\s*[\"'])[^\"']+(?=[\"'])"),
+    re.compile(rf"(?i)((?:{_SENSITIVE_FIELD_NAMES})\s*[:=]\s*)[^\s,;|]+"),
 )
 
 
