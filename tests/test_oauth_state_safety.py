@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 
+import pytest
+
 from app import connectors, oauth_state_safety, postgres_compat, store
 
 
@@ -125,6 +127,37 @@ def test_expired_oauth_state_is_not_consumed(monkeypatch) -> None:
         "SELECT COUNT(*) FROM oauth_states WHERE state=?",
         (stored_state,),
     ).fetchone()[0] == 1
+
+
+def test_oversized_callback_state_fails_closed_before_database_access(monkeypatch) -> None:
+    touched = False
+
+    def unexpected_connect():
+        nonlocal touched
+        touched = True
+        raise AssertionError("database must not be touched for implausible state input")
+
+    monkeypatch.setattr(oauth_state_safety._store, "_connect", unexpected_connect)
+    oversized = "x" * (oauth_state_safety.MAX_OAUTH_STATE_CHARS + 1)
+
+    assert oauth_state_safety.consume_oauth_state_atomic(oversized, "google") is None
+    assert oauth_state_safety.consume_oauth_state_atomic("", "google") is None
+    assert touched is False
+
+
+def test_generated_state_guard_rejects_empty_or_oversized_values_before_database_access(monkeypatch) -> None:
+    monkeypatch.setattr(
+        oauth_state_safety._store,
+        "_connect",
+        lambda: (_ for _ in ()).throw(AssertionError("database must not be touched")),
+    )
+
+    with pytest.raises(ValueError, match="empty or too large"):
+        oauth_state_safety.save_oauth_state_with_cleanup("", 1, 2, "google")
+    with pytest.raises(ValueError, match="empty or too large"):
+        oauth_state_safety.save_oauth_state_with_cleanup(
+            "x" * (oauth_state_safety.MAX_OAUTH_STATE_CHARS + 1), 1, 2, "meta"
+        )
 
 
 def test_postgres_compat_translates_oauth_expiry_expressions() -> None:
