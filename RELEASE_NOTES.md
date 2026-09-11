@@ -21,6 +21,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
+- AI evidence-boundary hardening that treats company profiles, business memory, connector data, competitor content, web-derived text and saved notes as untrusted data rather than instructions, while preserving human approval gates and secret-handling rules
 - a minimal public production health/privacy contract that exposes deployment identity without provider, database, billing, SMTP, OAuth or secret-configuration inventory
 - CI supply-chain hardening and removal of the obsolete write workflow
 - release-version consistency checks so package/app/release metadata cannot drift silently
@@ -47,7 +48,7 @@ The repository now distinguishes three different kinds of evidence:
 
 1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
 2. **Deployment evidence** — a successful Vercel Preview/Production deployment for runtime-affecting changes.
-3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, and the documented five-company pilot checklist.
+3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, and the documented five-company pilot checklist.
 
 A green CI run alone does not substitute for deployment or pilot/manual evidence.
 
