@@ -5,6 +5,7 @@ import os
 import httpx
 
 from . import connectors as _connectors
+from .google_read_reliability import _validated_google_ads_api_version
 from .secret_redaction import redact_sensitive_text as _redact_sensitive_text
 
 
@@ -76,7 +77,7 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
 
     try:
         access_token, _ = await _connectors._refresh_google_access_token(workspace_id, connector)
-        api_version = (os.getenv("GOOGLE_ADS_API_VERSION") or "v25").strip()
+        api_version = _validated_google_ads_api_version(os.getenv("GOOGLE_ADS_API_VERSION") or "v25")
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
@@ -87,7 +88,7 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
             headers["login-customer-id"] = "".join(ch for ch in login_customer_id if ch.isdigit())
 
         # Small read-only probe. It performs no mutation and requests no campaign changes.
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
             reliable_post = getattr(_connectors, "_google_read_post", None)
             if callable(reliable_post):
                 response = await reliable_post(
