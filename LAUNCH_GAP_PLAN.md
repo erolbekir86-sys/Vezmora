@@ -1,6 +1,6 @@
 # Vexmera launch gap plan
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-11
 
 This document tracks the shortest safe path from the current build to a five-company private beta. It intentionally excludes changes to live ad execution, campaign budgets, bids, live billing, secrets, permissions, domains, DNS or customer data.
 
@@ -11,8 +11,9 @@ Do not use a hard-coded commit SHA in this document as a release pointer. Before
 ## Current verified position
 
 - GitHub repository access is working and the latest checked `main` GitHub Actions run was successful.
-- At this review, Vercel reported `Deployment rate limited — retry in 24 hours.` That is a deployment-capacity status, not evidence of a code-test failure. Production deployment of newer commits therefore remains unverified until Vercel accepts another build.
+- The latest capability-URL hardening change has been merged to `main` after successful CI and a Ready Vercel preview. Production revision and production runtime behavior still require separate deployed verification before external pilot use.
 - Public landing, authenticated app shell, onboarding guards, connector-state UX, owner/admin disconnect controls, privacy controls, accessibility hardening, session-cookie input bounds and customer-safe sync summaries are present.
+- Sensitive one-time capability query keys are normalized before no-store/no-referrer matching, so casing variations do not bypass the existing reset, invite, Stripe session or OAuth callback browser safeguards.
 - Public `/health/runtime` is intentionally minimal in production and no longer exposes provider, database, Stripe, SMTP, OAuth or secret-configuration booleans.
 - Public beta-readiness output is limited to the small safety surface needed to prove the private-beta execution posture. Full configuration checks belong in operator preflight.
 - Google and Meta read-only connector paths have bounded retry and malformed-response hardening. Meta also has bounded Insights pagination, loop/page-limit protection and campaign/date deduplication.
@@ -21,7 +22,7 @@ Do not use a hard-coded commit SHA in this document as a release pointer. Before
 - Stripe code and customer-facing pricing use Start / Growth / Pro at 995 / 1,495 / 2,995 SEK monthly. Checkout remains fail-closed until the current test-mode catalog and explicit pricing-version marker are verified.
 - Production environment guards no longer synthesize historical `STRIPE_PRICE_STARTER` or `STRIPE_PRICE_SCALE` aliases from the current pricing model.
 - Flexible persisted approval/job/Core-action payloads are bounded to 64 KiB of compact UTF-8 JSON before persistence.
-- Direct ChatGPT to Vercel project/log inspection remains blocked while the connected Vercel account exposes no usable team/project context.
+- Direct ChatGPT to Vercel production runtime/log inspection remains unavailable; do not treat a Ready preview as evidence that production runtime QA has passed.
 
 ## Priority 0: restore reliable production observability
 
@@ -29,7 +30,6 @@ Goal: prove what is actually deployed before inviting external users.
 
 Remaining gates:
 
-- wait for or resolve the Vercel deployment rate limit without changing DNS, domains, secrets or production permissions;
 - verify the accepted production deployment revision through minimal `/health/runtime` output;
 - run operator `scripts/preflight.py` in the configured environment rather than relying on public configuration booleans;
 - inspect production errors/logs once direct Vercel visibility is available;
@@ -119,16 +119,16 @@ These percentages are planning estimates, not release certification.
 - Backend / diagnostics / safety foundations: 96%
 - Google + Meta production-read integration readiness: 84%
 - Billing sandbox readiness: 82%
-- Five-company pilot operations / documentation: 93%
+- Five-company pilot operations / documentation: 94%
 - Production observability and final deployed QA: 65%
 - Overall private-beta readiness: approximately 89%
 
-The remaining work is concentrated in external verification and deployed evidence rather than missing core product code. The largest gates are Vercel deployment/observability, Google Ads Basic Access plus a real read-only sync, current Stripe sandbox reconciliation and E2E billing verification, authenticated browser QA, real Meta lifecycle verification and final legal sign-off.
+The remaining work is concentrated in external verification and deployed evidence rather than missing core product code. The largest gates are Vercel production observability, Google Ads Basic Access plus a real read-only sync, current Stripe sandbox reconciliation and E2E billing verification, authenticated browser QA, real Meta lifecycle verification and final legal sign-off.
 
 ## Immediate next action
 
 1. Recheck GitHub `main`, CI and Vercel status at execution time.
-2. Once Vercel accepts a build, verify the deployed revision and run operator preflight.
+2. Verify the production deployment revision and run operator preflight once production visibility is available.
 3. Complete authenticated browser QA against that verified deployment.
 4. Verify Google Ads Basic Access and run the first controlled read-only Ads sync.
 5. Reconcile the Start/Growth/Pro Stripe sandbox and complete signed webhook/Checkout/Portal E2E.
