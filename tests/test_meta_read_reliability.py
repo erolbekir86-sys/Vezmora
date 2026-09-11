@@ -168,6 +168,33 @@ def test_meta_pagination_fails_closed_on_repeated_next_url(monkeypatch):
     assert "repeated page" in str(exc_info.value.detail)
 
 
+@pytest.mark.parametrize(
+    "next_url",
+    [
+        "https://evil.example/next?access_token=private",
+        "http://graph.facebook.com/v24.0/next?access_token=private",
+        "https://user:pass@graph.facebook.com/v24.0/next?access_token=private",
+    ],
+)
+def test_meta_pagination_rejects_untrusted_urls_before_token_can_leave_meta(next_url, monkeypatch):
+    monkeypatch.setenv("VEZMORA_META_MAX_INSIGHTS_PAGES", "10")
+    client = FakeClient([FakeResponse(200, {"data": [], "paging": {"next": next_url}})])
+
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            reliability._meta_insight_rows(
+                client,
+                "https://graph.facebook.com/v24.0/act_1/insights",
+                {"access_token": "private"},
+            )
+        )
+
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.detail == "Meta insights returned an invalid pagination URL"
+    assert len(client.calls) == 1
+    assert "private" not in str(exc_info.value.detail)
+
+
 def test_meta_pagination_fails_closed_instead_of_writing_partial_unbounded_result(monkeypatch):
     monkeypatch.setenv("VEZMORA_META_MAX_INSIGHTS_PAGES", "1")
     client = FakeClient(
