@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -21,6 +22,25 @@ from .store import (
 )
 
 _RETRYABLE_GOOGLE_STATUS = {429, 500, 502, 503, 504}
+_GA_PROPERTY_RE = re.compile(r"^(?:properties/)?([0-9]+)$")
+_GOOGLE_ADS_API_VERSION_RE = re.compile(r"^v[0-9]+$")
+
+
+def _validated_ga_property_id(value: object) -> str | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    match = _GA_PROPERTY_RE.fullmatch(raw)
+    if not match:
+        raise ValueError("invalid Google Analytics property ID")
+    return match.group(1)
+
+
+def _validated_google_ads_api_version(value: object) -> str:
+    raw = str(value or "v25").strip()
+    if not _GOOGLE_ADS_API_VERSION_RE.fullmatch(raw):
+        raise ValueError("invalid Google Ads API version")
+    return raw
 
 
 def _retry_delay(response: Any | None, attempt: int) -> float:
@@ -108,7 +128,7 @@ async def refresh_google_access_token_reliable(workspace_id: int, connector: dic
 
     if refresh_token and client_id and client_secret:
         try:
-            async with httpx.AsyncClient(timeout=20) as client:
+            async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
                 response = await _google_post(
                     client,
                     _connectors.GOOGLE_TOKEN_URL,
@@ -171,7 +191,13 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
     }
     warnings: list[str] = synced["warnings"]  # type: ignore[assignment]
 
-    property_id = str(metadata.get("analytics_property_id") or "").replace("properties/", "")
+    raw_property_id = metadata.get("analytics_property_id")
+    try:
+        property_id = _validated_ga_property_id(raw_property_id)
+    except ValueError:
+        property_id = None
+        warnings.append("Analytics sync failed (invalid property ID)")
+
     if property_id:
         payload = {
             "dimensions": [{"name": "date"}],
@@ -181,7 +207,7 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
             "limit": "100",
         }
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
                 response = await _google_post(
                     client,
                     f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:runReport",
@@ -238,112 +264,118 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
                         warnings.append("Analytics returned malformed rows; invalid rows were skipped")
             else:
                 warnings.append(f"Analytics sync failed ({response.status_code})")
-    else:
+    elif not raw_property_id:
         warnings.append("Google Analytics property ID is missing")
 
     customer_id = "".join(ch for ch in str(metadata.get("ads_customer_id") or "") if ch.isdigit())
     developer_token = os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN")
     if customer_id and developer_token:
-        api_version = os.getenv("GOOGLE_ADS_API_VERSION", "v25")
-        query = (
-            "SELECT segments.date, customer.currency_code, campaign.id, campaign.name, "
-            "metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value, metrics.cost_micros "
-            f"FROM campaign WHERE segments.date BETWEEN '{start_date}' AND '{end_date}' ORDER BY segments.date"
-        )
-        ads_headers = {**headers, "developer-token": developer_token}
-        login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
-        if login_customer_id:
-            ads_headers["login-customer-id"] = "".join(ch for ch in login_customer_id if ch.isdigit())
-
         try:
-            async with httpx.AsyncClient(timeout=40) as client:
-                response = await _google_post(
-                    client,
-                    f"https://googleads.googleapis.com/{api_version}/customers/{customer_id}/googleAds:searchStream",
-                    headers=ads_headers,
-                    json_body={"query": query},
-                )
-        except httpx.TransportError:
-            warnings.append("Google Ads sync failed after bounded network retries")
-        else:
-            if response.status_code < 400:
-                results = _safe_ads_results(response)
-                if results is None:
-                    warnings.append("Google Ads sync returned an invalid response")
-                else:
-                    daily: dict[str, dict[str, float]] = {}
-                    for result in results:
-                        segments = result.get("segments") if isinstance(result.get("segments"), dict) else {}
-                        metrics = result.get("metrics") if isinstance(result.get("metrics"), dict) else {}
-                        customer = result.get("customer") if isinstance(result.get("customer"), dict) else {}
-                        campaign = result.get("campaign") if isinstance(result.get("campaign"), dict) else {}
-                        metric_date = str(segments.get("date") or "")
-                        campaign_id = campaign.get("id")
-                        if not metric_date or campaign_id in (None, ""):
-                            continue
+            api_version = _validated_google_ads_api_version(os.getenv("GOOGLE_ADS_API_VERSION", "v25"))
+        except ValueError:
+            api_version = None
+            warnings.append("Google Ads sync failed (invalid API version)")
 
-                        currency = str(customer.get("currencyCode") or customer.get("currency_code") or base_currency).upper()
-                        spend = _number(metrics.get("costMicros", metrics.get("cost_micros", 0))) / 1_000_000
-                        revenue = _number(metrics.get("conversionsValue", metrics.get("conversions_value", 0)))
-                        conversions = _number(metrics.get("conversions", 0))
-                        impressions = int(_number(metrics.get("impressions", 0)))
-                        clicks = int(_number(metrics.get("clicks", 0)))
+        if api_version:
+            query = (
+                "SELECT segments.date, customer.currency_code, campaign.id, campaign.name, "
+                "metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value, metrics.cost_micros "
+                f"FROM campaign WHERE segments.date BETWEEN '{start_date}' AND '{end_date}' ORDER BY segments.date"
+            )
+            ads_headers = {**headers, "developer-token": developer_token}
+            login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
+            if login_customer_id:
+                ads_headers["login-customer-id"] = "".join(ch for ch in login_customer_id if ch.isdigit())
 
-                        upsert_campaign_metric(
-                            workspace_id,
-                            {
-                                "provider": "google_ads",
-                                "external_campaign_id": campaign_id,
-                                "campaign_name": campaign.get("name") or str(campaign_id),
-                                "date": metric_date,
-                                "impressions": impressions,
-                                "clicks": clicks,
-                                "conversions": conversions,
-                                "spend": spend,
-                                "revenue": revenue,
-                                "currency": currency,
-                            },
-                        )
-                        synced["campaign_rows"] = int(synced["campaign_rows"]) + 1
-
-                        rate = get_fx_rate(workspace_id, currency)
-                        if rate is None:
-                            warning = (
-                                f"Missing FX rate for Google Ads {currency} → {base_currency}; "
-                                "raw campaign rows were saved but aggregate KPI was skipped"
-                            )
-                            if warning not in warnings:
-                                warnings.append(warning)
-                            continue
-
-                        bucket = daily.setdefault(
-                            metric_date,
-                            {"impressions": 0, "clicks": 0, "conversions": 0, "spend": 0.0, "revenue": 0.0},
-                        )
-                        bucket["impressions"] += impressions
-                        bucket["clicks"] += clicks
-                        bucket["conversions"] += conversions
-                        bucket["spend"] += spend * rate
-                        bucket["revenue"] += revenue * rate
-
-                    for metric_date, bucket in daily.items():
-                        upsert_kpi(
-                            workspace_id,
-                            {
-                                "date": metric_date,
-                                "impressions": int(bucket["impressions"]),
-                                "clicks": int(bucket["clicks"]),
-                                "leads": 0,
-                                "conversions": int(round(bucket["conversions"])),
-                                "spend_sek": bucket["spend"],
-                                "revenue_sek": bucket["revenue"],
-                                "source": "google_ads",
-                                "currency": base_currency,
-                            },
-                        )
-                        synced["ads_rows"] = int(synced["ads_rows"]) + 1
+            try:
+                async with httpx.AsyncClient(timeout=40, follow_redirects=False) as client:
+                    response = await _google_post(
+                        client,
+                        f"https://googleads.googleapis.com/{api_version}/customers/{customer_id}/googleAds:searchStream",
+                        headers=ads_headers,
+                        json_body={"query": query},
+                    )
+            except httpx.TransportError:
+                warnings.append("Google Ads sync failed after bounded network retries")
             else:
-                warnings.append(f"Google Ads sync failed ({response.status_code})")
+                if response.status_code < 400:
+                    results = _safe_ads_results(response)
+                    if results is None:
+                        warnings.append("Google Ads sync returned an invalid response")
+                    else:
+                        daily: dict[str, dict[str, float]] = {}
+                        for result in results:
+                            segments = result.get("segments") if isinstance(result.get("segments"), dict) else {}
+                            metrics = result.get("metrics") if isinstance(result.get("metrics"), dict) else {}
+                            customer = result.get("customer") if isinstance(result.get("customer"), dict) else {}
+                            campaign = result.get("campaign") if isinstance(result.get("campaign"), dict) else {}
+                            metric_date = str(segments.get("date") or "")
+                            campaign_id = campaign.get("id")
+                            if not metric_date or campaign_id in (None, ""):
+                                continue
+
+                            currency = str(customer.get("currencyCode") or customer.get("currency_code") or base_currency).upper()
+                            spend = _number(metrics.get("costMicros", metrics.get("cost_micros", 0))) / 1_000_000
+                            revenue = _number(metrics.get("conversionsValue", metrics.get("conversions_value", 0)))
+                            conversions = _number(metrics.get("conversions", 0))
+                            impressions = int(_number(metrics.get("impressions", 0)))
+                            clicks = int(_number(metrics.get("clicks", 0)))
+
+                            upsert_campaign_metric(
+                                workspace_id,
+                                {
+                                    "provider": "google_ads",
+                                    "external_campaign_id": campaign_id,
+                                    "campaign_name": campaign.get("name") or str(campaign_id),
+                                    "date": metric_date,
+                                    "impressions": impressions,
+                                    "clicks": clicks,
+                                    "conversions": conversions,
+                                    "spend": spend,
+                                    "revenue": revenue,
+                                    "currency": currency,
+                                },
+                            )
+                            synced["campaign_rows"] = int(synced["campaign_rows"]) + 1
+
+                            rate = get_fx_rate(workspace_id, currency)
+                            if rate is None:
+                                warning = (
+                                    f"Missing FX rate for Google Ads {currency} → {base_currency}; "
+                                    "raw campaign rows were saved but aggregate KPI was skipped"
+                                )
+                                if warning not in warnings:
+                                    warnings.append(warning)
+                                continue
+
+                            bucket = daily.setdefault(
+                                metric_date,
+                                {"impressions": 0, "clicks": 0, "conversions": 0, "spend": 0.0, "revenue": 0.0},
+                            )
+                            bucket["impressions"] += impressions
+                            bucket["clicks"] += clicks
+                            bucket["conversions"] += conversions
+                            bucket["spend"] += spend * rate
+                            bucket["revenue"] += revenue * rate
+
+                        for metric_date, bucket in daily.items():
+                            upsert_kpi(
+                                workspace_id,
+                                {
+                                    "date": metric_date,
+                                    "impressions": int(bucket["impressions"]),
+                                    "clicks": int(bucket["clicks"]),
+                                    "leads": 0,
+                                    "conversions": int(round(bucket["conversions"])),
+                                    "spend_sek": bucket["spend"],
+                                    "revenue_sek": bucket["revenue"],
+                                    "source": "google_ads",
+                                    "currency": base_currency,
+                                },
+                            )
+                            synced["ads_rows"] = int(synced["ads_rows"]) + 1
+                else:
+                    warnings.append(f"Google Ads sync failed ({response.status_code})")
     elif customer_id:
         warnings.append("GOOGLE_ADS_DEVELOPER_TOKEN is missing")
     else:
@@ -370,4 +402,5 @@ def install_google_read_reliability() -> None:
     _connectors._refresh_google_access_token = refresh_google_access_token_reliable
     _connectors.sync_google = sync_google_reliable
     _connectors._google_read_post = _google_post
+    _connectors._validated_google_ads_api_version = _validated_google_ads_api_version
     _connectors._vexmera_google_read_reliability_installed = True
