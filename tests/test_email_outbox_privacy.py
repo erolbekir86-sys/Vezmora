@@ -20,7 +20,7 @@ class FakeConnection:
         return object()
 
 
-def test_successful_email_body_is_scrubbed_after_original_finish(monkeypatch) -> None:
+def _install_fakes(monkeypatch):
     events: list[tuple] = []
     con = FakeConnection()
 
@@ -29,6 +29,11 @@ def test_successful_email_body_is_scrubbed_after_original_finish(monkeypatch) ->
 
     monkeypatch.setattr(email_outbox_privacy, "_ORIGINAL_FINISH_EMAIL", fake_original)
     monkeypatch.setattr(email_outbox_privacy._store, "_connect", lambda: con)
+    return events, con
+
+
+def test_successful_email_body_is_scrubbed_after_original_finish(monkeypatch) -> None:
+    events, con = _install_fakes(monkeypatch)
 
     email_outbox_privacy.finish_email_with_body_scrub(17)
 
@@ -36,41 +41,26 @@ def test_successful_email_body_is_scrubbed_after_original_finish(monkeypatch) ->
     assert len(con.calls) == 1
     sql, params = con.calls[0]
     assert "SET body_text=''" in sql
-    assert "status='sent'" in sql
+    assert "status IN ('sent','failed')" in sql
     assert params == (17,)
 
 
-def test_failed_email_keeps_body_available_for_future_retry(monkeypatch) -> None:
-    events: list[tuple] = []
-
-    def fake_original(email_id: int, error: str | None = None) -> None:
-        events.append(("finish", email_id, error))
-
-    monkeypatch.setattr(email_outbox_privacy, "_ORIGINAL_FINISH_EMAIL", fake_original)
-
-    def should_not_connect():
-        raise AssertionError("Failed email body must not be scrubbed")
-
-    monkeypatch.setattr(email_outbox_privacy._store, "_connect", should_not_connect)
+def test_failed_email_body_is_scrubbed_after_terminal_failure(monkeypatch) -> None:
+    events, con = _install_fakes(monkeypatch)
 
     email_outbox_privacy.finish_email_with_body_scrub(18, "SMTP timeout")
 
     assert events == [("finish", 18, "SMTP timeout")]
+    assert len(con.calls) == 1
+    sql, params = con.calls[0]
+    assert "SET body_text=''" in sql
+    assert "status IN ('sent','failed')" in sql
+    assert params == (18,)
 
 
 def test_failed_email_error_is_redacted_before_persistence(monkeypatch) -> None:
     monkeypatch.setenv("SMTP_PASSWORD", "smtp-super-secret")
-    events: list[tuple] = []
-
-    def fake_original(email_id: int, error: str | None = None) -> None:
-        events.append((email_id, error))
-
-    monkeypatch.setattr(email_outbox_privacy, "_ORIGINAL_FINISH_EMAIL", fake_original)
-    monkeypatch.setattr(
-        email_outbox_privacy._store,
-        "_connect",
-        lambda: (_ for _ in ()).throw(AssertionError("Failed mail must not scrub body")),
-    )
+    events, _ = _install_fakes(monkeypatch)
 
     email_outbox_privacy.finish_email_with_body_scrub(
         19,
@@ -78,17 +68,22 @@ def test_failed_email_error_is_redacted_before_persistence(monkeypatch) -> None:
     )
 
     assert len(events) == 1
-    persisted = str(events[0][1])
+    persisted = str(events[0][2])
     assert "smtp-super-secret" not in persisted
     assert "inline-smtp-pass" not in persisted
     assert "host=smtp.example" in persisted
     assert persisted.count("[REDACTED]") >= 2
 
 
-def test_scrub_update_is_status_guarded() -> None:
+def test_scrub_update_is_terminal_status_guarded() -> None:
     source = open(email_outbox_privacy.__file__, encoding="utf-8").read()
-    assert "WHERE id=? AND status='sent'" in source
-    assert "if error:" in source
+    assert "WHERE id=? AND status IN ('sent','failed')" in source
+    assert "if error:" not in source
+
+
+def test_current_outbox_claims_only_queued_rows() -> None:
+    source = open(store.__file__, encoding="utf-8").read()
+    assert "SELECT * FROM email_outbox WHERE status='queued'" in source
 
 
 def test_emailer_binds_privacy_wrapped_finish_helper() -> None:
