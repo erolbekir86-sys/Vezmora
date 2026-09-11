@@ -74,7 +74,7 @@ async def _revoke_provider_token(provider: str, secret_blob: str | None) -> tupl
         return False, False
 
     try:
-        async with httpx.AsyncClient(timeout=12) as client:
+        async with httpx.AsyncClient(timeout=12, follow_redirects=False) as client:
             if provider == "google":
                 response = await client.post(
                     "https://oauth2.googleapis.com/revoke",
