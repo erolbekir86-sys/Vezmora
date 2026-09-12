@@ -7,6 +7,7 @@ import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from .login_enumeration_safety import install_login_enumeration_safety
 from .secret_redaction import redact_sensitive_text
 
 
@@ -23,6 +24,11 @@ def sanitize_http_detail(value: Any) -> Any:
 
 def install_http_error_safety(app: FastAPI) -> None:
     """Install defense-in-depth handlers for user-visible/provider transport errors."""
+
+    # app.main is fully imported before this installer runs. Harden its public
+    # email lookup at the same HTTP safety boundary without changing auth routes
+    # or their response contracts.
+    install_login_enumeration_safety()
 
     @app.exception_handler(HTTPException)
     async def _safe_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
