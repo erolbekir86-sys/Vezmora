@@ -51,19 +51,19 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - The public marketing page uses illustrative demo metrics and labels them as demo data.
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
-- Google connector transport hardening is code/CI/deploy verified, but Google Ads Basic Access and live read-only account evidence remain external/manual pilot gates.
-- Meta connector transport hardening is code/CI/deploy verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but live read-only account evidence remains a manual pilot gate.
-- Stripe request-body and webhook retry hardening are code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
+- Google connector transport hardening is code/CI verified, but Google Ads Basic Access, direct deployed runtime inspection and live read-only account evidence remain external/manual pilot gates.
+- Meta connector transport hardening is code/CI verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but direct deployed runtime inspection and live read-only account evidence remain manual pilot gates.
+- Stripe request-body and webhook retry hardening are code/CI verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
-- Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
+- The GitHub-side Vercel checks for the latest hardening PRs are green, but the connected Vercel integration currently cannot enumerate the project or directly inspect those deployments. Treat direct runtime/deployment inspection as a separate unresolved evidence gate.
 
 ## Current release verification posture
 
 The repository now distinguishes three different kinds of evidence:
 
 1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
-2. **Deployment evidence** — a successful Vercel Preview/Production deployment for runtime-affecting changes.
+2. **Deployment evidence** — direct evidence that a specific Vercel Preview/Production deployment is ready and inspectable; a GitHub-side Vercel check alone is not treated as full runtime observability.
 3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, fresh Stripe sandbox evidence, and the documented five-company pilot checklist.
 
 A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read in one environment also does not prove that a different account, OAuth grant, manager hierarchy or provider-access level is ready.
