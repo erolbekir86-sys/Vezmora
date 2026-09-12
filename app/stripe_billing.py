@@ -168,13 +168,13 @@ def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
         raise HTTPException(status_code=413, detail="Stripe webhook payload is too large")
     if signature is not None and len(signature) > MAX_STRIPE_SIGNATURE_CHARS:
         raise HTTPException(status_code=400, detail="Stripe-Signature header is too large")
+    if not signature:
+        raise HTTPException(status_code=400, detail="Stripe-Signature header is required")
 
-    client = _stripe_client()
     secret = os.getenv("STRIPE_WEBHOOK_SECRET")
     if not secret:
         raise HTTPException(status_code=503, detail="STRIPE_WEBHOOK_SECRET is not configured")
-    if not signature:
-        raise HTTPException(status_code=400, detail="Stripe-Signature header is required")
+    client = _stripe_client()
     try:
         event = client.construct_event(payload, signature, secret)
     except Exception:
