@@ -33,6 +33,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - login-only account-enumeration timing hardening that adds equivalent password-KDF work for unknown accounts without changing password-reset or other email-lookup flows
 - process-local IP abuse limiting for public login, registration and password-reset POST endpoints on Vercel, with `Retry-After` and no-store responses; this is defense in depth and does not replace distributed edge controls
 - versioned PBKDF2-HMAC-SHA256 password records for new/rotated credentials using a 600k work factor, while historical 310k records remain verifiable with timing padding
+- transactional SMTP transport that fails closed on Vercel when STARTTLS is disabled, validates SMTP ports before network I/O and uses a certificate-verifying default TLS context before reset/invite mail or SMTP credentials are sent
 - diagnostic secret redaction extended to OAuth callback/provider URL capabilities such as authorization `code`, `state`, access/refresh tokens and client secrets while preserving ordinary non-URL error-code context
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
@@ -57,10 +58,11 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Google connector transport hardening is code/CI verified, but Google Ads Basic Access, direct deployed runtime inspection and live read-only account evidence remain external/manual pilot gates.
 - Meta connector transport hardening is code/CI verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but direct deployed runtime inspection and live read-only account evidence remain manual pilot gates.
 - Stripe request-body and webhook retry hardening are code/CI verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
+- SMTP STARTTLS hardening passed CI on its PR head, but the corresponding Vercel deployment check was build-rate-limited; deployed runtime evidence for that change remains outstanding.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
 - The connected Vercel app currently sees the Vezmora team but enumerates zero projects, so direct project/deployment/runtime inspection is unavailable through that connector.
-- New Vercel previews are currently build-rate-limited for 24 hours. Runtime-affecting changes that lack a fresh successful preview remain unmerged until deployment verification becomes available again.
+- New Vercel previews are currently build-rate-limited for 24 hours. Runtime-affecting changes without fresh successful deployment evidence must not be treated as deployment-verified.
 
 ## Current release verification posture
 
