@@ -45,6 +45,34 @@ def test_oversized_signature_is_rejected_before_stripe_client_or_secret_lookup(m
     assert exc_info.value.detail == "Stripe-Signature header is too large"
 
 
+def test_missing_signature_is_rejected_before_stripe_client_creation(monkeypatch):
+    def unexpected_client():
+        raise AssertionError("missing signature must fail before Stripe client creation")
+
+    monkeypatch.setattr(stripe_billing, "_stripe_client", unexpected_client)
+    monkeypatch.delenv("STRIPE_WEBHOOK_SECRET", raising=False)
+
+    with pytest.raises(HTTPException) as exc_info:
+        stripe_billing.parse_webhook(b"{}", None)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Stripe-Signature header is required"
+
+
+def test_missing_webhook_secret_is_rejected_before_stripe_client_creation(monkeypatch):
+    def unexpected_client():
+        raise AssertionError("missing webhook secret must fail before Stripe client creation")
+
+    monkeypatch.setattr(stripe_billing, "_stripe_client", unexpected_client)
+    monkeypatch.delenv("STRIPE_WEBHOOK_SECRET", raising=False)
+
+    with pytest.raises(HTTPException) as exc_info:
+        stripe_billing.parse_webhook(b"{}", "sig_test")
+
+    assert exc_info.value.status_code == 503
+    assert exc_info.value.detail == "STRIPE_WEBHOOK_SECRET is not configured"
+
+
 def test_signature_at_limit_still_reaches_signature_verification(monkeypatch):
     monkeypatch.setattr(stripe_billing, "MAX_STRIPE_SIGNATURE_CHARS", 8)
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private_test_value")
