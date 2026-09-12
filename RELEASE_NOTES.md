@@ -31,11 +31,14 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - secure session-cookie cleanup shared by normal logout and permanent account deletion so production `Secure` cookie attributes remain aligned when authentication state is cleared
 - successful password reset treated as credential rotation, with all previously authenticated sessions revoked atomically with the password update
 - login-only account-enumeration timing hardening that adds equivalent password-KDF work for unknown accounts without changing password-reset or other email-lookup flows
+- process-local IP abuse limiting for public login, registration and password-reset POST endpoints on Vercel, with `Retry-After` and no-store responses; this is defense in depth and does not replace distributed edge controls
+- versioned PBKDF2-HMAC-SHA256 password records for new/rotated credentials using a 600k work factor, while historical 310k records remain verifiable with timing padding
 - diagnostic secret redaction extended to OAuth callback/provider URL capabilities such as authorization `code`, `state`, access/refresh tokens and client secrets while preserving ordinary non-URL error-code context
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
 - AI evidence-boundary hardening that treats company profiles, business memory, connector data, competitor content, web-derived text and saved notes as untrusted data rather than instructions, while preserving human approval gates and secret-handling rules
 - a minimal public production health/privacy contract that exposes deployment identity without provider, database, billing, SMTP, OAuth or secret-configuration inventory
+- pilot/runtime/legal preflight HTTP evidence bound to a plain HTTPS origin with redirects rejected, public response buffering capped at 1 MiB and ambiguous targets rejected before network I/O
 - CI supply-chain hardening and removal of the obsolete write workflow
 - CI dependency-consistency verification with `python -m pip check` after installation, before compile and test stages
 - release-version consistency checks so package/app/release metadata cannot drift silently
@@ -56,14 +59,15 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Stripe request-body and webhook retry hardening are code/CI verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
-- The GitHub-side Vercel checks for the latest hardening PRs are green, but the connected Vercel integration currently cannot enumerate the project or directly inspect those deployments. Treat direct runtime/deployment inspection as a separate unresolved evidence gate.
+- The connected Vercel app currently sees the Vezmora team but enumerates zero projects, so direct project/deployment/runtime inspection is unavailable through that connector.
+- New Vercel previews are currently build-rate-limited for 24 hours. Runtime-affecting changes that lack a fresh successful preview remain unmerged until deployment verification becomes available again.
 
 ## Current release verification posture
 
 The repository now distinguishes three different kinds of evidence:
 
 1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
-2. **Deployment evidence** — direct evidence that a specific Vercel Preview/Production deployment is ready and inspectable; a GitHub-side Vercel check alone is not treated as full runtime observability.
+2. **Deployment evidence** — direct evidence that a specific Vercel Preview/Production deployment is ready and inspectable; a GitHub-side status alone is not treated as full runtime observability.
 3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, fresh Stripe sandbox evidence, and the documented five-company pilot checklist.
 
 A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read in one environment also does not prove that a different account, OAuth grant, manager hierarchy or provider-access level is ready.
