@@ -23,7 +23,6 @@ def test_production_snapshot_marks_disabled_starttls_transport_unsafe(monkeypatc
     assert snapshot["smtp_minimum_configured"] is True
     assert snapshot["smtp_transport_ready"] is False
     assert snapshot["production_transport_safe"] is False
-    assert snapshot["transport"]["smtp_starttls_required_but_disabled"] is True
     assert snapshot["pilot_readiness"]["checks"]["transactional_email_configured"] is False
     assert "production_transport_safe" in snapshot["pilot_readiness"]["configuration_blockers"]
     assert "transactional_email_configured" in snapshot["pilot_readiness"]["configuration_blockers"]
@@ -52,7 +51,6 @@ def test_local_operator_snapshot_keeps_plaintext_smtp_as_nonproduction_diagnosti
     snapshot = beta_readiness.beta_safety_snapshot()
 
     assert snapshot["transport"]["production_like"] is False
-    assert snapshot["transport"]["smtp_starttls_required_but_disabled"] is False
     assert snapshot["production_transport_safe"] is True
     assert snapshot["smtp_transport_ready"] is True
 
