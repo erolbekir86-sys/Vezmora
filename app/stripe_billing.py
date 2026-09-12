@@ -59,6 +59,24 @@ def _integration_identifier() -> str:
     return f"vezmora_beta_{suffix}"
 
 
+def _billing_return_base_url() -> str:
+    """Return the canonical origin used for Stripe Checkout/Portal redirects.
+
+    Local development keeps the historical localhost fallback. Vercel must never
+    create Stripe return URLs pointing at localhost or plaintext HTTP when the
+    canonical application URL is missing or unsafe.
+    """
+    configured = (os.getenv("VEZMORA_APP_URL") or "").strip().rstrip("/")
+    if os.getenv("VERCEL"):
+        if not configured or not configured.lower().startswith("https://"):
+            raise HTTPException(
+                status_code=503,
+                detail="VEZMORA_APP_URL must be configured as HTTPS before billing redirects can be created",
+            )
+        return configured
+    return configured or "http://localhost:8000"
+
+
 def _trial_days(settings: dict[str, Any]) -> int:
     """Grant at most the unused part of the workspace's first beta trial.
 
@@ -103,7 +121,7 @@ def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
     if settings.get("stripe_subscription_id") and str(settings.get("billing_status") or "") not in {"canceled", "incomplete_expired"}:
         raise HTTPException(status_code=409, detail="This workspace already has a Stripe subscription. Use the billing portal to manage it.")
 
-    base_url = os.getenv("VEZMORA_APP_URL", "http://localhost:8000").rstrip("/")
+    base_url = _billing_return_base_url()
     trial_days = _trial_days(settings)
     metadata = {
         "workspace_id": str(workspace_id),
@@ -140,7 +158,7 @@ def create_portal(workspace_id: int) -> dict[str, Any]:
     customer = settings.get("stripe_customer_id")
     if not customer:
         raise HTTPException(status_code=409, detail="No Stripe customer is attached to this workspace")
-    base_url = os.getenv("VEZMORA_APP_URL", "http://localhost:8000").rstrip("/")
+    base_url = _billing_return_base_url()
     session = client.v1.billing_portal.sessions.create({"customer": customer, "return_url": f"{base_url}/?view=team"})
     return {"url": session.url}
 
