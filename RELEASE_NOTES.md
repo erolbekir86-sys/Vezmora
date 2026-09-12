@@ -16,6 +16,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - safe Stripe catalog preflight that validates active monthly SEK prices and expected amounts without printing secrets or IDs
 - Stripe webhook payload and signature-input bounds before signature verification
 - Stripe webhook request-body protection at the ASGI boundary, including a 1 MB streaming limit and fail-closed handling of malformed, negative or duplicate `Content-Length` headers before body buffering
+- ordinary mutating `/api` requests protected by a separate 1 MiB pre-buffer/streaming body ceiling, with malformed, negative and duplicate `Content-Length` rejected before application parsing; Stripe retains its dedicated webhook limiter
 - Stripe webhook retry safety that keeps completed event IDs idempotent while leaving transient billing-state failures retryable until the local projection succeeds
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
@@ -29,11 +30,14 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies, including fail-closed blocking of `same-site` but cross-origin browser mutations from sibling origins
 - secure session-cookie cleanup shared by normal logout and permanent account deletion so production `Secure` cookie attributes remain aligned when authentication state is cleared
 - successful password reset treated as credential rotation, with all previously authenticated sessions revoked atomically with the password update
+- login-only account-enumeration timing hardening that adds equivalent password-KDF work for unknown accounts without changing password-reset or other email-lookup flows
+- diagnostic secret redaction extended to OAuth callback/provider URL capabilities such as authorization `code`, `state`, access/refresh tokens and client secrets while preserving ordinary non-URL error-code context
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
 - AI evidence-boundary hardening that treats company profiles, business memory, connector data, competitor content, web-derived text and saved notes as untrusted data rather than instructions, while preserving human approval gates and secret-handling rules
 - a minimal public production health/privacy contract that exposes deployment identity without provider, database, billing, SMTP, OAuth or secret-configuration inventory
 - CI supply-chain hardening and removal of the obsolete write workflow
+- CI dependency-consistency verification with `python -m pip check` after installation, before compile and test stages
 - release-version consistency checks so package/app/release metadata cannot drift silently
 - premium Vexmera marketing-site and Command Center polish aligned to the same pricing, product names and private-beta language
 - Swedish-first Command Center customer copy with Core, Pulse, Launch and Autopilot retained as product names
