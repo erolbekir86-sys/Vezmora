@@ -18,6 +18,12 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Stripe webhook retry safety that keeps completed event IDs idempotent while leaving transient billing-state failures retryable until the local projection succeeds
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
+- explicit no-redirect transport for Google authorization-code exchange, access-token refresh, Analytics/Ads reads, Ads diagnostics and provider-token revocation
+- Google Analytics property-ID and Google Ads API-version validation before provider URL construction
+- explicit no-redirect transport for Meta OAuth exchange, ad-account discovery, account probe, campaign discovery and the canonical Insights read path
+- strict Meta ad-account and Graph-version validation before token-bearing URL construction, plus mapped/sanitized provider errors instead of raw Meta messages
+- Meta paging restricted to HTTPS `graph.facebook.com` URLs without embedded credentials, with bounded retries, page limits and repeated-page detection
+- connector-state integrity that keeps provider/configuration failures out of healthy empty-data states while preserving genuine zero-row and partial-data states
 - baseline runtime CSP plus HSTS, no-store, referrer, frame, MIME-sniffing and browser capability hardening
 - server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
@@ -38,9 +44,11 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - The public marketing page uses illustrative demo metrics and labels them as demo data.
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
+- Google connector transport hardening is code/CI/deploy verified, but Google Ads Basic Access and live read-only account evidence remain external/manual pilot gates.
+- Meta connector transport hardening is code/CI/deploy verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but live read-only account evidence remains a manual pilot gate.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - Stripe webhook retry safety is code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
-- VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access and the five-company pilot remain launch work.
+- VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
 - Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
 
 ## Current release verification posture
@@ -49,8 +57,8 @@ The repository now distinguishes three different kinds of evidence:
 
 1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
 2. **Deployment evidence** — a successful Vercel Preview/Production deployment for runtime-affecting changes.
-3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, and the documented five-company pilot checklist.
+3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, fresh Stripe sandbox evidence, and the documented five-company pilot checklist.
 
-A green CI run alone does not substitute for deployment or pilot/manual evidence.
+A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read in one environment also does not prove that a different account, OAuth grant, manager hierarchy or provider-access level is ready.
 
 Secrets and credentials are never intentionally committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require the correct environment configuration in the active deployment.
