@@ -16,8 +16,10 @@ def test_vercel_config_sets_minimal_csp_without_restricting_app_assets():
         "base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'"
     )
     assert headers["x-content-type-options"] == "nosniff"
+    assert headers["x-frame-options"] == "DENY"
     assert headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    assert headers["x-permitted-cross-domain-policies"] == "none"
 
     # Keep this deliberately narrow for Private Beta. These directives harden
     # injected <base>, plugin/object content, cross-origin HTML form posts, and
