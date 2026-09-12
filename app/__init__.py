@@ -103,6 +103,7 @@ from .public_routing import install_public_routing as _install_public_routing
 from .runtime_diagnostics import install_runtime_diagnostics as _install_runtime_diagnostics
 from .security_headers import install_security_headers as _install_security_headers
 from .static_entrypoint_guard import install_static_entrypoint_guard as _install_static_entrypoint_guard
+from .stripe_request_body_limit import install_stripe_webhook_body_limit as _install_stripe_webhook_body_limit
 
 _install_cron_auth_safety()
 _install_http_error_safety(_app)
@@ -116,5 +117,6 @@ _install_production_execution_guard(_app)
 _install_oauth_callback_guard(_app)
 _install_production_token_response_guard(_app)
 _install_public_routing(_app)
+_install_stripe_webhook_body_limit(_app)
 
 __all__ = []
