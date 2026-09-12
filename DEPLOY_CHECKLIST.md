@@ -96,9 +96,9 @@
 - [x] Confirm Google Analytics sync returns real rows
 - [x] Save a Google Ads customer ID in Vexmera
 - [x] Create a Google Ads Manager account for Vexmera
-- [x] Create Google Ads API developer token
-- [x] Add `GOOGLE_ADS_DEVELOPER_TOKEN` to Vercel Production and redeploy successfully
-- [x] Submit Google Ads API Basic Access application with Vexmera tool documentation
+- [x] Keep the historical developer token recorded in Vercel for compatibility; read-only sync no longer sends or requires it
+- [ ] Verify Explorer access or higher for the Google Cloud project that owns the OAuth client (the current production access workflow is Cloud-managed)
+- [ ] Reconcile any historical Google Ads API Basic Access application in the new Cloud project access workflow
 - [x] Send manager-account link request from Vexmera MCC to the target Google Ads account
 - [x] Manager-to-client relationship accepted and active in Google Ads on 2026-09-05
 - [x] Add owner/admin-only Google disconnect backend with local credential deletion and best-effort upstream revocation
