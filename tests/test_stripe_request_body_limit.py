@@ -6,8 +6,13 @@ import json
 from app.stripe_request_body_limit import StripeWebhookBodyLimitMiddleware
 
 
-def _scope(*, path: str = "/api/billing/webhook", content_length: str | None = None):
-    headers = []
+def _scope(
+    *,
+    path: str = "/api/billing/webhook",
+    content_length: str | None = None,
+    extra_headers: list[tuple[bytes, bytes]] | None = None,
+):
+    headers = list(extra_headers or [])
     if content_length is not None:
         headers.append((b"content-length", content_length.encode("ascii")))
     return {
@@ -25,7 +30,14 @@ def _scope(*, path: str = "/api/billing/webhook", content_length: str | None = N
     }
 
 
-def _run_request(messages, *, content_length: str | None = None, path: str = "/api/billing/webhook", max_bytes: int = 5):
+def _run_request(
+    messages,
+    *,
+    content_length: str | None = None,
+    extra_headers: list[tuple[bytes, bytes]] | None = None,
+    path: str = "/api/billing/webhook",
+    max_bytes: int = 5,
+):
     sent = []
     called = {"inner": False}
     queue = list(messages)
@@ -46,7 +58,13 @@ def _run_request(messages, *, content_length: str | None = None, path: str = "/a
         await send_inner({"type": "http.response.body", "body": b""})
 
     middleware = StripeWebhookBodyLimitMiddleware(inner, max_bytes=max_bytes)
-    asyncio.run(middleware(_scope(path=path, content_length=content_length), receive, send))
+    asyncio.run(
+        middleware(
+            _scope(path=path, content_length=content_length, extra_headers=extra_headers),
+            receive,
+            send,
+        )
+    )
     return sent, called["inner"]
 
 
@@ -76,6 +94,28 @@ def test_rejects_chunked_webhook_when_cumulative_body_crosses_limit():
 
     assert inner_called is True
     assert _response(sent) == (413, {"detail": "Stripe webhook payload is too large"})
+
+
+def test_rejects_malformed_or_negative_content_length_before_inner_app():
+    for value in ("not-a-number", "-1"):
+        sent, inner_called = _run_request(
+            [{"type": "http.request", "body": b"abc", "more_body": False}],
+            content_length=value,
+        )
+
+        assert inner_called is False
+        assert _response(sent) == (400, {"detail": "Invalid Content-Length"})
+
+
+def test_rejects_duplicate_content_length_before_inner_app():
+    sent, inner_called = _run_request(
+        [{"type": "http.request", "body": b"abc", "more_body": False}],
+        content_length="3",
+        extra_headers=[(b"content-length", b"3")],
+    )
+
+    assert inner_called is False
+    assert _response(sent) == (400, {"detail": "Invalid Content-Length"})
 
 
 def test_allows_webhook_at_limit_and_does_not_affect_other_paths():
