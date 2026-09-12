@@ -64,6 +64,14 @@ def _stripe_key_mode() -> str:
     return "unknown"
 
 
+def _smtp_starttls_enabled() -> bool:
+    # Match the runtime default: an unset SMTP_STARTTLS means secure STARTTLS.
+    raw = os.getenv("SMTP_STARTTLS")
+    if raw is None:
+        return True
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def build_report() -> dict[str, Any]:
     core_missing = _missing(CORE_REQUIRED)
     if not database_configured():
@@ -79,9 +87,10 @@ def build_report() -> dict[str, Any]:
     production_like = enabled("VERCEL") or (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
     insecure_app_url = bool(production_like and app_url and not app_url.startswith("https://"))
     insecure_cookie_override = bool(production_like and configured("VEZMORA_COOKIE_SECURE") and not enabled("VEZMORA_COOKIE_SECURE"))
+    insecure_smtp_transport = bool(production_like and not smtp_missing and not _smtp_starttls_enabled())
 
     beta_execution_locked = not unsafe_flags
-    production_transport_safe = not insecure_app_url and not insecure_cookie_override
+    production_transport_safe = not insecure_app_url and not insecure_cookie_override and not insecure_smtp_transport
     stripe_key_mode = _stripe_key_mode()
     stripe_prices_configured = all(configured(name) for name in STRIPE_PRICE_ENV.values())
     stripe_pricing_version_reconciled = checkout_pricing_reconciled()
@@ -93,7 +102,7 @@ def build_report() -> dict[str, Any]:
     )
     google_oauth_ready = not google_oauth_missing
     meta_oauth_ready = not meta_oauth_missing
-    smtp_ready = not smtp_missing
+    smtp_ready = not smtp_missing and not insecure_smtp_transport
 
     pilot_checks = {
         "execution_locked": beta_execution_locked,
@@ -151,6 +160,7 @@ def build_report() -> dict[str, Any]:
             for issue, active in (
                 ("VEZMORA_APP_URL must use https in production", insecure_app_url),
                 ("VEZMORA_COOKIE_SECURE must not be disabled in production", insecure_cookie_override),
+                ("SMTP_STARTTLS must not be disabled in production", insecure_smtp_transport),
             )
             if active
         ],
