@@ -38,7 +38,7 @@ def test_cross_origin_authenticated_api_mutation_is_blocked():
     )
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "Cross-site authenticated request blocked"}
+    assert response.json() == {"detail": "Cross-origin authenticated request blocked"}
     assert "attacker.example" not in response.text
 
 
@@ -52,7 +52,7 @@ def test_cross_origin_authenticated_root_api_mutation_is_blocked():
     )
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "Cross-site authenticated request blocked"}
+    assert response.json() == {"detail": "Cross-origin authenticated request blocked"}
 
 
 def test_fetch_metadata_blocks_cross_site_authenticated_mutation_without_origin():
@@ -65,6 +65,19 @@ def test_fetch_metadata_blocks_cross_site_authenticated_mutation_without_origin(
     )
 
     assert response.status_code == 403
+
+
+def test_fetch_metadata_blocks_same_site_cross_origin_authenticated_mutation():
+    client = _client()
+    client.cookies.set(SESSION_COOKIE, "session-token")
+
+    response = client.post(
+        "/api/write",
+        headers={"Sec-Fetch-Site": "same-site"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Cross-origin authenticated request blocked"}
 
 
 def test_same_origin_authenticated_api_mutation_is_allowed():
