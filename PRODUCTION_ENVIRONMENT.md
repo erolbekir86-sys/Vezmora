@@ -87,10 +87,12 @@ Minimum required:
 
 Usually required by the provider:
 
-- `SMTP_PORT` — defaults to `587`.
+- `SMTP_PORT` — defaults to `587` and must be a valid TCP port.
 - `SMTP_USERNAME`
 - `SMTP_PASSWORD`
 - `SMTP_STARTTLS` — defaults to `true`.
+
+For the supported Vercel private-beta runtime, `SMTP_STARTTLS` must remain enabled. The application fails closed before connecting if it is explicitly disabled, and `scripts/preflight.py` marks production transport unsafe. This prevents password-reset and workspace-invite capability links, as well as SMTP credentials, from being sent over an accidentally plaintext SMTP connection.
 
 ## Google Analytics + Google Ads
 
@@ -162,13 +164,13 @@ The preflight reports only configuration names, booleans and missing-variable na
 
 - core application secrets and persistent database configuration
 - Stripe billing variable presence
-- transactional email minimum configuration
+- transactional email minimum configuration and production STARTTLS safety
 - Google OAuth and Google Ads developer-token presence
 - Meta OAuth configuration
 - serverless mode
 - private-beta execution locks
 
-During the private beta the command intentionally exits non-zero if a core requirement is missing **or if any private-beta execution flag is accidentally enabled**.
+During the private beta the command intentionally exits non-zero if a core requirement is missing, if a private-beta execution flag is accidentally enabled, or if a production transport guard is unsafe.
 
 ## Safe runtime diagnostics
 
@@ -205,9 +207,9 @@ Account deletion does not promise deletion of third-party billing/compliance rec
 
 1. Core internal secrets (`VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, `CRON_SECRET`).
 2. Persistent database and OpenAI connectivity.
-3. Transactional email.
+3. Transactional email with STARTTLS enforced.
 4. Google/Meta read-only OAuth.
-5. Run `scripts/preflight.py` and confirm private-beta execution locks are SAFE.
+5. Run `scripts/preflight.py` and confirm private-beta execution locks and production transport are SAFE.
 6. Reconcile and verify the current Start/Growth/Pro Stripe test catalog with `scripts/verify_stripe_catalog.py`, then run a full test-mode Checkout/webhook/Portal flow.
 7. Complete authenticated browser QA including connector disconnect, synchronized-history deletion, account deletion and analytics-consent controls.
 8. Finalize legal entity details, privacy/terms, retention/subprocessor disclosures, VAT/tax treatment and canonical domain.

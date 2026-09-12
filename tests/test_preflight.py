@@ -20,6 +20,7 @@ def _clear(monkeypatch):
             "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
             "VEZMORA_SERVERLESS",
             "VEZMORA_COOKIE_SECURE",
+            "SMTP_STARTTLS",
             "VERCEL",
             "VERCEL_ENV",
         ]
@@ -80,6 +81,24 @@ def test_preflight_rejects_insecure_production_transport(monkeypatch):
         "VEZMORA_COOKIE_SECURE must not be disabled in production",
     ]
     assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
+
+
+def test_preflight_rejects_plaintext_smtp_in_production(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
+    monkeypatch.setenv("VEZMORA_COOKIE_SECURE", "true")
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.test")
+    monkeypatch.setenv("SMTP_FROM", "noreply@example.test")
+    monkeypatch.setenv("SMTP_STARTTLS", "false")
+
+    report = preflight.build_report()
+    assert report["smtp_ready"] is False
+    assert report["production_transport_safe"] is False
+    assert report["transport_issues"] == ["SMTP_STARTTLS must not be disabled in production"]
+    assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
+    assert "transactional_email_configured" in report["pilot_readiness"]["configuration_blockers"]
 
 
 def test_preflight_allows_secure_production_transport(monkeypatch):
