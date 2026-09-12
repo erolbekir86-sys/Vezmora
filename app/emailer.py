@@ -14,7 +14,18 @@ def smtp_configured() -> bool:
 
 
 def app_url() -> str:
-    return os.getenv("VEZMORA_APP_URL", "http://localhost:8000").rstrip("/")
+    """Return the canonical application origin used in capability emails.
+
+    Local development keeps the historical localhost fallback. Vercel must never
+    manufacture password-reset or workspace-invite links from that fallback: the
+    canonical application URL is a deployment requirement and must be HTTPS.
+    """
+    configured = (os.getenv("VEZMORA_APP_URL") or "").strip().rstrip("/")
+    if os.getenv("VERCEL"):
+        if not configured or not configured.lower().startswith("https://"):
+            raise RuntimeError("VEZMORA_APP_URL must be configured as HTTPS on Vercel")
+        return configured
+    return configured or "http://localhost:8000"
 
 
 def _smtp_starttls_enabled() -> bool:
