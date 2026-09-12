@@ -4,13 +4,12 @@ from typing import Any
 
 from fastapi.responses import JSONResponse
 
-from .api_request_body_limit import ApiRequestBodyLimitMiddleware
-from .stripe_billing import MAX_WEBHOOK_PAYLOAD_BYTES
+MAX_API_REQUEST_BODY_BYTES = 1024 * 1024
+_BODY_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_SKIP_PATHS = frozenset({"/api/billing/webhook", "/api/billing/webhook/"})
 
-_STRIPE_WEBHOOK_PATHS = frozenset({"/api/billing/webhook", "/api/billing/webhook/"})
 
-
-class _StripeWebhookPayloadTooLarge(Exception):
+class _ApiPayloadTooLarge(Exception):
     pass
 
 
@@ -18,30 +17,29 @@ class _InvalidContentLength(Exception):
     pass
 
 
-class StripeWebhookBodyLimitMiddleware:
-    """Reject oversized Stripe webhook bodies before buffering them in memory.
+class ApiRequestBodyLimitMiddleware:
+    """Bound ordinary API request bodies before FastAPI buffers/parses them.
 
-    ``parse_webhook`` still enforces the same limit as a defense-in-depth check.
-    This middleware moves the boundary to the ASGI receive stream so requests
-    without a trustworthy Content-Length header cannot bypass the memory guard.
+    Vexmera's authenticated JSON inputs are all far smaller than this ceiling.
+    Stripe webhooks keep their dedicated limiter so their existing signature and
+    error contract remain independent.
     """
 
-    def __init__(self, app: Any, max_bytes: int = MAX_WEBHOOK_PAYLOAD_BYTES) -> None:
+    def __init__(self, app: Any, max_bytes: int = MAX_API_REQUEST_BODY_BYTES) -> None:
         self.app = app
         self.max_bytes = max_bytes
 
     @staticmethod
     def _content_length(scope: dict[str, Any]) -> int | None:
-        values: list[bytes] = []
-        for raw_name, raw_value in scope.get("headers") or []:
-            if raw_name.lower() == b"content-length":
-                values.append(raw_value)
-
+        values = [
+            raw_value
+            for raw_name, raw_value in (scope.get("headers") or [])
+            if raw_name.lower() == b"content-length"
+        ]
         if not values:
             return None
         if len(values) != 1:
             raise _InvalidContentLength
-
         try:
             value = int(values[0].decode("ascii"))
         except (UnicodeDecodeError, ValueError):
@@ -50,8 +48,19 @@ class StripeWebhookBodyLimitMiddleware:
             raise _InvalidContentLength
         return value
 
+    @staticmethod
+    def _applies(scope: dict[str, Any]) -> bool:
+        path = str(scope.get("path") or "")
+        method = str(scope.get("method") or "").upper()
+        return (
+            scope.get("type") == "http"
+            and method in _BODY_METHODS
+            and (path == "/api" or path.startswith("/api/"))
+            and path not in _SKIP_PATHS
+        )
+
     async def __call__(self, scope: dict[str, Any], receive, send) -> None:
-        if scope.get("type") != "http" or scope.get("path") not in _STRIPE_WEBHOOK_PATHS:
+        if not self._applies(scope):
             await self.app(scope, receive, send)
             return
 
@@ -61,6 +70,7 @@ class StripeWebhookBodyLimitMiddleware:
             response = JSONResponse(
                 status_code=400,
                 content={"detail": "Invalid Content-Length"},
+                headers={"Cache-Control": "no-store"},
             )
             await response(scope, receive, send)
             return
@@ -68,7 +78,8 @@ class StripeWebhookBodyLimitMiddleware:
         if content_length is not None and content_length > self.max_bytes:
             response = JSONResponse(
                 status_code=413,
-                content={"detail": "Stripe webhook payload is too large"},
+                content={"detail": "API request payload is too large"},
+                headers={"Cache-Control": "no-store"},
             )
             await response(scope, receive, send)
             return
@@ -82,21 +93,15 @@ class StripeWebhookBodyLimitMiddleware:
                 body = message.get("body", b"") or b""
                 received += len(body)
                 if received > self.max_bytes:
-                    raise _StripeWebhookPayloadTooLarge
+                    raise _ApiPayloadTooLarge
             return message
 
         try:
             await self.app(scope, limited_receive, send)
-        except _StripeWebhookPayloadTooLarge:
+        except _ApiPayloadTooLarge:
             response = JSONResponse(
                 status_code=413,
-                content={"detail": "Stripe webhook payload is too large"},
+                content={"detail": "API request payload is too large"},
+                headers={"Cache-Control": "no-store"},
             )
             await response(scope, receive, send)
-
-
-def install_stripe_webhook_body_limit(app) -> None:
-    # Ordinary JSON mutations get a separate request-body memory ceiling while
-    # Stripe retains its dedicated limiter and signature-verification contract.
-    app.add_middleware(ApiRequestBodyLimitMiddleware)
-    app.add_middleware(StripeWebhookBodyLimitMiddleware)
