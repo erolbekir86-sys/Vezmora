@@ -3,30 +3,37 @@ from __future__ import annotations
 import argparse
 import json
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+
+from scripts.preflight_http import get_public_text, normalize_https_origin
 
 
 def _get_text(url: str, timeout: float = 8.0) -> tuple[int, str]:
-    request = Request(url, headers={"User-Agent": "Vexmera-Public-Legal-Preflight/1.0"})
-    try:
-        with urlopen(request, timeout=timeout) as response:
-            return int(response.status), response.read().decode("utf-8", errors="replace")
-    except HTTPError as exc:
-        return int(exc.code), ""
-    except (URLError, TimeoutError, OSError) as exc:
-        raise RuntimeError(f"request_failed:{type(exc).__name__}") from exc
+    return get_public_text(
+        url,
+        user_agent="Vexmera-Public-Legal-Preflight/1.0",
+        timeout=timeout,
+    )
 
 
 def build_public_legal_preflight(base_url: str) -> dict[str, Any]:
     """Verify public legal discoverability using GET requests only.
 
     This intentionally checks only public pages. It sends no credentials and
-    performs no mutations. The goal is to catch a subtle but important failure
-    mode for pilot/OAuth readiness: legal pages may exist while the marketing
-    homepage stops linking to them.
+    performs no mutations. The target must be one plain HTTPS origin and redirects
+    are rejected so legal evidence cannot silently come from a different host.
     """
-    base = base_url.rstrip("/")
+    try:
+        base = normalize_https_origin(base_url)
+    except ValueError:
+        return {
+            "ok": False,
+            "scope": "public_get_only_legal_discoverability",
+            "base_url": None,
+            "checks": {},
+            "blockers": ["invalid_base_url"],
+            "note": "Legal preflight requires a plain HTTPS origin and never follows redirects.",
+        }
+
     checks: dict[str, dict[str, Any]] = {}
     blockers: list[str] = []
 
@@ -84,7 +91,10 @@ def build_public_legal_preflight(base_url: str) -> dict[str, Any]:
         "base_url": base,
         "checks": checks,
         "blockers": blockers,
-        "note": "GET-only public checks. No credentials are sent and no application, billing, or advertising state is changed.",
+        "note": (
+            "GET-only public checks against one explicit HTTPS origin. Redirects are rejected, responses "
+            "are size-bounded, no credentials are sent and no application, billing, or advertising state is changed."
+        ),
     }
 
 
