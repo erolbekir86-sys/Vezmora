@@ -13,6 +13,10 @@ class _StripeWebhookPayloadTooLarge(Exception):
     pass
 
 
+class _InvalidContentLength(Exception):
+    pass
+
+
 class StripeWebhookBodyLimitMiddleware:
     """Reject oversized Stripe webhook bodies before buffering them in memory.
 
@@ -27,22 +31,39 @@ class StripeWebhookBodyLimitMiddleware:
 
     @staticmethod
     def _content_length(scope: dict[str, Any]) -> int | None:
+        values: list[bytes] = []
         for raw_name, raw_value in scope.get("headers") or []:
-            if raw_name.lower() != b"content-length":
-                continue
-            try:
-                value = int(raw_value.decode("ascii"))
-            except (UnicodeDecodeError, ValueError):
-                return None
-            return value if value >= 0 else None
-        return None
+            if raw_name.lower() == b"content-length":
+                values.append(raw_value)
+
+        if not values:
+            return None
+        if len(values) != 1:
+            raise _InvalidContentLength
+
+        try:
+            value = int(values[0].decode("ascii"))
+        except (UnicodeDecodeError, ValueError):
+            raise _InvalidContentLength from None
+        if value < 0:
+            raise _InvalidContentLength
+        return value
 
     async def __call__(self, scope: dict[str, Any], receive, send) -> None:
         if scope.get("type") != "http" or scope.get("path") not in _STRIPE_WEBHOOK_PATHS:
             await self.app(scope, receive, send)
             return
 
-        content_length = self._content_length(scope)
+        try:
+            content_length = self._content_length(scope)
+        except _InvalidContentLength:
+            response = JSONResponse(
+                status_code=400,
+                content={"detail": "Invalid Content-Length"},
+            )
+            await response(scope, receive, send)
+            return
+
         if content_length is not None and content_length > self.max_bytes:
             response = JSONResponse(
                 status_code=413,
