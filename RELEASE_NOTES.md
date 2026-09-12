@@ -20,7 +20,8 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
 - explicit no-redirect transport for Google authorization-code exchange, access-token refresh, Analytics/Ads reads, Ads diagnostics and provider-token revocation
 - Google Analytics property-ID and Google Ads API-version validation before provider URL construction
-- explicit no-redirect transport for the canonical Meta read path, with strict ad-account and Graph-version validation before token-bearing requests
+- explicit no-redirect transport for Meta OAuth exchange, ad-account discovery, account probe, campaign discovery and the canonical Insights read path
+- strict Meta ad-account and Graph-version validation before token-bearing URL construction, plus mapped/sanitized provider errors instead of raw Meta messages
 - Meta paging restricted to HTTPS `graph.facebook.com` URLs without embedded credentials, with bounded retries, page limits and repeated-page detection
 - connector-state integrity that keeps provider/configuration failures out of healthy empty-data states while preserving genuine zero-row and partial-data states
 - baseline runtime CSP plus HSTS, no-store, referrer, frame, MIME-sniffing and browser capability hardening
@@ -44,10 +45,10 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
 - Google connector transport hardening is code/CI/deploy verified, but Google Ads Basic Access and live read-only account evidence remain external/manual pilot gates.
-- The canonical Meta read path is hardened and deployment-verified. Additional Meta OAuth/account-discovery/probe/campaign-discovery calls in the Vercel root entrypoint remain tracked in issue #157 and must not be treated as fully closed until that separate surface is hardened and verified.
+- Meta connector transport hardening is code/CI/deploy verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but live read-only account evidence remains a manual pilot gate.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - Stripe webhook retry safety is code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
-- VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access and the five-company pilot remain launch work.
+- VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
 - Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
 
 ## Current release verification posture
