@@ -44,7 +44,29 @@ def _configure(monkeypatch):
     monkeypatch.setenv("SMTP_PASSWORD", "password")
 
 
+def test_vercel_requires_https_canonical_app_url_for_capability_links(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+
+    monkeypatch.delenv("VEZMORA_APP_URL", raising=False)
+    with pytest.raises(RuntimeError, match="must be configured as HTTPS"):
+        emailer.app_url()
+
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://vexmera.example")
+    with pytest.raises(RuntimeError, match="must be configured as HTTPS"):
+        emailer.app_url()
+
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://vexmera.example/")
+    assert emailer.app_url() == "https://vexmera.example"
+
+
+def test_local_development_keeps_localhost_fallback(monkeypatch):
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.delenv("VEZMORA_APP_URL", raising=False)
+    assert emailer.app_url() == "http://localhost:8000"
+
+
 def test_vercel_refuses_plaintext_smtp(monkeypatch):
+    _FakeSMTP.instances.clear()
     _configure(monkeypatch)
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("SMTP_STARTTLS", "false")
