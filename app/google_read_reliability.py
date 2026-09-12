@@ -162,8 +162,14 @@ async def refresh_google_access_token_reliable(workspace_id: int, connector: dic
                     )
                 elif not token.get("access_token"):
                     raise HTTPException(status_code=502, detail="Google access-token refresh returned no access token")
-            elif not token.get("access_token"):
-                raise HTTPException(status_code=502, detail="Google access-token refresh failed")
+            else:
+                error_payload = _safe_dict_payload(response) or {}
+                if error_payload.get("error") == "invalid_grant":
+                    raise HTTPException(status_code=409, detail="Google access has expired or been revoked. Reconnect Google before syncing.")
+                if error_payload.get("error") == "invalid_client":
+                    raise HTTPException(status_code=503, detail="Google OAuth client configuration is invalid. Check the client ID and secret in Vercel.")
+                if not token.get("access_token"):
+                    raise HTTPException(status_code=502, detail="Google access-token refresh failed")
 
     access_token = token.get("access_token")
     if not access_token:
@@ -268,8 +274,9 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
         warnings.append("Google Analytics property ID is missing")
 
     customer_id = "".join(ch for ch in str(metadata.get("ads_customer_id") or "") if ch.isdigit())
-    developer_token = os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN")
-    if customer_id and developer_token:
+    # Since 2026-09-09 API access belongs to the OAuth client's Cloud project.
+    # A legacy developer token must neither gate a read nor be sent to Google.
+    if customer_id:
         try:
             api_version = _validated_google_ads_api_version(os.getenv("GOOGLE_ADS_API_VERSION", "v25"))
         except ValueError:
@@ -282,7 +289,7 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
                 "metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value, metrics.cost_micros "
                 f"FROM campaign WHERE segments.date BETWEEN '{start_date}' AND '{end_date}' ORDER BY segments.date"
             )
-            ads_headers = {**headers, "developer-token": developer_token}
+            ads_headers = dict(headers)
             login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
             if login_customer_id:
                 ads_headers["login-customer-id"] = "".join(ch for ch in login_customer_id if ch.isdigit())
@@ -375,9 +382,14 @@ async def sync_google_reliable(workspace_id: int, days: int = 7) -> dict[str, ob
                             )
                             synced["ads_rows"] = int(synced["ads_rows"]) + 1
                 else:
-                    warnings.append(f"Google Ads sync failed ({response.status_code})")
-    elif customer_id:
-        warnings.append("GOOGLE_ADS_DEVELOPER_TOKEN is missing")
+                    # Preserve the actual failing response; a second probe can
+                    # succeed or produce a different error and obscure the cause.
+                    from .google_ads_diagnostics import _google_ads_error_summary
+
+                    detail = _google_ads_error_summary(response)
+                    warning = f"Google Ads sync failed ({response.status_code})"
+                    warnings.append(f"{warning}: {detail}" if detail else warning)
+                    synced["ads_error_diagnosed"] = True
     else:
         warnings.append("Google Ads customer ID is missing")
 

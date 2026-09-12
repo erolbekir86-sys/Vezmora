@@ -62,7 +62,7 @@ def connector_readiness() -> dict[str, dict[str, object]]:
             "label": "Google Analytics + Ads",
             "configured": bool(os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET") and os.getenv("GOOGLE_REDIRECT_URI")),
             "requirements": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"],
-            "notes": "Read-only sync. Analytics needs a property ID; Google Ads needs customer ID + developer token.",
+            "notes": "Read-only sync. Analytics needs a property ID; Google Ads needs a customer ID and API access on the OAuth client's Google Cloud project.",
         },
         "meta": {
             "label": "Meta Ads",
@@ -234,11 +234,10 @@ async def sync_google(workspace_id: int, days: int = 7) -> dict[str, object]:
         synced["warnings"].append("Google Analytics property ID is missing")
 
     customer_id = "".join(ch for ch in str(metadata.get("ads_customer_id") or "") if ch.isdigit())
-    developer_token = os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN")
-    if customer_id and developer_token:
+    if customer_id:
         api_version = os.getenv("GOOGLE_ADS_API_VERSION", "v25")
         query = f"""SELECT segments.date, customer.currency_code, campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.conversions, metrics.conversions_value, metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{start_date}' AND '{end_date}' ORDER BY segments.date"""
-        ads_headers = {**headers, "developer-token": developer_token}
+        ads_headers = dict(headers)
         login_customer_id = os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID")
         if login_customer_id:
             ads_headers["login-customer-id"] = "".join(ch for ch in login_customer_id if ch.isdigit())
@@ -285,8 +284,6 @@ async def sync_google(workspace_id: int, days: int = 7) -> dict[str, object]:
                 synced["ads_rows"] += 1
         else:
             synced["warnings"].append(f"Google Ads sync failed ({response.status_code})")
-    elif customer_id:
-        synced["warnings"].append("GOOGLE_ADS_DEVELOPER_TOKEN is missing")
     else:
         synced["warnings"].append("Google Ads customer ID is missing")
 

@@ -113,7 +113,7 @@ def build_report() -> dict[str, Any]:
         "remote_database_configured": database_configured(),
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_ready,
-        "google_ads_api_configured": google_ads_developer_token_ready,
+        "google_ads_api_configured": google_oauth_ready,
         "meta_oauth_configured": meta_oauth_ready,
         "transactional_email_configured": smtp_ready,
     }
@@ -186,7 +186,7 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"Stripe sandbox: {'READY' if report['stripe_sandbox_ready'] else 'NOT READY'}")
     print(f"transactional email: {_status(bool(report['smtp_ready']))}")
     print(f"Google OAuth: {_status(bool(report['google_oauth_ready']))}")
-    print(f"Google Ads developer token: {_status(bool(report['google_ads_developer_token_ready']))}")
+    print("Google Ads access: verify the OAuth client's Cloud project access level; legacy developer token is not required")
     print(f"Google Ads manager login ID: {_status(bool(report['google_ads_login_customer_id_ready']))}")
     print(f"Meta OAuth: {_status(bool(report['meta_oauth_ready']))}")
     print(f"serverless mode enabled: {bool(report['serverless_enabled'])}")

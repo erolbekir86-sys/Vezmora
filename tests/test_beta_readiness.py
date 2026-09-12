@@ -194,7 +194,7 @@ def test_beta_readiness_rejects_live_key_or_wrong_pricing_version(monkeypatch):
     assert snapshot["stripe_sandbox_ready"] is False
 
 
-def test_beta_readiness_marks_google_ads_api_config_incomplete_without_developer_token(monkeypatch):
+def test_beta_readiness_accepts_cloud_managed_ads_without_developer_token(monkeypatch):
     _clear(monkeypatch)
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "google-client-private")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "google-secret-private")
@@ -203,8 +203,9 @@ def test_beta_readiness_marks_google_ads_api_config_incomplete_without_developer
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["google_oauth_configured"] is True
     assert snapshot["google_ads_developer_token_configured"] is False
-    assert snapshot["pilot_readiness"]["checks"]["google_ads_api_configured"] is False
-    assert "google_ads_api_configured" in snapshot["pilot_readiness"]["configuration_blockers"]
+    assert snapshot["pilot_readiness"]["checks"]["google_ads_api_configured"] is True
+    assert "google_ads_api_configured" not in snapshot["pilot_readiness"]["configuration_blockers"]
+    assert "google_ads_live_read_only_sync_verified" in snapshot["pilot_readiness"]["manual_gates"]
 
 
 def test_beta_readiness_marks_configuration_ready_without_claiming_manual_gates(monkeypatch):

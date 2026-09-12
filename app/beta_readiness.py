@@ -186,7 +186,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         remote_database_configured=bool(database["remote_database_configured"]),
         stripe_sandbox_ready=stripe_sandbox_ready,
         google_oauth_configured=google_oauth_configured,
-        google_ads_api_configured=google_ads_developer_token_configured,
+        google_ads_api_configured=google_oauth_configured,
         meta_oauth_configured=meta_oauth_configured,
         smtp_ready=smtp_transport_ready,
     )
@@ -232,9 +232,9 @@ def beta_safety_snapshot() -> dict[str, object]:
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Transactional email readiness requires minimum SMTP configuration and, in production, STARTTLS must not be disabled.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
-            "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
+            "Google Ads configuration readiness requires OAuth; API access is granted to the OAuth client's Google Cloud project. Legacy developer tokens are not required. Cloud access and manager linking remain external verification gates.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
-            "Google Ads Basic Access and manager linking require separate external verification.",
+            "Google Ads Cloud project production access and manager linking, if needed, require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
         ],
     }
