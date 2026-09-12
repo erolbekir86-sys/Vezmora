@@ -26,6 +26,12 @@ _LIMITS: dict[str, _Limit] = {
 }
 
 
+def _rate_limit_enabled() -> bool:
+    if os.getenv("VERCEL"):
+        return True
+    return os.getenv("VEZMORA_AUTH_RATE_LIMIT", "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
 class AuthRateLimitMiddleware:
     """Bound repeated public auth mutations by source IP.
 
@@ -35,6 +41,8 @@ class AuthRateLimitMiddleware:
 
     State is intentionally process-local: this adds a cheap application barrier
     against burst abuse but does not pretend to replace distributed edge limits.
+    The middleware is enabled automatically on Vercel and can be opted into on
+    other runtimes with ``VEZMORA_AUTH_RATE_LIMIT=true``.
     """
 
     def __init__(self, app: Any, *, clock=time.monotonic) -> None:
@@ -97,6 +105,9 @@ class AuthRateLimitMiddleware:
             return True, 0
 
     async def __call__(self, scope: dict[str, Any], receive, send) -> None:
+        if not _rate_limit_enabled():
+            await self.app(scope, receive, send)
+            return
         if scope.get("type") != "http" or str(scope.get("method") or "").upper() != "POST":
             await self.app(scope, receive, send)
             return
