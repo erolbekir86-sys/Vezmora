@@ -22,6 +22,7 @@ def _clear(monkeypatch):
         "DATABASE_URL",
         "POSTGRES_URL",
         "TURSO_DATABASE_URL",
+        "TURSO_AUTH_TOKEN",
         "STRIPE_SECRET_KEY",
         "STRIPE_PRICE_START",
         "STRIPE_PRICE_GROWTH",
@@ -65,6 +66,7 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
         "database_url_configured": False,
         "postgres_url_configured": False,
         "turso_url_configured": False,
+        "turso_auth_token_configured": False,
         "remote_database_configured": False,
     }
     assert snapshot["stripe_key_mode"] == "missing"
@@ -101,6 +103,7 @@ def test_beta_readiness_prefers_postgres_intent_over_turso_compat_alias(monkeypa
         "database_url_configured": True,
         "postgres_url_configured": False,
         "turso_url_configured": True,
+        "turso_auth_token_configured": False,
         "remote_database_configured": True,
     }
 
@@ -108,11 +111,15 @@ def test_beta_readiness_prefers_postgres_intent_over_turso_compat_alias(monkeypa
 def test_beta_readiness_reports_legacy_turso_without_exposing_url(monkeypatch):
     _clear(monkeypatch)
     secret_url = "libsql://private-beta-secret.invalid"
+    secret_token = "private-turso-auth-token"
     monkeypatch.setenv("TURSO_DATABASE_URL", secret_url)
+    monkeypatch.setenv("TURSO_AUTH_TOKEN", secret_token)
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["database"]["backend_intent"] == "turso"
+    assert snapshot["database"]["turso_auth_token_configured"] is True
     assert snapshot["database"]["remote_database_configured"] is True
     assert secret_url not in str(snapshot)
+    assert secret_token not in str(snapshot)
 
 
 def test_beta_readiness_detects_unsafe_execution_flags(monkeypatch):
