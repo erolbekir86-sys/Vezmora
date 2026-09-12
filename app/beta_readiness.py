@@ -65,6 +65,8 @@ def _database_snapshot() -> dict[str, object]:
     database_url_configured = _configured("DATABASE_URL")
     postgres_url_configured = _configured("POSTGRES_URL")
     turso_url_configured = _configured("TURSO_DATABASE_URL")
+    turso_auth_token_configured = _configured("TURSO_AUTH_TOKEN")
+    turso_ready = turso_url_configured and turso_auth_token_configured
 
     if database_url_configured or postgres_url_configured:
         backend_intent = "postgres"
@@ -78,7 +80,8 @@ def _database_snapshot() -> dict[str, object]:
         "database_url_configured": database_url_configured,
         "postgres_url_configured": postgres_url_configured,
         "turso_url_configured": turso_url_configured,
-        "remote_database_configured": database_url_configured or postgres_url_configured or turso_url_configured,
+        "turso_auth_token_configured": turso_auth_token_configured,
+        "remote_database_configured": database_url_configured or postgres_url_configured or turso_ready,
     }
 
 
@@ -223,7 +226,8 @@ def beta_safety_snapshot() -> dict[str, object]:
         "notes": [
             "Configuration booleans do not prove third-party approval or account access.",
             "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
-            "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
+            "Database readiness reports only backend intent and configured-variable booleans; connection strings and token values are never returned.",
+            "Legacy Turso readiness requires both TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, matching operator preflight semantics.",
             "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, and the exact pricing-version marker; no Stripe identifiers are returned.",
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Transactional email readiness requires minimum SMTP configuration and, in production, STARTTLS must not be disabled.",
