@@ -288,7 +288,6 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["database"]["backend_intent"] == "postgres"
     assert payload["database"]["database_url_configured"] is True
     assert payload["database"]["turso_url_configured"] is False
-    assert payload["database"]["stripe_catalog_env_configured"] if False else True
     assert payload["stripe_catalog_env_configured"] is True
     assert payload["stripe_pricing_version_reconciled"] is True
     assert payload["stripe_webhook_env_configured"] is True
