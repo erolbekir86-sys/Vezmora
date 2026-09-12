@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from .auth import SESSION_COOKIE
 
 _UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_CROSS_ORIGIN_FETCH_SITES = frozenset({"cross-site", "same-site"})
 
 
 def _origin_tuple(value: str) -> tuple[str, str] | None:
@@ -32,12 +33,13 @@ def _is_api_path(path: str) -> bool:
 
 
 def install_csrf_guard(app: FastAPI) -> None:
-    """Reject cross-site browser mutations that carry a Vexmera session cookie.
+    """Reject cross-origin browser mutations that carry a Vexmera session cookie.
 
-    SameSite=Lax already blocks the common CSRF path. This middleware adds a
-    server-side defence-in-depth check using browser Origin / Fetch Metadata
-    without imposing CSRF tokens on API clients, Stripe webhooks, cron jobs, or
-    unauthenticated login/register requests.
+    SameSite=Lax blocks cross-site cookie delivery, but it does not treat sibling
+    subdomains as cross-site. This middleware adds a server-side defence-in-depth
+    check using browser Origin / Fetch Metadata without imposing CSRF tokens on
+    API clients, Stripe webhooks, cron jobs, or unauthenticated login/register
+    requests.
     """
 
     if getattr(app.state, "vexmera_csrf_guard_installed", False):
@@ -51,14 +53,14 @@ def install_csrf_guard(app: FastAPI) -> None:
             and request.cookies.get(SESSION_COOKIE)
         ):
             fetch_site = (request.headers.get("sec-fetch-site") or "").strip().lower()
-            if fetch_site == "cross-site":
-                return JSONResponse(status_code=403, content={"detail": "Cross-site authenticated request blocked"})
+            if fetch_site in _CROSS_ORIGIN_FETCH_SITES:
+                return JSONResponse(status_code=403, content={"detail": "Cross-origin authenticated request blocked"})
 
             origin_header = (request.headers.get("origin") or "").strip()
             if origin_header:
                 origin = _origin_tuple(origin_header)
                 if origin is None or origin != _request_origin(request):
-                    return JSONResponse(status_code=403, content={"detail": "Cross-site authenticated request blocked"})
+                    return JSONResponse(status_code=403, content={"detail": "Cross-origin authenticated request blocked"})
 
         return await call_next(request)
 
