@@ -8,6 +8,7 @@ from . import store as _store
 _ORIGINAL_CREATE_SESSION = _store.create_session
 _ORIGINAL_CREATE_PASSWORD_RESET = _store.create_password_reset
 _ORIGINAL_CREATE_WORKSPACE_INVITE = _store.create_workspace_invite
+MAX_ACTIVE_SESSIONS_PER_USER = 20
 
 
 def _prune_expired(table: str) -> None:
@@ -19,10 +20,30 @@ def _prune_expired(table: str) -> None:
         con.execute(f"DELETE FROM {table} WHERE expires_at<=?", (now,))
 
 
+def _trim_user_sessions(user_id: int) -> None:
+    """Keep only the newest bounded set of active sessions for one account."""
+    with _store._connect() as con:
+        con.execute(
+            """DELETE FROM sessions
+               WHERE user_id=?
+                 AND id NOT IN (
+                     SELECT id FROM sessions
+                     WHERE user_id=?
+                     ORDER BY created_at DESC, id DESC
+                     LIMIT ?
+                 )""",
+            (user_id, user_id, MAX_ACTIVE_SESSIONS_PER_USER),
+        )
+
+
 @wraps(_ORIGINAL_CREATE_SESSION)
 def create_session_with_retention(user_id: int, token_hash: str, expires_at: str) -> None:
     _prune_expired("sessions")
     _ORIGINAL_CREATE_SESSION(user_id, token_hash, expires_at)
+    # A successful login may create a new device/browser session. Bound active
+    # capability growth without forcing normal users into single-session auth.
+    # The newest session is always kept; only the oldest excess rows are removed.
+    _trim_user_sessions(user_id)
 
 
 @wraps(_ORIGINAL_CREATE_PASSWORD_RESET)
@@ -65,7 +86,7 @@ def create_workspace_invite_with_retention(
 
 
 def install_capability_retention() -> None:
-    """Prune expired capability rows before auth/main bind creation helpers."""
+    """Prune and bound capability rows before auth/main bind creation helpers."""
     if getattr(_store, "_vexmera_capability_retention_installed", False):
         return
     _store.create_session = create_session_with_retention
