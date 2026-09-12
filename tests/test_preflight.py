@@ -133,7 +133,7 @@ def test_preflight_pilot_requires_internal_secrets(monkeypatch):
     assert "core_internal_secrets_configured" in report["pilot_readiness"]["configuration_blockers"]
 
 
-def test_preflight_pilot_requires_google_ads_api_configuration(monkeypatch):
+def test_preflight_pilot_accepts_cloud_managed_ads_without_developer_token(monkeypatch):
     _clear(monkeypatch)
     for name in preflight.CORE_REQUIRED:
         monkeypatch.setenv(name, "configured")
@@ -149,8 +149,8 @@ def test_preflight_pilot_requires_google_ads_api_configuration(monkeypatch):
 
     report = preflight.build_report()
     assert report["google_ads_developer_token_ready"] is False
-    assert report["pilot_readiness"]["configuration_ready"] is False
-    assert "google_ads_api_configured" in report["pilot_readiness"]["configuration_blockers"]
+    assert report["pilot_readiness"]["configuration_ready"] is True
+    assert "google_ads_api_configured" not in report["pilot_readiness"]["configuration_blockers"]
 
 
 def test_preflight_reports_optional_service_readiness_without_secret_values(monkeypatch, capsys):

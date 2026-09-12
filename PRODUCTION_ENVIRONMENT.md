@@ -102,9 +102,7 @@ OAuth connection requires:
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
 
-Google Ads data additionally requires:
-
-- `GOOGLE_ADS_DEVELOPER_TOKEN`
+Google Ads data additionally requires a customer ID saved in the workspace and API access on the Google Cloud project that owns `GOOGLE_CLIENT_ID`. Since 2026-09-09, the read-only integration no longer requires or sends `GOOGLE_ADS_DEVELOPER_TOKEN`.
 
 Optional:
 
@@ -113,7 +111,17 @@ Optional:
 
 The redirect URI must exactly match the callback URL registered in Google Cloud.
 
-A configured developer token does not prove that Google has granted the required API access level or that the Ads account is linked to the manager account. Treat Basic Access approval and manager linking as separate external checks.
+Verify production access in Google Cloud > Google Ads API for the project owning the OAuth client. A configured OAuth client alone does not prove approval or account access. Verify manager linking separately when the signed-in user accesses the customer through an MCC.
+
+Production values must agree exactly:
+
+```text
+VEZMORA_APP_URL=https://vexmera.com
+GOOGLE_REDIRECT_URI=https://vexmera.com/api/connectors/google/callback
+GOOGLE_ADS_API_VERSION=v25
+```
+
+Register that exact redirect URI on the same Web application OAuth client as the Vercel `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Set `GOOGLE_ADS_LOGIN_CUSTOMER_ID=9445022492` only when that manager is the intended access path; save customer `6383436270` in Vexmera, not the manager ID. Apply environment changes to Production and redeploy. Never paste client secrets or tokens into logs or issue comments.
 
 The customer-facing Google Analytics tag is separate from the connector API. In the authenticated web application, analytics storage defaults to denied and the Google Analytics script is loaded only after explicit opt-in consent. Google Signals and ad-personalization signals remain disabled.
 

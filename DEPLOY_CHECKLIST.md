@@ -105,7 +105,7 @@
 - [x] Add customer-facing owner/admin Google disconnect control with explicit confirmation
 - [x] Add bounded retries and safe response validation to Google token refresh, Analytics reads and Ads reads
 - [x] Keep Google read reliability underneath diagnostics and customer empty-state wrappers
-- [ ] Receive Google approval for Basic Access
+- [ ] Receive Google approval for Basic Access or another sufficient production access level on the OAuth client's Cloud project (the API Center application process changed 2026-09-09)
 - [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required for the active manager hierarchy
 - [ ] Complete Google Ads sync against the real linked account and confirm campaign-level rows
 

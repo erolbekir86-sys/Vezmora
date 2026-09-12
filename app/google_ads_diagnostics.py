@@ -18,6 +18,9 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
         payload = response.json() or {}
     except Exception:
         return None
+    # searchStream can return a JSON array even for an error response.
+    if isinstance(payload, list):
+        payload = next((item for item in payload if isinstance(item, dict) and isinstance(item.get("error"), dict)), {})
     if not isinstance(payload, dict):
         return None
 
@@ -33,7 +36,7 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
     if message:
         parts.append(_redact_sensitive_text(message))
 
-    request_id = None
+    request_id = response.headers.get("request-id")
     google_error_code = None
     google_error_message = None
     details = error.get("details") or []
@@ -60,6 +63,9 @@ def _google_ads_error_summary(response: httpx.Response) -> str | None:
     if request_id:
         parts.append(f"request_id={_redact_sensitive_text(request_id)}")
 
+    if google_error_code and "CLOUD_PROJECT_NOT_APPROVED_FOR_PRODUCTION" in google_error_code:
+        parts.insert(0, "Google Cloud project lacks production Ads API access. Check Google Ads API access in the project that owns GOOGLE_CLIENT_ID and apply for Explorer access or higher.")
+
     summary = " | ".join(part for part in parts if part)
     return summary[:900] if summary else None
 
@@ -71,8 +77,7 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
 
     metadata = connector.get("metadata") or {}
     customer_id = "".join(ch for ch in str(metadata.get("ads_customer_id") or "") if ch.isdigit())
-    developer_token = (os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN") or "").strip()
-    if not customer_id or not developer_token:
+    if not customer_id:
         return None
 
     try:
@@ -81,7 +86,6 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
-            "developer-token": developer_token,
         }
         login_customer_id = (os.getenv("GOOGLE_ADS_LOGIN_CUSTOMER_ID") or "").strip()
         if login_customer_id:
@@ -113,6 +117,8 @@ async def _diagnose_google_ads_failure(workspace_id: int) -> str | None:
 
 async def sync_google_with_diagnostics(workspace_id: int, days: int = 7) -> dict[str, object]:
     result = await _original_sync_google(workspace_id, days)
+    if result.pop("ads_error_diagnosed", False):
+        return result
     warnings = result.get("warnings")
     if not isinstance(warnings, list):
         return result
