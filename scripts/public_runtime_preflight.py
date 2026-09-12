@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from scripts.pilot_preflight import _get_text
+from scripts.preflight_http import normalize_https_origin
 
 
 def _safe_json_get(url: str) -> tuple[int | None, bool, dict[str, object]]:
@@ -28,7 +29,18 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
     This helper remains GET-only and fails closed when the production identity or
     private-beta execution lock cannot be verified.
     """
-    base = base_url.rstrip("/")
+    try:
+        base = normalize_https_origin(base_url)
+    except ValueError:
+        return {
+            "ok": False,
+            "scope": "public_read_only_runtime_checks",
+            "base_url": None,
+            "checks": {},
+            "blockers": ["invalid_base_url"],
+            "note": "Runtime preflight requires a plain HTTPS origin and never follows redirects.",
+        }
+
     blockers: list[str] = []
 
     runtime_status, runtime_reachable, runtime = _safe_json_get(f"{base}/health/runtime")
@@ -96,7 +108,8 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
         },
         "blockers": blockers,
         "note": (
-            "GET-only checks using minimal public deployment identity and private-beta safety evidence. "
-            "Database, provider and secret-presence diagnostics are intentionally not exposed publicly."
+            "GET-only checks against one explicit HTTPS origin using minimal public deployment identity and "
+            "private-beta safety evidence. Redirects are rejected and responses are size-bounded. Database, "
+            "provider and secret-presence diagnostics are intentionally not exposed publicly."
         ),
     }
