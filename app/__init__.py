@@ -1,4 +1,13 @@
+import logging
+
 from .production_env_guards import apply_production_env_guards as _apply_production_env_guards
+
+# httpx logs request URLs at INFO when the surrounding runtime enables verbose
+# logging. Connector requests carry OAuth access tokens in query parameters, so
+# keep provider transport logs at WARNING and never persist credential-bearing
+# URLs in Vercel runtime logs.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Production safety overrides must run before app.main is imported because
 # some beta-only behavior is selected from environment flags at import time.
