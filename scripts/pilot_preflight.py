@@ -5,8 +5,6 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -14,6 +12,7 @@ if str(ROOT) not in sys.path:
 
 from app.beta_readiness import beta_safety_snapshot
 from app.pricing import checkout_pricing_reconciled
+from scripts.preflight_http import get_public_text, normalize_https_origin
 
 
 def _checkout_pricing_reconciled() -> bool:
@@ -79,23 +78,33 @@ def build_preflight_snapshot() -> dict[str, Any]:
 
 
 def _get_text(url: str, timeout: float = 8.0) -> tuple[int, str]:
-    request = Request(url, headers={"User-Agent": "Vexmera-Pilot-Preflight/1.0"})
-    try:
-        with urlopen(request, timeout=timeout) as response:
-            return int(response.status), response.read().decode("utf-8", errors="replace")
-    except HTTPError as exc:
-        return int(exc.code), ""
-    except (URLError, TimeoutError, OSError) as exc:
-        raise RuntimeError(f"request_failed:{type(exc).__name__}") from exc
+    return get_public_text(
+        url,
+        user_agent="Vexmera-Pilot-Preflight/1.0",
+        timeout=timeout,
+    )
 
 
 def build_live_preflight(base_url: str) -> dict[str, Any]:
     """Read only public production endpoints and report pilot-safety evidence.
 
     This function performs GET requests only. It never sends credentials, mutates
-    provider state, changes campaigns, or reads secret values.
+    provider state, changes campaigns, or reads secret values. The target must be
+    a plain HTTPS origin and redirects are not followed, so evidence cannot drift
+    to a different host or path silently.
     """
-    base = base_url.rstrip("/")
+    try:
+        base = normalize_https_origin(base_url)
+    except ValueError:
+        return {
+            "ok": False,
+            "scope": "public_read_only_live_checks",
+            "base_url": None,
+            "checks": {},
+            "blockers": ["invalid_base_url"],
+            "note": "Pilot live checks require a plain HTTPS origin and never follow redirects.",
+        }
+
     checks: dict[str, dict[str, Any]] = {}
     blockers: list[str] = []
 
@@ -161,7 +170,10 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
         "base_url": base,
         "checks": checks,
         "blockers": blockers,
-        "note": "GET-only production checks. No credentials are sent and no external advertising state is changed.",
+        "note": (
+            "GET-only production checks against one explicit HTTPS origin. Redirects are rejected, "
+            "responses are size-bounded, no credentials are sent and no external advertising state is changed."
+        ),
     }
 
 
