@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import smtplib
+import ssl
 from email.message import EmailMessage
 from typing import Any
 
@@ -16,15 +17,32 @@ def app_url() -> str:
     return os.getenv("VEZMORA_APP_URL", "http://localhost:8000").rstrip("/")
 
 
+def _smtp_starttls_enabled() -> bool:
+    return os.getenv("SMTP_STARTTLS", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def send_email(recipient: str, subject: str, body: str) -> None:
-    host = os.getenv("SMTP_HOST")
-    sender = os.getenv("SMTP_FROM")
+    host = (os.getenv("SMTP_HOST") or "").strip()
+    sender = (os.getenv("SMTP_FROM") or "").strip()
     if not host or not sender:
         raise RuntimeError("SMTP is not configured")
-    port = int(os.getenv("SMTP_PORT", "587"))
+
+    try:
+        port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError as exc:
+        raise RuntimeError("SMTP_PORT is invalid") from exc
+    if not 1 <= port <= 65535:
+        raise RuntimeError("SMTP_PORT is invalid")
+
     username = os.getenv("SMTP_USERNAME")
     password = os.getenv("SMTP_PASSWORD")
-    use_tls = os.getenv("SMTP_STARTTLS", "true").lower() in {"1", "true", "yes", "on"}
+    use_tls = _smtp_starttls_enabled()
+
+    # Vercel is the production deployment boundary for the private beta. Never
+    # transmit invite/reset content or SMTP credentials over plaintext transport
+    # there, even if a stale environment override disables STARTTLS.
+    if os.getenv("VERCEL") and not use_tls:
+        raise RuntimeError("SMTP STARTTLS is required on Vercel")
 
     msg = EmailMessage()
     msg["From"] = sender
@@ -34,7 +52,7 @@ def send_email(recipient: str, subject: str, body: str) -> None:
 
     with smtplib.SMTP(host, port, timeout=20) as smtp:
         if use_tls:
-            smtp.starttls()
+            smtp.starttls(context=ssl.create_default_context())
         if username and password:
             smtp.login(username, password)
         smtp.send_message(msg)
