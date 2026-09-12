@@ -15,6 +15,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - verified **test-mode** Vexmera Starter, Growth and Scale catalog for the currently connected Stripe sandbox
 - safe Stripe catalog preflight that validates active monthly SEK prices and expected amounts without printing secrets or IDs
 - Stripe webhook payload and signature-input bounds before signature verification
+- Stripe webhook request-body protection at the ASGI boundary, including a 1 MB streaming limit and fail-closed handling of malformed, negative or duplicate `Content-Length` headers before body buffering
 - Stripe webhook retry safety that keeps completed event IDs idempotent while leaving transient billing-state failures retryable until the local projection succeeds
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
@@ -25,7 +26,9 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - Meta paging restricted to HTTPS `graph.facebook.com` URLs without embedded credentials, with bounded retries, page limits and repeated-page detection
 - connector-state integrity that keeps provider/configuration failures out of healthy empty-data states while preserving genuine zero-row and partial-data states
 - baseline runtime CSP plus HSTS, no-store, referrer, frame, MIME-sniffing and browser capability hardening
-- server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies
+- server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies, including fail-closed blocking of `same-site` but cross-origin browser mutations from sibling origins
+- secure session-cookie cleanup shared by normal logout and permanent account deletion so production `Secure` cookie attributes remain aligned when authentication state is cleared
+- successful password reset treated as credential rotation, with all previously authenticated sessions revoked atomically with the password update
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
 - AI evidence-boundary hardening that treats company profiles, business memory, connector data, competitor content, web-derived text and saved notes as untrusted data rather than instructions, while preserving human approval gates and secret-handling rules
@@ -46,8 +49,8 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
 - Google connector transport hardening is code/CI/deploy verified, but Google Ads Basic Access and live read-only account evidence remain external/manual pilot gates.
 - Meta connector transport hardening is code/CI/deploy verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but live read-only account evidence remains a manual pilot gate.
+- Stripe request-body and webhook retry hardening are code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
-- Stripe webhook retry safety is code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
 - Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
 
