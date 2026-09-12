@@ -113,6 +113,7 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
         health_ok = status == 200
         payload = json.loads(body) if health_ok else {}
         execution_safe = payload.get("private_beta_execution_safe") is True
+        transport_safe = payload.get("production_transport_safe") is True
         external_locked = payload.get("external_execution_enabled") is False
         autopilot_locked = payload.get("autopilot_execution_enabled") is False
         meta_execution_scope_locked = payload.get("meta_execution_scope_enabled") is False
@@ -121,6 +122,7 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
             "status_code": status,
             "reachable": health_ok,
             "private_beta_execution_safe": execution_safe,
+            "production_transport_safe": transport_safe,
             "external_execution_enabled": payload.get("external_execution_enabled"),
             "autopilot_execution_enabled": payload.get("autopilot_execution_enabled"),
             "meta_execution_scope_enabled": payload.get("meta_execution_scope_enabled"),
@@ -130,6 +132,8 @@ def build_live_preflight(base_url: str) -> dict[str, Any]:
             blockers.append("beta_readiness_unreachable")
         if health_ok and not execution_safe:
             blockers.append("private_beta_execution_unsafe")
+        if health_ok and not transport_safe:
+            blockers.append("production_transport_unsafe")
         if health_ok and not external_locked:
             blockers.append("external_execution_not_locked")
         if health_ok and not autopilot_locked:
