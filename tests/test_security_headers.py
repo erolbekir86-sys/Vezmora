@@ -29,6 +29,20 @@ def test_vexmera_responses_include_low_risk_browser_hardening(tmp_path, monkeypa
     assert "strict-transport-security" not in response.headers
 
 
+def test_security_header_installation_is_idempotent(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    install_security_headers(app)
+    middleware_count = len(app.user_middleware)
+    install_security_headers(app)
+
+    assert len(app.user_middleware) == middleware_count
+    assert app.state.vexmera_security_headers_installed is True
+
+
+
 def test_hsts_is_added_for_vercel_https_runtime(monkeypatch) -> None:
     monkeypatch.setenv("VERCEL", "1")
     app = FastAPI()
