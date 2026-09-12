@@ -68,6 +68,8 @@ def _protect_capability_referrer(request: Request, response) -> None:
 
 def install_security_headers(app: FastAPI) -> None:
     """Add low-risk browser hardening headers at the application boundary."""
+    if getattr(app.state, "vexmera_security_headers_installed", False):
+        return
 
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):
@@ -83,3 +85,5 @@ def install_security_headers(app: FastAPI) -> None:
         if _https_runtime():
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
+
+    app.state.vexmera_security_headers_installed = True
