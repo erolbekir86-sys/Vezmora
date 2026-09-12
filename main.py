@@ -54,6 +54,11 @@ if postgres_url:
 from app.main import app, main
 import app.main as _app_main
 import app.connectors as _connectors
+from app.meta_read_reliability import (
+    _meta_error_detail,
+    _validated_meta_ad_account_id,
+    _validated_meta_graph_version,
+)
 
 # Importing app.postgres_compat executes app/__init__.py, which imports app.main
 # before the Postgres startup override above is installed. FastAPI's lifespan
@@ -82,36 +87,55 @@ def _meta_business_authorization_url(workspace_id: int, user_id: int) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
+def _safe_meta_graph_version() -> str:
+    try:
+        return _validated_meta_graph_version(os.getenv("META_GRAPH_VERSION") or "v24.0")
+    except ValueError:
+        raise HTTPException(status_code=503, detail="Meta Graph version configuration is invalid") from None
+
+
+def _safe_meta_payload(response: httpx.Response, action: str) -> dict[str, object]:
+    try:
+        payload = response.json()
+    except Exception:
+        raise HTTPException(status_code=502, detail=f"{action} returned an invalid response") from None
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=502, detail=f"{action} returned an invalid response")
+    return payload
+
+
 async def _meta_business_callback(code: str, state: str) -> dict[str, object]:
     state_row = _connectors.consume_oauth_state(state, "meta")
     if not state_row:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
-    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    graph_version = _safe_meta_graph_version()
     params = {
         "client_id": os.getenv("META_APP_ID"),
         "client_secret": os.getenv("META_APP_SECRET"),
         "redirect_uri": os.getenv("META_REDIRECT_URI"),
         "code": code,
     }
-    async with httpx.AsyncClient(timeout=20) as client:
-        response = await client.get(f"https://graph.facebook.com/{graph_version}/oauth/access_token", params=params)
+    try:
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.get(
+                f"https://graph.facebook.com/{graph_version}/oauth/access_token",
+                params=params,
+            )
+    except httpx.TransportError:
+        raise HTTPException(status_code=502, detail="Meta token exchange failed") from None
     if response.status_code >= 400:
-        try:
-            error = (response.json() or {}).get("error") or {}
-        except Exception:
-            error = {}
+        detail = _meta_error_detail(response, "Meta token exchange")
         raise HTTPException(
             status_code=502,
             detail={
                 "message": "Meta token exchange failed",
                 "meta_status": response.status_code,
-                "meta_error": error.get("message") or "Unknown Meta OAuth error",
-                "meta_type": error.get("type"),
-                "meta_code": error.get("code"),
-                "meta_subcode": error.get("error_subcode"),
+                "diagnostic": detail,
             },
         )
-    token_data = response.json()
+    token_data = _safe_meta_payload(response, "Meta token exchange")
+    if not token_data.get("access_token"):
+        raise HTTPException(status_code=502, detail="Meta token exchange returned no access token")
     _connectors.save_connector(
         workspace_id=state_row["workspace_id"],
         provider="meta",
@@ -137,10 +161,18 @@ _original_sync_meta = _connectors.sync_meta
 
 
 def _valid_meta_ad_account_id(value: str) -> bool:
-    raw = value.strip()
-    if raw.startswith("act_"):
-        raw = raw[4:]
-    return bool(raw) and raw.isdigit()
+    try:
+        _validated_meta_ad_account_id(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _normalized_meta_ad_account_id(value: object) -> str:
+    try:
+        return _validated_meta_ad_account_id(value)
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Meta returned an invalid ad account ID") from None
 
 
 async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) -> dict[str, object]:
@@ -156,51 +188,63 @@ async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) ->
         if not access_token:
             raise HTTPException(status_code=409, detail="Meta connector has no access token")
 
-        graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.get(
-                f"https://graph.facebook.com/{graph_version}/me/adaccounts",
-                params={
-                    "access_token": access_token,
-                    "fields": "id,account_id,name,account_status,currency",
-                    "limit": 100,
-                },
-            )
+        graph_version = _safe_meta_graph_version()
+        try:
+            async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+                response = await client.get(
+                    f"https://graph.facebook.com/{graph_version}/me/adaccounts",
+                    params={
+                        "access_token": access_token,
+                        "fields": "id,account_id,name,account_status,currency",
+                        "limit": 100,
+                    },
+                )
+        except httpx.TransportError:
+            raise HTTPException(status_code=502, detail="Could not list Meta ad accounts") from None
         if response.status_code >= 400:
-            try:
-                error = (response.json() or {}).get("error") or {}
-            except Exception:
-                error = {}
-            message = error.get("message") or f"HTTP {response.status_code}"
-            code = error.get("code")
-            suffix = f" (Meta code {code})" if code is not None else ""
-            raise HTTPException(status_code=502, detail=f"Could not list Meta ad accounts: {message}{suffix}")
+            raise HTTPException(
+                status_code=502,
+                detail=_meta_error_detail(response, "Meta ad-account discovery"),
+            )
 
-        accounts = response.json().get("data", [])
+        payload = _safe_meta_payload(response, "Meta ad-account discovery")
+        accounts = payload.get("data") or []
+        if not isinstance(accounts, list) or any(not isinstance(account, dict) for account in accounts):
+            raise HTTPException(status_code=502, detail="Meta ad-account discovery returned an invalid response")
         if not accounts:
             raise HTTPException(status_code=409, detail="No Meta ad accounts were found for this Facebook login")
 
-        if len(accounts) > 1:
-            safe_accounts = [
+        normalized_accounts: list[dict[str, object]] = []
+        for account in accounts[:25]:
+            raw_id = str(account.get("id") or "").strip()
+            if not raw_id:
+                account_id = str(account.get("account_id") or "").strip()
+                raw_id = f"act_{account_id}" if account_id else ""
+            try:
+                safe_id = _validated_meta_ad_account_id(raw_id)
+            except ValueError:
+                continue
+            normalized_accounts.append(
                 {
-                    "id": str(account.get("id") or ""),
+                    "id": safe_id,
                     "name": str(account.get("name") or "Unnamed account"),
                     "currency": account.get("currency"),
                 }
-                for account in accounts[:25]
-            ]
-            _connectors.update_connector_metadata(workspace_id, "meta", {"available_ad_accounts": safe_accounts})
-            options = "; ".join(f"{a['name']} ({a['id']})" for a in safe_accounts)
+            )
+
+        if not normalized_accounts:
+            raise HTTPException(status_code=502, detail="Meta returned no valid ad account IDs")
+        if len(accounts) > 1:
+            _connectors.update_connector_metadata(
+                workspace_id,
+                "meta",
+                {"available_ad_accounts": normalized_accounts},
+            )
+            options = "; ".join(f"{a['name']} ({a['id']})" for a in normalized_accounts)
             raise HTTPException(status_code=409, detail=f"Multiple Meta ad accounts found: {options}")
 
         account = accounts[0]
-        selected_id = str(account.get("id") or "").strip()
-        if not selected_id:
-            account_id = str(account.get("account_id") or "").strip()
-            selected_id = f"act_{account_id}" if account_id else ""
-        if not _valid_meta_ad_account_id(selected_id):
-            raise HTTPException(status_code=502, detail="Meta returned an invalid ad account ID")
-
+        selected_id = normalized_accounts[0]["id"]
         _connectors.update_connector_metadata(
             workspace_id,
             "meta",
@@ -211,69 +255,62 @@ async def _sync_meta_with_account_discovery(workspace_id: int, days: int = 7) ->
             },
         )
 
-    # Preflight the exact ad-account lookup and expose only Meta's safe error
-    # metadata. Never expose the access token or any application secret.
+    # Preflight the exact ad-account lookup and expose only mapped error metadata.
+    # Never expose the access token, application secret, OAuth code or raw Meta text.
     connector = _connectors.get_connector(workspace_id, "meta", include_secret=True)
     metadata = connector.get("metadata") or {}
-    ad_account = str(metadata.get("ad_account_id") or "").strip()
-    if not ad_account.startswith("act_"):
-        ad_account = f"act_{ad_account}"
+    ad_account = _normalized_meta_ad_account_id(metadata.get("ad_account_id"))
     token = _connectors.decrypt_json(connector["secret_blob"])
     access_token = token.get("access_token")
-    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
-    async with httpx.AsyncClient(timeout=20) as client:
-        probe = await client.get(
-            f"https://graph.facebook.com/{graph_version}/{ad_account}",
-            params={"access_token": access_token, "fields": "id,account_id,name,currency"},
-        )
+    if not access_token:
+        raise HTTPException(status_code=409, detail="Meta connector has no access token")
+    graph_version = _safe_meta_graph_version()
+    try:
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            probe = await client.get(
+                f"https://graph.facebook.com/{graph_version}/{ad_account}",
+                params={"access_token": access_token, "fields": "id,account_id,name,currency"},
+            )
+    except httpx.TransportError:
+        raise HTTPException(status_code=502, detail="Meta ad account lookup failed") from None
     if probe.status_code >= 400:
-        try:
-            error = (probe.json() or {}).get("error") or {}
-        except Exception:
-            error = {}
-        message = error.get("message") or f"HTTP {probe.status_code}"
-        code = error.get("code")
-        subcode = error.get("error_subcode")
-        parts = [f"Meta ad account lookup failed: {message}"]
-        if code is not None:
-            parts.append(f"code {code}")
-        if subcode is not None:
-            parts.append(f"subcode {subcode}")
-        raise HTTPException(status_code=502, detail=" | ".join(parts))
+        raise HTTPException(status_code=502, detail=_meta_error_detail(probe, "Meta ad account lookup"))
+    _safe_meta_payload(probe, "Meta ad account lookup")
 
     campaign_count: int | None = None
     campaign_examples: list[dict[str, object]] = []
     campaign_warning: str | None = None
-    async with httpx.AsyncClient(timeout=20) as client:
-        campaigns_response = await client.get(
-            f"https://graph.facebook.com/{graph_version}/{ad_account}/campaigns",
-            params={
-                "access_token": access_token,
-                "fields": "id,name,status,effective_status",
-                "limit": 100,
-            },
-        )
-    if campaigns_response.status_code < 400:
-        campaigns = campaigns_response.json().get("data", [])
-        campaign_count = len(campaigns)
-        campaign_examples = [
-            {
-                "id": str(campaign.get("id") or ""),
-                "name": str(campaign.get("name") or "Unnamed campaign"),
-                "status": campaign.get("effective_status") or campaign.get("status"),
-            }
-            for campaign in campaigns[:10]
-        ]
-    else:
-        try:
-            error = (campaigns_response.json() or {}).get("error") or {}
-        except Exception:
-            error = {}
-        message = error.get("message") or f"HTTP {campaigns_response.status_code}"
-        code = error.get("code")
-        campaign_warning = f"Meta campaign-list lookup failed: {message}"
-        if code is not None:
-            campaign_warning += f" (code {code})"
+    try:
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            campaigns_response = await client.get(
+                f"https://graph.facebook.com/{graph_version}/{ad_account}/campaigns",
+                params={
+                    "access_token": access_token,
+                    "fields": "id,name,status,effective_status",
+                    "limit": 100,
+                },
+            )
+    except httpx.TransportError:
+        campaigns_response = None
+        campaign_warning = "Meta campaign-list lookup failed after a network error"
+
+    if campaigns_response is not None and campaigns_response.status_code < 400:
+        campaigns_payload = _safe_meta_payload(campaigns_response, "Meta campaign-list lookup")
+        campaigns = campaigns_payload.get("data") or []
+        if not isinstance(campaigns, list) or any(not isinstance(campaign, dict) for campaign in campaigns):
+            campaign_warning = "Meta campaign-list lookup returned an invalid response"
+        else:
+            campaign_count = len(campaigns)
+            campaign_examples = [
+                {
+                    "id": str(campaign.get("id") or ""),
+                    "name": str(campaign.get("name") or "Unnamed campaign"),
+                    "status": campaign.get("effective_status") or campaign.get("status"),
+                }
+                for campaign in campaigns[:10]
+            ]
+    elif campaigns_response is not None:
+        campaign_warning = _meta_error_detail(campaigns_response, "Meta campaign-list lookup")
 
     result = await _original_sync_meta(workspace_id, days)
     result["campaigns_found"] = campaign_count
