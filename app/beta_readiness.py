@@ -48,12 +48,14 @@ def _transport_snapshot() -> dict[str, object]:
             and not smtp_starttls_disabled
         )
 
+    # Keep the established operator diagnostic shape stable. SMTP readiness is
+    # reported separately below while the public endpoint exposes only the
+    # aggregate production_transport_safe boolean.
     return {
         "production_like": production_like,
         "app_url_configured": bool(app_url),
         "app_url_https": app_url_https,
         "secure_cookie_explicitly_disabled": cookie_secure_override is False,
-        "smtp_starttls_required_but_disabled": bool(production_like and smtp_starttls_disabled),
         "safe": safe,
     }
 
