@@ -96,6 +96,7 @@ from . import connector_empty_states as _connector_empty_states
 from . import connector_privacy_controls as _connector_privacy_controls
 from . import account_privacy_controls as _account_privacy_controls
 from . import beta_readiness as _beta_readiness
+from .auth_rate_limit import install_auth_rate_limit as _install_auth_rate_limit
 from .cron_auth_safety import install_cron_auth_safety as _install_cron_auth_safety
 from .csrf_guard import install_csrf_guard as _install_csrf_guard
 from .http_error_safety import install_http_error_safety as _install_http_error_safety
@@ -115,6 +116,7 @@ _install_cron_auth_safety()
 _install_http_error_safety(_app)
 _install_security_headers(_app)
 _install_csrf_guard(_app)
+_install_auth_rate_limit(_app)
 _install_public_health_guard(_app)
 _install_runtime_diagnostics(_app)
 _install_static_entrypoint_guard(_app)
