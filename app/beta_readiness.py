@@ -22,6 +22,13 @@ def _production_like() -> bool:
     return _enabled("VERCEL") or (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
 
 
+def _smtp_starttls_enabled() -> bool:
+    raw = os.getenv("SMTP_STARTTLS")
+    if raw is None:
+        return True
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _transport_snapshot() -> dict[str, object]:
     app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().lower()
     production_like = _production_like()
@@ -30,10 +37,20 @@ def _transport_snapshot() -> dict[str, object]:
     if _configured("VEZMORA_COOKIE_SECURE"):
         cookie_secure_override = _enabled("VEZMORA_COOKIE_SECURE")
 
+    smtp_minimum_configured = _all_configured("SMTP_HOST", "SMTP_FROM")
+    smtp_starttls_disabled = smtp_minimum_configured and not _smtp_starttls_enabled()
+
     safe = True
     if production_like:
-        safe = app_url_https and cookie_secure_override is not False
+        safe = (
+            app_url_https
+            and cookie_secure_override is not False
+            and not smtp_starttls_disabled
+        )
 
+    # Keep the established operator diagnostic shape stable. SMTP readiness is
+    # reported separately below while the public endpoint exposes only the
+    # aggregate production_transport_safe boolean.
     return {
         "production_like": production_like,
         "app_url_configured": bool(app_url),
@@ -86,7 +103,7 @@ def _pilot_readiness_snapshot(
     google_oauth_configured: bool,
     google_ads_api_configured: bool,
     meta_oauth_configured: bool,
-    smtp_minimum_configured: bool,
+    smtp_ready: bool,
 ) -> dict[str, object]:
     """Summarize configuration-only blockers for the five-company pilot."""
     checks = {
@@ -98,7 +115,7 @@ def _pilot_readiness_snapshot(
         "google_oauth_configured": google_oauth_configured,
         "google_ads_api_configured": google_ads_api_configured,
         "meta_oauth_configured": meta_oauth_configured,
-        "transactional_email_configured": smtp_minimum_configured,
+        "transactional_email_configured": smtp_ready,
     }
     blockers = [name for name, ready in checks.items() if not ready]
     return {
@@ -129,6 +146,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         or dev_show_tokens_enabled
     )
     transport = _transport_snapshot()
+    production_like = bool(transport["production_like"])
     core_internal_secrets_configured = _all_configured("VEZMORA_SECRET_KEY", "CRON_SECRET")
     database = _database_snapshot()
     stripe_key_mode = _stripe_key_mode()
@@ -154,6 +172,9 @@ def beta_safety_snapshot() -> dict[str, object]:
         "META_REDIRECT_URI",
     )
     smtp_minimum_configured = _all_configured("SMTP_HOST", "SMTP_FROM")
+    smtp_transport_ready = smtp_minimum_configured and (
+        not production_like or _smtp_starttls_enabled()
+    )
 
     pilot_readiness = _pilot_readiness_snapshot(
         private_beta_execution_safe=private_beta_execution_safe,
@@ -164,7 +185,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         google_oauth_configured=google_oauth_configured,
         google_ads_api_configured=google_ads_developer_token_configured,
         meta_oauth_configured=meta_oauth_configured,
-        smtp_minimum_configured=smtp_minimum_configured,
+        smtp_ready=smtp_transport_ready,
     )
 
     return {
@@ -191,6 +212,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "google_ads_login_customer_id_configured": google_ads_login_customer_id_configured,
         "meta_oauth_configured": meta_oauth_configured,
         "smtp_minimum_configured": smtp_minimum_configured,
+        "smtp_transport_ready": smtp_transport_ready,
         "privacy_controls": {
             "connector_disconnect": True,
             "scoped_synced_history_deletion": True,
@@ -204,6 +226,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Database readiness reports only backend intent and configured-variable booleans; connection strings are never returned.",
             "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, and the exact pricing-version marker; no Stripe identifiers are returned.",
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
+            "Transactional email readiness requires minimum SMTP configuration and, in production, STARTTLS must not be disabled.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
             "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
