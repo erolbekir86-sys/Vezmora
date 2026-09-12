@@ -15,7 +15,9 @@ def test_account_deletion_expires_secure_session_cookie_with_matching_attributes
     monkeypatch.setenv("VEZMORA_COOKIE_SECURE", "false")
     store.init_db()
 
-    with TestClient(app) as client:
+    # Vercel forces Secure auth cookies. Use an HTTPS test origin so the client
+    # stores and sends the cookie exactly as a production browser would.
+    with TestClient(app, base_url="https://testserver") as client:
         registered = client.post(
             "/api/auth/register",
             json={
