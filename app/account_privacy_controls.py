@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from . import connector_privacy_controls as _connector_privacy
 from . import store as _store
-from .auth import require_user, verify_password
+from .auth import clear_session_cookie, require_user, verify_password
 from .main import app as _app
 
 User = Annotated[dict[str, Any], Depends(require_user)]
@@ -204,7 +204,7 @@ async def delete_account(request: AccountDeleteRequest, response: Response, user
             detail="Account deletion conditions changed. Reload the deletion preview and try again.",
         ) from exc
 
-    response.delete_cookie("vezmora_session", path="/")
+    clear_session_cookie(response)
     return {
         "ok": True,
         "account_deleted": True,

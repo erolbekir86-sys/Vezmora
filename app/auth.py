@@ -73,12 +73,8 @@ def start_session(response: Response, user_id: int) -> None:
     )
 
 
-def end_session(response: Response, raw_token: str | None) -> None:
-    token_hash = _session_token_hash(raw_token)
-    if token_hash:
-        revoke_session(token_hash)
-    # Keep deletion attributes aligned with the session cookie. This avoids
-    # leaving a stale auth cookie behind when production uses Secure cookies.
+def clear_session_cookie(response: Response) -> None:
+    """Expire the auth cookie with the same attributes used when it is created."""
     response.delete_cookie(
         SESSION_COOKIE,
         path="/",
@@ -86,6 +82,13 @@ def end_session(response: Response, raw_token: str | None) -> None:
         secure=_secure_cookie(),
         samesite="lax",
     )
+
+
+def end_session(response: Response, raw_token: str | None) -> None:
+    token_hash = _session_token_hash(raw_token)
+    if token_hash:
+        revoke_session(token_hash)
+    clear_session_cookie(response)
 
 
 def require_user(vezmora_session: str | None = Cookie(default=None)) -> dict[str, Any]:
