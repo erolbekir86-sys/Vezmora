@@ -22,6 +22,13 @@ def _production_like() -> bool:
     return _enabled("VERCEL") or (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
 
 
+def _smtp_starttls_enabled() -> bool:
+    raw = os.getenv("SMTP_STARTTLS")
+    if raw is None:
+        return True
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _transport_snapshot() -> dict[str, object]:
     app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().lower()
     production_like = _production_like()
@@ -30,9 +37,12 @@ def _transport_snapshot() -> dict[str, object]:
     if _configured("VEZMORA_COOKIE_SECURE"):
         cookie_secure_override = _enabled("VEZMORA_COOKIE_SECURE")
 
+    smtp_minimum_configured = _all_configured("SMTP_HOST", "SMTP_FROM")
+    smtp_transport_safe = not smtp_minimum_configured or _smtp_starttls_enabled()
+
     safe = True
     if production_like:
-        safe = app_url_https and cookie_secure_override is not False
+        safe = app_url_https and cookie_secure_override is not False and smtp_transport_safe
 
     return {
         "production_like": production_like,
@@ -86,7 +96,7 @@ def _pilot_readiness_snapshot(
     google_oauth_configured: bool,
     google_ads_api_configured: bool,
     meta_oauth_configured: bool,
-    smtp_minimum_configured: bool,
+    smtp_ready: bool,
 ) -> dict[str, object]:
     """Summarize configuration-only blockers for the five-company pilot."""
     checks = {
@@ -98,7 +108,7 @@ def _pilot_readiness_snapshot(
         "google_oauth_configured": google_oauth_configured,
         "google_ads_api_configured": google_ads_api_configured,
         "meta_oauth_configured": meta_oauth_configured,
-        "transactional_email_configured": smtp_minimum_configured,
+        "transactional_email_configured": smtp_ready,
     }
     blockers = [name for name, ready in checks.items() if not ready]
     return {
@@ -154,6 +164,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "META_REDIRECT_URI",
     )
     smtp_minimum_configured = _all_configured("SMTP_HOST", "SMTP_FROM")
+    smtp_ready = smtp_minimum_configured and (not _production_like() or _smtp_starttls_enabled())
 
     pilot_readiness = _pilot_readiness_snapshot(
         private_beta_execution_safe=private_beta_execution_safe,
@@ -164,7 +175,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         google_oauth_configured=google_oauth_configured,
         google_ads_api_configured=google_ads_developer_token_configured,
         meta_oauth_configured=meta_oauth_configured,
-        smtp_minimum_configured=smtp_minimum_configured,
+        smtp_ready=smtp_ready,
     )
 
     return {
@@ -191,6 +202,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "google_ads_login_customer_id_configured": google_ads_login_customer_id_configured,
         "meta_oauth_configured": meta_oauth_configured,
         "smtp_minimum_configured": smtp_minimum_configured,
+        "smtp_transport_ready": smtp_ready,
         "privacy_controls": {
             "connector_disconnect": True,
             "scoped_synced_history_deletion": True,
@@ -206,6 +218,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
             "Google Ads configuration readiness requires OAuth and a developer token; manager/login-customer linking remains a separate external/manual gate because it depends on account topology.",
+            "Transactional email readiness requires minimum SMTP configuration and secure STARTTLS transport in production-like environments.",
             "Account deletion is self-service but deliberately blocked until shared ownership and active subscription constraints are resolved.",
             "Google Ads Basic Access and manager linking require separate external verification.",
             "Live billing, VAT/tax, legal terms and canonical production domain remain separate launch decisions.",
