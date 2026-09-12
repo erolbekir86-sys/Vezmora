@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi.responses import JSONResponse
 
+from .api_request_body_limit import ApiRequestBodyLimitMiddleware
 from .stripe_billing import MAX_WEBHOOK_PAYLOAD_BYTES
 
 _STRIPE_WEBHOOK_PATHS = frozenset({"/api/billing/webhook", "/api/billing/webhook/"})
@@ -95,4 +96,7 @@ class StripeWebhookBodyLimitMiddleware:
 
 
 def install_stripe_webhook_body_limit(app) -> None:
+    # Ordinary JSON mutations get a separate request-body memory ceiling while
+    # Stripe retains its dedicated limiter and signature-verification contract.
+    app.add_middleware(ApiRequestBodyLimitMiddleware)
     app.add_middleware(StripeWebhookBodyLimitMiddleware)
