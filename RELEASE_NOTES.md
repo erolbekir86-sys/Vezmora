@@ -16,6 +16,7 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - safe Stripe catalog preflight that validates active monthly SEK prices and expected amounts without printing secrets or IDs
 - Stripe webhook payload and signature-input bounds before signature verification
 - Stripe webhook request-body protection at the ASGI boundary, including a 1 MB streaming limit and fail-closed handling of malformed, negative or duplicate `Content-Length` headers before body buffering
+- ordinary mutating `/api` requests protected by a separate 1 MiB pre-buffer/streaming body ceiling, with malformed, negative and duplicate `Content-Length` rejected before application parsing; Stripe retains its dedicated webhook limiter
 - Stripe webhook retry safety that keeps completed event IDs idempotent while leaving transient billing-state failures retryable until the local projection succeeds
 - Google/Meta private-beta connector work with external execution kept behind explicit safety gates
 - bounded provider transport handling with customer-visible transport errors sanitized before rendering
@@ -29,11 +30,14 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - server-side CSRF defence-in-depth for authenticated state-changing API requests in addition to SameSite session cookies, including fail-closed blocking of `same-site` but cross-origin browser mutations from sibling origins
 - secure session-cookie cleanup shared by normal logout and permanent account deletion so production `Secure` cookie attributes remain aligned when authentication state is cleared
 - successful password reset treated as credential rotation, with all previously authenticated sessions revoked atomically with the password update
+- login-only account-enumeration timing hardening that adds equivalent password-KDF work for unknown accounts without changing password-reset or other email-lookup flows
+- diagnostic secret redaction extended to OAuth callback/provider URL capabilities such as authorization `code`, `state`, access/refresh tokens and client secrets while preserving ordinary non-URL error-code context
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
 - AI evidence-boundary hardening that treats company profiles, business memory, connector data, competitor content, web-derived text and saved notes as untrusted data rather than instructions, while preserving human approval gates and secret-handling rules
 - a minimal public production health/privacy contract that exposes deployment identity without provider, database, billing, SMTP, OAuth or secret-configuration inventory
 - CI supply-chain hardening and removal of the obsolete write workflow
+- CI dependency-consistency verification with `python -m pip check` after installation, before compile and test stages
 - release-version consistency checks so package/app/release metadata cannot drift silently
 - premium Vexmera marketing-site and Command Center polish aligned to the same pricing, product names and private-beta language
 - Swedish-first Command Center customer copy with Core, Pulse, Launch and Autopilot retained as product names
@@ -47,19 +51,19 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - The public marketing page uses illustrative demo metrics and labels them as demo data.
 - Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
 - External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
-- Google connector transport hardening is code/CI/deploy verified, but Google Ads Basic Access and live read-only account evidence remain external/manual pilot gates.
-- Meta connector transport hardening is code/CI/deploy verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but live read-only account evidence remains a manual pilot gate.
-- Stripe request-body and webhook retry hardening are code/CI/deploy verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
+- Google connector transport hardening is code/CI verified, but Google Ads Basic Access, direct deployed runtime inspection and live read-only account evidence remain external/manual pilot gates.
+- Meta connector transport hardening is code/CI verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but direct deployed runtime inspection and live read-only account evidence remain manual pilot gates.
+- Stripe request-body and webhook retry hardening are code/CI verified, but fresh sandbox Checkout/webhook evidence is still part of manual pilot validation before billing is treated as pilot-ready.
 - Stripe live mode is **not** enabled by these release notes. The connected sandbox catalog is test-only, and deployment Price IDs/webhook configuration must be reconciled before a fresh end-to-end Checkout test.
 - VAT/tax handling, final legal terms, the canonical production domain, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
-- Runtime changes that have green CI but no successful current Vercel preview remain unmerged until deployment verification is available.
+- The GitHub-side Vercel checks for the latest hardening PRs are green, but the connected Vercel integration currently cannot enumerate the project or directly inspect those deployments. Treat direct runtime/deployment inspection as a separate unresolved evidence gate.
 
 ## Current release verification posture
 
 The repository now distinguishes three different kinds of evidence:
 
 1. **Code/CI evidence** — automated tests and static/runtime contract checks in GitHub Actions.
-2. **Deployment evidence** — a successful Vercel Preview/Production deployment for runtime-affecting changes.
+2. **Deployment evidence** — direct evidence that a specific Vercel Preview/Production deployment is ready and inspectable; a GitHub-side Vercel check alone is not treated as full runtime observability.
 3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, fresh Stripe sandbox evidence, and the documented five-company pilot checklist.
 
 A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read in one environment also does not prove that a different account, OAuth grant, manager hierarchy or provider-access level is ready.

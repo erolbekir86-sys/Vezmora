@@ -1,64 +1,74 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-09-08
+Last reviewed: 2026-09-12
 
-This file is a non-secret operational snapshot for the five-company private beta. It records only evidence that can be safely verified without changing credentials, billing, permissions, domains, DNS, or live advertising settings.
+This file is a non-secret operational snapshot for the five-company private beta. It records only evidence that can be safely verified without changing credentials, billing, permissions, domains, DNS or live advertising settings.
 
 ## Verified healthy
 
 - GitHub repository is reachable and writable through the connected GitHub integration; the default branch is `main`.
-- Latest observed `main` commit before this snapshot refresh is `dd9401c7b03722d0bb1de7ecd5d57ad29eecbdf8` (`Add GA metric semantics evidence to pilot template`).
-- GitHub Actions `Vexmera CI` run 414 for that commit completed successfully on 2026-09-08.
-- GitHub reports the Vercel deployment status for that commit as `success`, confirming the GitHub -> Vercel deployment path completed for the observed `main` revision.
-- The Python package identifies the product as `vexmera` version `0.6.1`.
-- CI/test coverage includes deployment, execution safety, connector empty states, privacy controls, analytics consent, Google Ads diagnostics, billing alignment, beta readiness and public frontend asset smoke coverage.
-- Public frontend smoke coverage verifies that `/` and `/app` return content and that referenced local JavaScript/CSS assets are present and non-empty.
-- Frontend JavaScript syntax checks cover the landing-page scripts used by the deployed marketing page.
-- Landing-page reveal effects fail open: content is visible by default, enhanced reveal behavior is enabled only when JavaScript initializes, and frontend errors remove the reveal lock so a script failure cannot leave the page visually blank.
-- Connector empty-state handling distinguishes successful zero-row accounts from provider failures, HTTP errors and missing Google Ads configuration. Provider warnings are preserved instead of being replaced by reassuring empty-state copy.
-- Regression coverage includes campaign/ad row combinations, malformed row counts, provider errors, HTTP failures, missing Google Ads configuration and warning preservation for connector empty-state classification.
-- Google Analytics metric semantics are explicitly guarded for the pilot: GA `sessions` currently normalize into the generic `clicks` field, so pilot documentation and UI warnings require that those values be treated as website sessions, never paid-ad clicks or paid-media click totals.
-- The pilot runbook explicitly requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
-- Production database intent is confirmed from code: `DATABASE_URL`/`POSTGRES_URL` (Neon/Postgres) is preferred, while Turso is a legacy compatibility fallback.
-- Database readiness diagnostics report backend intent and configuration booleans without exposing connection strings.
-- Five-company pilot readiness diagnostics distinguish configuration blockers from manual launch gates, preventing a configuration-only pass from being mistaken for external-pilot approval.
-- New Stripe Checkout creation is intentionally blocked by a pricing-reconciliation safety guard while the public Start / Growth / Pro model differs from the historical Starter / Growth / Scale backend and verified Stripe sandbox catalog.
+- The code baseline observed immediately before this documentation refresh was `cecbff7694de15728949f1bd6a4a67bc32a360f9` on `main`.
+- Private-beta release packaging now includes the post-170 security work plus the latest auth, request-boundary, secret-redaction and CI dependency-consistency hardening.
+- GitHub Actions verification was green for the latest hardening changes: dependency consistency (#173), ordinary API request-body limits (#174), login-only enumeration hardening (#176) and OAuth diagnostic query redaction (#177).
+- The GitHub-side Vercel checks for the latest runtime hardening PRs completed successfully with no unresolved preview feedback. This is useful deployment-path evidence, but is not treated as direct runtime observability.
+- CI now verifies the installed Python dependency graph with `python -m pip check` before compilation and tests.
+- Stripe webhooks have a dedicated 1 MB ASGI streaming/request-body ceiling and fail closed on malformed, negative or duplicate `Content-Length` before buffering.
+- Ordinary mutating `/api` requests now have a separate 1 MiB pre-buffer/streaming ceiling, including chunked-body enforcement and fail-closed `Content-Length` validation. Stripe remains on its dedicated limiter.
+- Secure session-cookie cleanup is shared by logout and permanent account deletion.
+- Successful password reset revokes all existing authenticated sessions atomically with credential rotation.
+- Login now reduces the obvious known-vs-unknown account timing signal with equivalent password-KDF work for missing accounts, scoped to the login route only so password-reset behavior is not unintentionally changed.
+- Authenticated mutation CSRF protection blocks both cross-site and `same-site` cross-origin browser requests in addition to SameSite cookie protection.
+- OAuth callback/provider diagnostic URLs are sanitized for authorization codes, state values, access/refresh tokens and client secrets without hiding ordinary non-URL provider error codes.
+- Baseline production security headers include CSP, HSTS on HTTPS runtime, `nosniff`, frame denial, referrer restrictions, permissions policy and no-store handling for sensitive/API responses.
+- Public production health responses remain intentionally minimal and do not reveal provider, database, billing, SMTP, OAuth or secret-configuration inventory.
+- External marketing execution and Autopilot execution remain fail-closed in Vercel Private Beta; preview/recommendation paths remain available for human review.
+- Meta production scope hardening keeps `ads_management` disabled on Vercel. Meta read sync remains based on `ads_read` unless a separate non-production execution scope is explicitly enabled.
+- Google/Meta read paths retain bounded retries, input validation, non-redirecting token-bearing transports and sanitized provider-facing diagnostics.
+- Connector empty-state handling distinguishes genuine successful zero-row states from configuration/provider failures and preserves actionable sanitized warnings.
+- The public marketing page uses illustrative demo metrics and identifies them as demo data.
+- Google Analytics session semantics remain explicitly guarded: current GA `sessions` normalization must not be presented as paid-ad clicks or used as paid-media click truth in the pilot.
+- The pilot runbook requires recommendation-only behavior and forbids autonomous campaign, budget, bid or ad changes.
+- Production database intent remains Neon/Postgres through `DATABASE_URL`/`POSTGRES_URL`, with Turso retained only as legacy compatibility.
+- Five-company pilot diagnostics distinguish machine-checkable configuration readiness from manual/external launch gates.
+- New Stripe Checkout remains deliberately guarded until the current pricing/catalog version and sandbox evidence are reconciled; no billing configuration was changed during this refresh.
 
 ## Current blockers requiring manual or external resolution
 
-### 1. Direct Vercel connector visibility
+### 1. Direct Vercel project/runtime visibility
 
-Rechecked 2026-09-08: the connected Vercel integration still returns zero teams. GitHub simultaneously reports the latest observed `main` commit's Vercel status as successful, so this remains an integration authorization/scope problem rather than evidence that the project or deployment was deleted.
+Rechecked 2026-09-12: the connected Vercel integration can see the `Vezmora` team (`team_ujJMnSfADV4K416z45SV43gL`) but currently enumerates zero projects. A direct lookup of a GitHub-reported preview hostname also returns `Deployment not found` through the connector.
 
-Manual action only if direct Vercel inspection is needed: reconnect/authorize the Vercel integration with access to the existing `vezmora` team/project. Do not change domains, DNS, secrets, credentials, project permissions or production settings as part of this check.
+At the same time, GitHub-side Vercel checks for the latest hardening PRs are successful and expose preview-feedback links. Treat this as a connector authorization/visibility mismatch, not proof that the project or deployment is missing.
+
+Manual action only if direct Vercel runtime inspection is required: reconnect/authorize the Vercel integration with access to the existing project. Do not change domains, DNS, secrets, credentials, project settings or production permissions as part of that check.
 
 ### 2. Public pricing / backend / Stripe sandbox reconciliation
 
-The public marketing model is now **Start / Growth / Pro**, while the backend plan model and historical verified Stripe sandbox catalog still use **Starter / Growth / Scale**. New Checkout sessions are deliberately blocked until public pricing, backend plan metadata, billing tests and Stripe sandbox products/prices describe one approved model.
+The current pilot documentation continues to treat Checkout as blocked until the approved Start / Growth / Pro pricing version, backend plan metadata, tests and Stripe sandbox products/prices describe the same verified model.
 
-Do not bypass the checkout safety guard. Do not change Stripe keys, Price IDs, billing settings or payment configuration autonomously. The historical sandbox catalog is evidence of earlier test configuration only, not proof that current pilot Checkout is ready.
+Do not bypass the checkout safety guard. Do not change Stripe keys, Price IDs, billing settings, bank information or payment configuration autonomously.
 
 ### 3. Google Ads API approval
 
-The Vexmera MCC-to-client relationship is recorded as active, but Google Ads Basic Access remains an external prerequisite. Test Account Access is not sufficient for normal production-client reads.
+Google Ads Basic Access remains an external prerequisite for normal production-client reads. Test Account Access does not substitute for real production read evidence.
 
-Keep all advertising behavior read-only/recommendation-only until Basic Access and a real production read-only sync are independently verified. Do not enable external ad execution, campaign changes, budget changes or bid changes as part of pilot preparation.
+Keep advertising behavior read-only/recommendation-only until Basic Access and a real production read-only sync are independently verified. Do not enable external ad execution, campaign changes, budget changes or bid changes as part of pilot preparation.
 
 ### 4. Live connector verification
 
 Automated coverage distinguishes legitimate empty accounts from provider failures without exposing secrets, but a real deployed walkthrough is still required for Google Ads and Meta. Verify that successful empty accounts show a clear empty state and provider/API failures show actionable, sanitized diagnostics.
 
-For Google Analytics, also verify that the sessions-semantics warning is visible and that `source=google_analytics` data is not presented as paid-ad clicks, CPC/CTR input, or cross-channel paid-media click totals.
+For Google Analytics, also verify that the sessions-semantics warning is visible and that `source=google_analytics` data is not presented as paid-ad clicks, CPC/CTR input or cross-channel paid-media click totals.
 
 ### 5. Google Analytics metric model cleanup
 
-Google Analytics currently requests `sessions` but normalizes that value into Vexmera's generic `clicks` KPI field. Pilot safeguards now prevent that value from being interpreted as paid-ad clicks, but the long-term model should separate website sessions from advertising clicks.
+Google Analytics currently requests `sessions` but normalizes that value into Vexmera's generic `clicks` KPI field. Pilot safeguards prevent that value from being treated as paid-ad clicks, but the long-term data model should separate website sessions from advertising clicks.
 
-Do not perform a historical data/schema migration autonomously without migration evidence and explicit compatibility coverage. Until then, treat incorrect GA click labeling or aggregation as a stop condition for GA analysis in the pilot.
+Do not perform a historical data/schema migration autonomously without migration evidence and explicit compatibility coverage. Until then, incorrect GA click labeling or aggregation is a stop condition for GA analysis in the pilot.
 
 ### 6. Stripe sandbox end-to-end verification
 
-After pricing reconciliation is complete, a fresh sandbox verification remains an external/manual gate where account-level Stripe state is involved. Required checks include the reconciled test catalog, signed webhook behavior, Checkout/trial flow and Customer Portal behavior.
+After pricing reconciliation is complete, a fresh sandbox verification remains an external/manual gate. Required checks include the approved test catalog, signed webhook behavior, Checkout/trial flow and Customer Portal behavior.
 
 Do not bypass the pricing guard to perform this test early.
 
@@ -68,32 +78,33 @@ Before inviting external pilot companies, finalize the Privacy Policy and Beta T
 
 ### 8. Final deployed browser QA
 
-Perform one authenticated browser pass on the actual deployed Command Center before the first pilot. Confirm onboarding, connector empty states, connector failure states, disconnect flows, account privacy controls, GA metric semantics and recommendation-only behavior in the real deployment. Also confirm the public marketing page and `/app` render correctly in a real browser.
+Perform one authenticated browser pass on the actual deployed Command Center before the first pilot. Confirm onboarding, connector empty/failure states, disconnect flows, account privacy controls, GA metric semantics, recommendation-only behavior and responsive rendering. Also confirm the public marketing page and `/app` in a real browser.
 
 ## Pilot safety gate
 
 Do not start the five-company external pilot until all of the following are true:
 
-- the active production deployment is confirmed and health can be inspected;
+- the active production deployment is directly confirmed and health/runtime evidence can be inspected;
 - `/health/beta-readiness` reports `private_beta_execution_safe=true`;
 - `pilot_readiness.configuration_ready=true` with no configuration blockers;
 - external execution remains disabled;
-- required pilot connectors pass read-only sync checks;
+- required pilot connectors pass live read-only sync checks;
 - legitimate empty connector accounts and provider failures are visually distinguishable in deployed QA;
 - GA sessions are not presented or aggregated as paid-ad clicks;
-- public pricing, backend plan metadata, billing tests and the Stripe sandbox catalog are reconciled before any new Checkout test;
+- current pricing, backend plan metadata, billing tests and Stripe sandbox catalog are reconciled before any new Checkout test;
 - a fresh Stripe sandbox end-to-end test passes if billing is included in the pilot;
 - Privacy Policy and Beta Terms are finalized;
 - authenticated browser QA passes.
 
 ## Next safe autonomous work
 
+While direct Vercel project visibility remains unavailable, continue only with reversible code quality, diagnostics, tests, documentation, onboarding and beta-safety hardening that does not alter live ad execution, billing, secrets, permissions, DNS or customer data.
+
 When direct Vercel visibility becomes available, the next low-risk checks are:
 
 1. inspect production runtime errors and non-secret health diagnostics;
-2. confirm the active deployment revision matches GitHub `main`;
-3. verify execution-safety diagnostics remain safe;
+2. confirm the active production deployment revision matches GitHub `main`;
+3. verify execution-safety diagnostics remain fail-closed;
 4. inspect unresolved Vercel toolbar feedback;
-5. update this snapshot only when evidence changes.
-
-Until then, continue only with reversible code quality, diagnostics, tests, documentation, onboarding and beta-safety hardening that does not alter live ad execution, billing, secrets, permissions, DNS or customer data.
+5. run authenticated browser QA on the deployed Command Center;
+6. update this snapshot only when evidence changes.
