@@ -96,6 +96,7 @@ def test_pilot_preflight_never_renders_secret_values(monkeypatch):
 def _safe_beta_readiness_payload() -> dict[str, object]:
     return {
         "private_beta_execution_safe": True,
+        "production_transport_safe": True,
         "external_execution_enabled": False,
         "autopilot_execution_enabled": False,
         "meta_execution_scope_enabled": False,
@@ -119,6 +120,7 @@ def test_live_preflight_passes_safe_public_endpoints(monkeypatch):
     assert result["ok"] is True
     assert result["blockers"] == []
     beta = result["checks"]["beta_readiness"]
+    assert beta["production_transport_safe"] is True
     assert beta["external_execution_enabled"] is False
     assert beta["autopilot_execution_enabled"] is False
     assert beta["meta_execution_scope_enabled"] is False
@@ -178,6 +180,7 @@ def test_live_preflight_fails_closed_when_execution_lock_fields_are_missing(monk
             json.dumps(
                 {
                     "private_beta_execution_safe": True,
+                    "production_transport_safe": True,
                     "external_execution_enabled": False,
                     "autopilot_execution_enabled": False,
                 }
