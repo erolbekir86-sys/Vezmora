@@ -91,6 +91,7 @@ def build_report() -> dict[str, Any]:
 
     beta_execution_locked = not unsafe_flags
     production_transport_safe = not insecure_app_url and not insecure_cookie_override and not insecure_smtp_transport
+    core_internal_secrets_configured = configured("VEZMORA_SECRET_KEY") and configured("CRON_SECRET")
     stripe_key_mode = _stripe_key_mode()
     stripe_prices_configured = all(configured(name) for name in STRIPE_PRICE_ENV.values())
     stripe_pricing_version_reconciled = checkout_pricing_reconciled()
@@ -101,15 +102,18 @@ def build_report() -> dict[str, Any]:
         and stripe_pricing_version_reconciled
     )
     google_oauth_ready = not google_oauth_missing
+    google_ads_developer_token_ready = configured("GOOGLE_ADS_DEVELOPER_TOKEN")
     meta_oauth_ready = not meta_oauth_missing
     smtp_ready = not smtp_missing and not insecure_smtp_transport
 
     pilot_checks = {
         "execution_locked": beta_execution_locked,
         "production_transport_safe": production_transport_safe,
+        "core_internal_secrets_configured": core_internal_secrets_configured,
         "remote_database_configured": database_configured(),
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_ready,
+        "google_ads_api_configured": google_ads_developer_token_ready,
         "meta_oauth_configured": meta_oauth_ready,
         "transactional_email_configured": smtp_ready,
     }
@@ -128,7 +132,7 @@ def build_report() -> dict[str, Any]:
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "smtp_ready": smtp_ready,
         "google_oauth_ready": google_oauth_ready,
-        "google_ads_developer_token_ready": configured("GOOGLE_ADS_DEVELOPER_TOKEN"),
+        "google_ads_developer_token_ready": google_ads_developer_token_ready,
         "google_ads_login_customer_id_ready": configured("GOOGLE_ADS_LOGIN_CUSTOMER_ID"),
         "meta_oauth_ready": meta_oauth_ready,
         "serverless_enabled": enabled("VEZMORA_SERVERLESS"),
@@ -139,6 +143,7 @@ def build_report() -> dict[str, Any]:
             "checks": pilot_checks,
             "configuration_blockers": pilot_blockers,
             "manual_gates": [
+                "production_observability_verified",
                 "final_authenticated_browser_qa",
                 "privacy_terms_legal_review",
                 "google_ads_external_approval_and_manager_link_if_required",
