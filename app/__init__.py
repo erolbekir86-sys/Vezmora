@@ -16,6 +16,12 @@ _install_kpi_semantics_guard()
 from .one_time_token_safety import install_one_time_token_safety as _install_one_time_token_safety
 _install_one_time_token_safety()
 
+# A successful password reset is a credential rotation. Invalidate every
+# previously authenticated session for that user in the same database transaction
+# before app.main binds update_user_password.
+from .password_reset_session_safety import install_password_reset_session_safety as _install_password_reset_session_safety
+_install_password_reset_session_safety()
+
 # Expired sessions, reset tokens and workspace invites no longer need to remain
 # in capability tables. Prune expired rows opportunistically when new entries of
 # the same type are issued, before auth/main bind creation helpers.
