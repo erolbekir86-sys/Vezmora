@@ -238,3 +238,74 @@ def _billing_event_processed(provider_event_id: str) -> bool:
 
 
 def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
+    event_id = str(event.get("id") or "")
+    if not event_id:
+        raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
+
+    event_type = str(event.get("type") or "")
+    if not event_type:
+        raise HTTPException(status_code=400, detail="Stripe webhook event type is required")
+
+    obj, metadata = _webhook_object(event)
+    workspace_id: int | None = None
+    if metadata.get("workspace_id"):
+        try:
+            workspace_id = int(metadata["workspace_id"])
+        except (TypeError, ValueError):
+            workspace_id = None
+
+    # Checkout sessions created by Vexmera carry the workspace in two independent
+    # Stripe fields. Reject a signed event when both are present but disagree,
+    # before recording the event or mutating local billing state. Keeping the
+    # check conditional preserves compatibility with historical sandbox events.
+    if event_type == "checkout.session.completed" and workspace_id is not None and obj.get("client_reference_id") is not None:
+        if str(obj.get("client_reference_id")) != str(workspace_id):
+            raise HTTPException(status_code=400, detail="Stripe checkout workspace reference mismatch")
+
+    customer = obj.get("customer")
+    if customer:
+        customer_workspace_id = workspace_id_by_stripe_customer(str(customer))
+        if workspace_id is not None and customer_workspace_id is not None and customer_workspace_id != workspace_id:
+            raise HTTPException(status_code=400, detail="Stripe customer is linked to a different workspace")
+        if workspace_id is None:
+            workspace_id = customer_workspace_id
+
+    # Sequential duplicate deliveries remain side-effect free. The final unique
+    # insert below still protects the ledger if two deliveries race; the billing
+    # projection itself is an idempotent assignment in that case.
+    if _billing_event_processed(event_id):
+        return {"ok": True, "duplicate": True}
+
+    # Apply the local billing projection before claiming the Stripe event as
+    # processed. If the local write raises, Stripe can retry the same event.
+    if event_type == "checkout.session.completed" and workspace_id is not None:
+        plan = _event_plan(metadata.get("plan"))
+        try:
+            trialing = int(metadata.get("trial_days") or 0) > 0
+        except (TypeError, ValueError):
+            trialing = False
+        set_workspace_billing(
+            workspace_id,
+            plan=plan,
+            customer_id=str(obj.get("customer") or "") or None,
+            subscription_id=str(obj.get("subscription") or "") or None,
+            billing_status="trialing" if trialing else "active",
+        )
+    elif event_type in {"customer.subscription.updated", "customer.subscription.created"} and workspace_id is not None:
+        plan = _event_plan(metadata.get("plan"), get_workspace_settings(workspace_id).get("plan"))
+        set_workspace_billing(
+            workspace_id,
+            plan=plan,
+            customer_id=str(customer or "") or None,
+            subscription_id=str(obj.get("id") or "") or None,
+            billing_status=str(obj.get("status") or "active"),
+            trial_ends_at=_trial_end_iso(obj),
+        )
+    elif event_type == "customer.subscription.deleted" and workspace_id is not None:
+        set_workspace_billing(workspace_id, billing_status="canceled", subscription_id=str(obj.get("id") or "") or None)
+    elif event_type == "invoice.payment_failed" and workspace_id is not None:
+        set_workspace_billing(workspace_id, billing_status="past_due")
+
+    if not record_billing_event(workspace_id, event_id, event_type, event):
+        return {"ok": True, "duplicate": True}
+    return {"ok": True, "workspace_id": workspace_id, "type": event_type}
