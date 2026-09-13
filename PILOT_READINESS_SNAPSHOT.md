@@ -6,7 +6,7 @@ This is a non-secret operational snapshot for the five-company private beta. It 
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `f1d3e2596f10ced5b3c944c1c21c7eeb8ee1f248`.
+The latest verified `main` baseline at this refresh is `2d32d0bdf3ada3774d843a28d5290fb196672374`.
 
 Recent merged hardening includes:
 
@@ -20,6 +20,7 @@ Recent merged hardening includes:
 - ordinary mutating API requests have a separate 1 MiB streaming/pre-buffer body ceiling, while Stripe retains its dedicated webhook limiter;
 - OAuth diagnostic URLs redact authorization code/state/token/client-secret capabilities;
 - Vexmera diagnostic URL redaction now also masks password-reset, workspace-invite and Stripe Checkout `session_id` capability values while preserving non-secret URL context;
+- shared diagnostic redaction now also masks Authorization and Proxy-Authorization values, Cookie and Set-Cookie fields, and raw `vezmora_session=...` assignments before diagnostic text is exposed or persisted;
 - reset/invite emails fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
 - Stripe Checkout and Customer Portal return URLs fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
 - Google and Meta production OAuth redirect URIs must exactly match the canonical HTTPS app origin plus the expected provider callback path, otherwise that connector fails closed in the process;
