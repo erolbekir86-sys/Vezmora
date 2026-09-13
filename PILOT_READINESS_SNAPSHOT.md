@@ -6,7 +6,7 @@ This is a non-secret operational snapshot for the five-company private beta. It 
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `52871c52d00670e0e3fa77dbcabd7c3be80aa78d`.
+The latest verified `main` baseline at this refresh is `5c2c50a7fc67e5901ad49084be717b8511fedcdf`.
 
 Recent merged hardening includes:
 
@@ -28,6 +28,7 @@ Recent merged hardening includes:
 - operator runtime preflight can pin an expected deployment revision and fails closed on `deployment_revision_mismatch` without echoing revision values in the result;
 - Stripe webhook processing fails closed before billing or ledger writes when signed event metadata conflicts with an already-bound workspace/customer relationship;
 - HTTP transport logging remains pinned away from INFO-level request URL logging, with regression coverage protecting token-bearing OAuth/provider paths from future logging regressions;
+- production FastAPI docs/OpenAPI routes are now hidden consistently for every HTTP method, preventing 405/Allow method probes from revealing internal framework route existence;
 - CI verifies the installed dependency graph with `python -m pip check` before compile/tests and includes bounded dependency-update checks.
 
 ## Verified healthy from code and CI
