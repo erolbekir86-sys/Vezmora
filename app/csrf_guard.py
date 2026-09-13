@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
@@ -34,6 +35,19 @@ def _origin_tuple(value: str) -> tuple[str, str] | None:
 
 def _request_origin(request: Request) -> tuple[str, str]:
     return request.url.scheme.lower(), request.url.netloc.lower()
+
+
+def _trusted_origin(request: Request) -> tuple[str, str]:
+    """Prefer the configured canonical app origin over the request Host header.
+
+    Reverse proxies normally protect Host, but CSRF validation should not depend
+    on an attacker-controlled request header when the deployment already knows
+    its canonical public URL. Local/test deployments without VEZMORA_APP_URL keep
+    the existing request-origin fallback.
+    """
+
+    configured = _origin_tuple((os.getenv("VEZMORA_APP_URL") or "").strip())
+    return configured or _request_origin(request)
 
 
 def _is_api_path(path: str) -> bool:
@@ -79,7 +93,7 @@ def install_csrf_guard(app: FastAPI) -> None:
             origin_header = (request.headers.get("origin") or "").strip()
             if origin_header:
                 origin = _origin_tuple(origin_header)
-                if origin is None or origin != _request_origin(request):
+                if origin is None or origin != _trusted_origin(request):
                     return JSONResponse(status_code=403, content={"detail": detail})
 
         return await call_next(request)
