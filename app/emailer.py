@@ -39,7 +39,7 @@ def send_email(recipient: str, subject: str, body: str) -> None:
         raise RuntimeError("SMTP is not configured")
 
     try:
-        port = int(os.getenv("SMTP_PORT", "587"))
+        port = int((os.getenv("SMTP_PORT") or "587").strip())
     except ValueError as exc:
         raise RuntimeError("SMTP_PORT is invalid") from exc
     if not 1 <= port <= 65535:

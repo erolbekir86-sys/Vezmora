@@ -75,7 +75,11 @@ async def run_worker_once() -> bool:
 
 
 async def worker_loop() -> None:
-    poll_seconds = max(1, int(os.getenv("VEZMORA_WORKER_POLL_SECONDS", "5")))
+    raw_poll_seconds = (os.getenv("VEZMORA_WORKER_POLL_SECONDS") or "").strip()
+    try:
+        poll_seconds = max(1, int(raw_poll_seconds or "5"))
+    except ValueError:
+        poll_seconds = 5
     while True:
         did_work = await run_worker_once()
         did_email = await asyncio.to_thread(run_email_once)

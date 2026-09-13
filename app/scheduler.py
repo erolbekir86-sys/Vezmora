@@ -55,7 +55,14 @@ async def run_due_automation_once() -> dict[str, int]:
             except Exception as exc:
                 add_notification(workspace_id, "scheduler", "Morning brief failed", f"{type(exc).__name__}")
 
-    scan_hours = max(1, int(os.getenv("VEZMORA_RIVAL_SCAN_HOURS", "12")))
+    # Vercel can expose an unset dashboard variable as an empty string. Treat
+    # blank or malformed values as the documented default instead of allowing a
+    # scheduled maintenance request to crash before competitor scans run.
+    raw_scan_hours = (os.getenv("VEZMORA_RIVAL_SCAN_HOURS") or "").strip()
+    try:
+        scan_hours = max(1, int(raw_scan_hours or "12"))
+    except ValueError:
+        scan_hours = 12
     for settings in list_enabled_brief_settings():
         workspace_id = int(settings["workspace_id"])
         competitors = list_competitors(workspace_id)
