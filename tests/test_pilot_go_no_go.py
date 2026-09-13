@@ -52,6 +52,28 @@ def test_go_no_go_combines_live_runtime_and_legal_checks(monkeypatch):
     assert result["legal_discoverability"]["ok"] is True
 
 
+def test_go_no_go_forwards_expected_revision_to_runtime_check(monkeypatch):
+    monkeypatch.setattr(pilot_go_no_go, "build_preflight_snapshot", lambda: _configuration(True))
+    monkeypatch.setattr(pilot_go_no_go, "build_live_preflight", lambda base_url: {"ok": True})
+    seen: dict[str, str | None] = {}
+
+    def fake_runtime(base_url: str, expected_revision: str | None = None):
+        seen["base_url"] = base_url
+        seen["expected_revision"] = expected_revision
+        return {"ok": True, "blockers": []}
+
+    monkeypatch.setattr(pilot_go_no_go, "build_public_runtime_preflight", fake_runtime)
+    monkeypatch.setattr(pilot_go_no_go, "build_public_legal_preflight", lambda base_url: {"ok": True})
+
+    result = pilot_go_no_go.build_go_no_go_snapshot(
+        "https://vexmera.com",
+        expected_revision="abc123",
+    )
+
+    assert result["ok"] is True
+    assert seen == {"base_url": "https://vexmera.com", "expected_revision": "abc123"}
+
+
 def test_go_no_go_fails_closed_when_runtime_fails(monkeypatch):
     monkeypatch.setattr(pilot_go_no_go, "build_preflight_snapshot", lambda: _configuration(True))
     monkeypatch.setattr(pilot_go_no_go, "build_live_preflight", lambda base_url: {"ok": True})

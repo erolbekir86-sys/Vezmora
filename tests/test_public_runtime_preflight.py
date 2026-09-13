@@ -49,12 +49,43 @@ def test_public_runtime_preflight_passes_minimal_runtime_and_execution_lock(monk
     assert runtime["platform"] == "vercel"
     assert runtime["environment"] == "production"
     assert runtime["deployment_revision_present"] is True
+    assert runtime["revision_match_required"] is False
+    assert runtime["deployment_revision_matches_expected"] is None
     beta = result["checks"]["beta_readiness"]
     assert beta["reachable"] is True
     assert beta["private_beta_execution_safe"] is True
     assert beta["production_transport_safe"] is True
     assert beta["external_execution_enabled"] is False
     assert beta["autopilot_execution_enabled"] is False
+
+
+def test_public_runtime_preflight_can_pin_expected_revision(monkeypatch):
+    monkeypatch.setattr(public_runtime_preflight, "_get_text", _response_map())
+
+    result = public_runtime_preflight.build_public_runtime_preflight(
+        "https://vexmera.com",
+        expected_revision="abc123",
+    )
+
+    assert result["ok"] is True
+    runtime = result["checks"]["runtime"]
+    assert runtime["revision_match_required"] is True
+    assert runtime["deployment_revision_matches_expected"] is True
+
+
+def test_public_runtime_preflight_blocks_revision_mismatch(monkeypatch):
+    monkeypatch.setattr(public_runtime_preflight, "_get_text", _response_map())
+
+    result = public_runtime_preflight.build_public_runtime_preflight(
+        "https://vexmera.com",
+        expected_revision="def456",
+    )
+
+    assert result["ok"] is False
+    assert "deployment_revision_mismatch" in result["blockers"]
+    runtime = result["checks"]["runtime"]
+    assert runtime["revision_match_required"] is True
+    assert runtime["deployment_revision_matches_expected"] is False
 
 
 def test_public_runtime_preflight_fails_closed_on_invalid_deployment_identity(monkeypatch):

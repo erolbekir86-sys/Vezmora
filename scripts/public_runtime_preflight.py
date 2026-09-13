@@ -20,14 +20,18 @@ def _safe_json_get(url: str) -> tuple[int | None, bool, dict[str, object]]:
         return None, False, {}
 
 
-def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
+def build_public_runtime_preflight(
+    base_url: str,
+    expected_revision: str | None = None,
+) -> dict[str, Any]:
     """Check minimal production identity and private-beta execution safety.
 
     Public runtime diagnostics intentionally expose only liveness and deployment
     identity. Provider configuration, database health and secret-presence checks
     belong in authenticated/operator tooling rather than on a public endpoint.
     This helper remains GET-only and fails closed when the production identity or
-    private-beta execution lock cannot be verified.
+    private-beta execution lock cannot be verified. When an expected deployment
+    revision is supplied by the operator, the active runtime must match it exactly.
     """
     try:
         base = normalize_https_origin(base_url)
@@ -48,7 +52,15 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
 
     platform_vercel = runtime.get("platform") == "vercel"
     production_env = runtime.get("environment") == "production"
-    deployment_revision_present = bool(str(runtime.get("deployment_revision") or "").strip())
+    deployment_revision = str(runtime.get("deployment_revision") or "").strip()
+    deployment_revision_present = bool(deployment_revision)
+    normalized_expected_revision = str(expected_revision or "").strip()
+    revision_match_required = bool(normalized_expected_revision)
+    deployment_revision_matches_expected = (
+        deployment_revision == normalized_expected_revision
+        if revision_match_required and deployment_revision_present
+        else None
+    )
 
     if not runtime_reachable:
         blockers.append("runtime_unreachable")
@@ -59,6 +71,8 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
             blockers.append("runtime_not_production")
         if not deployment_revision_present:
             blockers.append("deployment_revision_unknown")
+        elif revision_match_required and not deployment_revision_matches_expected:
+            blockers.append("deployment_revision_mismatch")
 
     private_beta_execution_safe = beta.get("private_beta_execution_safe") is True
     production_transport_safe = beta.get("production_transport_safe") is True
@@ -94,6 +108,8 @@ def build_public_runtime_preflight(base_url: str) -> dict[str, Any]:
                 "platform": runtime.get("platform"),
                 "environment": runtime.get("environment"),
                 "deployment_revision_present": deployment_revision_present,
+                "revision_match_required": revision_match_required,
+                "deployment_revision_matches_expected": deployment_revision_matches_expected,
             },
             "beta_readiness": {
                 "status_code": beta_status,
