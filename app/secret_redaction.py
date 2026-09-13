@@ -28,6 +28,7 @@ _SENSITIVE_FIELD_NAMES = (
     r"vezmora[-_ ]?session"
 )
 _AUTHORIZATION_FIELD_NAMES = r"authorization|proxy[-_ ]?authorization"
+_STRIPE_SIGNATURE_FIELD_NAMES = r"stripe[-_ ]?signature"
 
 _SENSITIVE_INLINE_PATTERNS = (
     re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
@@ -36,6 +37,11 @@ _SENSITIVE_INLINE_PATTERNS = (
     # instead of stopping at the first whitespace-separated token.
     re.compile(rf"(?i)([\"']?(?:{_AUTHORIZATION_FIELD_NAMES})[\"']?\s*:\s*[\"'])[^\"']+(?=[\"'])"),
     re.compile(rf"(?i)((?:{_AUTHORIZATION_FIELD_NAMES})\s*[:=]\s*)[^\r\n,;|]+"),
+    # Stripe-Signature contains comma-separated timestamp/signature fragments.
+    # Redact the complete header value so v1 (and any rotated signatures) cannot
+    # survive merely because generic field redaction stops at commas.
+    re.compile(rf"(?i)([\"']?(?:{_STRIPE_SIGNATURE_FIELD_NAMES})[\"']?\s*:\s*[\"'])[^\"']+(?=[\"'])"),
+    re.compile(rf"(?i)((?:{_STRIPE_SIGNATURE_FIELD_NAMES})\s*[:=]\s*)[^\r\n|]+"),
     # OAuth callbacks, capability links and provider URLs can surface in
     # transport diagnostics. Query names such as `code` and `state` are too
     # generic to redact everywhere, so treat them as sensitive only when they
