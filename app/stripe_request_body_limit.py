@@ -96,7 +96,12 @@ class StripeWebhookBodyLimitMiddleware:
 
 
 def install_stripe_webhook_body_limit(app) -> None:
+    """Install both request-body guards once on a FastAPI application."""
+    if getattr(app.state, "vexmera_request_body_limits_installed", False):
+        return
+
     # Ordinary JSON mutations get a separate request-body memory ceiling while
     # Stripe retains its dedicated limiter and signature-verification contract.
     app.add_middleware(ApiRequestBodyLimitMiddleware)
     app.add_middleware(StripeWebhookBodyLimitMiddleware)
+    app.state.vexmera_request_body_limits_installed = True
