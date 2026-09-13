@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+from types import SimpleNamespace
 
-from app.stripe_request_body_limit import StripeWebhookBodyLimitMiddleware
+from app.api_request_body_limit import ApiRequestBodyLimitMiddleware
+from app.stripe_request_body_limit import (
+    StripeWebhookBodyLimitMiddleware,
+    install_stripe_webhook_body_limit,
+)
 
 
 def _scope(
@@ -133,3 +138,21 @@ def test_allows_webhook_at_limit_and_does_not_affect_other_paths():
     assert _response(webhook_sent) == (204, None)
     assert other_called is True
     assert _response(other_sent) == (204, None)
+
+
+def test_body_limit_installation_is_idempotent():
+    installed: list[type] = []
+
+    class DummyApp:
+        def __init__(self) -> None:
+            self.state = SimpleNamespace()
+
+        def add_middleware(self, middleware_type, **kwargs) -> None:
+            installed.append(middleware_type)
+
+    app = DummyApp()
+    install_stripe_webhook_body_limit(app)
+    install_stripe_webhook_body_limit(app)
+
+    assert installed == [ApiRequestBodyLimitMiddleware, StripeWebhookBodyLimitMiddleware]
+    assert app.state.vexmera_request_body_limits_installed is True
