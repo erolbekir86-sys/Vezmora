@@ -29,10 +29,15 @@ _SENSITIVE_FIELD_NAMES = (
 
 _SENSITIVE_INLINE_PATTERNS = (
     re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
-    # OAuth callback/provider URLs can surface in transport diagnostics. Query
-    # names such as `code` and `state` are too generic to redact everywhere, so
-    # treat them as sensitive only when they appear as URL query parameters.
-    re.compile(r"(?i)([?&](?:code|state|access_token|refresh_token|client_secret)=)[^&#\s]+"),
+    # OAuth callbacks, capability links and provider URLs can surface in
+    # transport diagnostics. Query names such as `code` and `state` are too
+    # generic to redact everywhere, so treat them as sensitive only when they
+    # appear as URL query parameters. The root-app reset/invite/session_id
+    # parameters carry one-time or billing-return capabilities and must receive
+    # the same treatment.
+    re.compile(
+        r"(?i)([?&](?:code|state|access_token|refresh_token|client_secret|reset|invite|session_id)=)[^&#\s]+"
+    ),
     # JSON and Python-dict style diagnostics are common provider-error shapes.
     # Keep the key/quote formatting while replacing only the sensitive value.
     re.compile(rf"(?i)([\"']?(?:{_SENSITIVE_FIELD_NAMES})[\"']?\s*:\s*[\"'])[^\"']+(?=[\"'])"),
