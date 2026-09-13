@@ -25,8 +25,9 @@ def install_production_docs_guard(app: FastAPI) -> None:
     """Keep FastAPI's developer schema/docs available locally but not on Vercel.
 
     The routes remain part of the application for local development and direct
-    Python introspection. Only public HTTP access is hidden in Vercel deployments,
-    where advertising internal route names adds no customer value.
+    Python introspection. Public HTTP access is hidden for every method in Vercel
+    deployments so method probing cannot distinguish these internal framework
+    routes from an ordinary missing path.
     """
     if getattr(app.state, "vexmera_production_docs_guard_installed", False):
         return
@@ -34,11 +35,7 @@ def install_production_docs_guard(app: FastAPI) -> None:
     @app.middleware("http")
     async def hide_framework_docs_in_vercel(request: Request, call_next):
         path = request.url.path.rstrip("/") or "/"
-        if (
-            os.getenv("VERCEL")
-            and request.method in {"GET", "HEAD"}
-            and path in _PRODUCTION_DOC_PATHS
-        ):
+        if os.getenv("VERCEL") and path in _PRODUCTION_DOC_PATHS:
             return JSONResponse(
                 status_code=404,
                 content={"detail": "Not Found"},
