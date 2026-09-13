@@ -51,6 +51,36 @@ def test_redacts_app_capabilities_when_embedded_in_url_queries() -> None:
     assert "?billing=success&session_id=[REDACTED]" in redacted
 
 
+def test_redacts_authorization_cookie_and_session_fields() -> None:
+    payload = (
+        "Authorization: Basic dXNlcjpzZWNyZXQ=; "
+        "Cookie: vezmora_session=session-cookie-secret; theme=dark; "
+        "vezmora_session=raw-session-secret"
+    )
+
+    redacted = redact_sensitive_text(payload)
+
+    for secret in ("dXNlcjpzZWNyZXQ=", "session-cookie-secret", "raw-session-secret"):
+        assert secret not in redacted
+    assert "Authorization: [REDACTED]" in redacted
+    assert "Cookie: [REDACTED]" in redacted
+    assert "vezmora_session=[REDACTED]" in redacted
+
+
+def test_redacts_proxy_authorization_and_set_cookie_fields() -> None:
+    payload = (
+        "Proxy-Authorization: Basic cHJveHk6c2VjcmV0; "
+        "Set-Cookie: vezmora_session=set-cookie-secret; Path=/; HttpOnly"
+    )
+
+    redacted = redact_sensitive_text(payload)
+
+    assert "cHJveHk6c2VjcmV0" not in redacted
+    assert "set-cookie-secret" not in redacted
+    assert "Proxy-Authorization: [REDACTED]" in redacted
+    assert "Set-Cookie: [REDACTED]" in redacted
+
+
 def test_plain_non_url_code_and_state_context_remain_visible() -> None:
     payload = "provider error code: 190; state: disconnected"
 

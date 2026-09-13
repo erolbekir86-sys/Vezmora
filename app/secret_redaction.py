@@ -24,11 +24,18 @@ SENSITIVE_ENV_NAMES = (
 _SENSITIVE_FIELD_NAMES = (
     r"developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
     r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
-    r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state"
+    r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state|cookie|set[-_ ]?cookie|"
+    r"vezmora[-_ ]?session"
 )
+_AUTHORIZATION_FIELD_NAMES = r"authorization|proxy[-_ ]?authorization"
 
 _SENSITIVE_INLINE_PATTERNS = (
     re.compile(r"(?i)(bearer\s+)[^\s,;|]+"),
+    # Authorization credentials often contain a scheme plus a credential, for
+    # example `Authorization: Basic <base64>`. Redact the complete field value
+    # instead of stopping at the first whitespace-separated token.
+    re.compile(rf"(?i)([\"']?(?:{_AUTHORIZATION_FIELD_NAMES})[\"']?\s*:\s*[\"'])[^\"']+(?=[\"'])"),
+    re.compile(rf"(?i)((?:{_AUTHORIZATION_FIELD_NAMES})\s*[:=]\s*)[^\r\n,;|]+"),
     # OAuth callbacks, capability links and provider URLs can surface in
     # transport diagnostics. Query names such as `code` and `state` are too
     # generic to redact everywhere, so treat them as sensitive only when they
