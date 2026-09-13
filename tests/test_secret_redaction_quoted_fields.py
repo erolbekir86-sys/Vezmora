@@ -37,6 +37,20 @@ def test_redacts_oauth_capabilities_when_embedded_in_url_queries() -> None:
     assert "?client_secret=[REDACTED]&access_token=[REDACTED]" in redacted
 
 
+def test_redacts_app_capabilities_when_embedded_in_url_queries() -> None:
+    payload = (
+        "https://vexmera.example/?reset=reset-secret&invite=invite-secret "
+        "and https://vexmera.example/?billing=success&session_id=checkout-session-secret"
+    )
+
+    redacted = redact_sensitive_text(payload)
+
+    for secret in ("reset-secret", "invite-secret", "checkout-session-secret"):
+        assert secret not in redacted
+    assert "?reset=[REDACTED]&invite=[REDACTED]" in redacted
+    assert "?billing=success&session_id=[REDACTED]" in redacted
+
+
 def test_plain_non_url_code_and_state_context_remain_visible() -> None:
     payload = "provider error code: 190; state: disconnected"
 
