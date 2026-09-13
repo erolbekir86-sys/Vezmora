@@ -81,6 +81,20 @@ def test_redacts_proxy_authorization_and_set_cookie_fields() -> None:
     assert "Set-Cookie: [REDACTED]" in redacted
 
 
+def test_redacts_complete_stripe_signature_header_value() -> None:
+    payload = (
+        "Stripe-Signature: t=1726250000,v1=primary-signature,v1=rotated-signature\n"
+        "provider_status=retryable"
+    )
+
+    redacted = redact_sensitive_text(payload)
+
+    for secret in ("1726250000", "primary-signature", "rotated-signature"):
+        assert secret not in redacted
+    assert "Stripe-Signature: [REDACTED]\n" in redacted
+    assert "provider_status=retryable" in redacted
+
+
 def test_plain_non_url_code_and_state_context_remain_visible() -> None:
     payload = "provider error code: 190; state: disconnected"
 
