@@ -6,7 +6,9 @@ from typing import Any
 
 from .models import AgentRequest, CampaignRequest, StrategyRequest
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-terra")
+DEFAULT_MODEL = "gpt-5.6-terra"
+FALLBACK_MODEL = (os.getenv("OPENAI_FALLBACK_MODEL") or "gpt-4o-mini").strip() or "gpt-4o-mini"
+MODEL = (os.getenv("OPENAI_MODEL") or DEFAULT_MODEL).strip() or DEFAULT_MODEL
 
 LANGUAGE_NAMES = {
     "sv": "Swedish",
@@ -59,7 +61,7 @@ def _business_memory(memory: dict[str, Any] | None) -> str:
     return "BUSINESS MEMORY\n" + json.dumps(memory, ensure_ascii=False, indent=2)
 
 
-def _agent(language: str):
+def _agent(language: str, model: str | None = None):
     Agent, _, function_tool = _load_agents()
 
     @function_tool
@@ -91,16 +93,78 @@ def _agent(language: str):
     language_name = LANGUAGE_NAMES.get(language, "English")
     return Agent(
         name="Vexmera CMO",
-        model=MODEL,
+        model=model or MODEL,
         instructions=BASE_INSTRUCTIONS + f"\nAlways write the final answer in {language_name}, unless the user explicitly requests another language.",
         tools=[funnel_framework, channel_playbook],
     )
 
 
+def _is_model_not_found(exc: BaseException) -> bool:
+    """Detect model/access 404s, including errors wrapped by the Agents SDK."""
+    seen: set[int] = set()
+    stack: list[BaseException] = [exc]
+    status_codes: set[int] = set()
+    text_parts: list[str] = []
+
+    while stack:
+        current = stack.pop()
+        marker = id(current)
+        if marker in seen:
+            continue
+        seen.add(marker)
+        text_parts.append(str(current))
+
+        for attr in ("status_code", "status"):
+            value = getattr(current, attr, None)
+            try:
+                if value is not None:
+                    status_codes.add(int(value))
+            except (TypeError, ValueError):
+                pass
+
+        response = getattr(current, "response", None)
+        value = getattr(response, "status_code", None) if response is not None else None
+        try:
+            if value is not None:
+                status_codes.add(int(value))
+        except (TypeError, ValueError):
+            pass
+
+        for nested in ("__cause__", "__context__"):
+            child = getattr(current, nested, None)
+            if isinstance(child, BaseException):
+                stack.append(child)
+
+    error_text = " ".join(text_parts).lower()
+    if 404 in status_codes or " 404" in error_text:
+        return True
+    return "model" in error_text and any(
+        phrase in error_text
+        for phrase in ("not found", "does not exist", "no access", "not available")
+    )
+
+
+async def _run_with_model_fallback(language: str, prompt: str) -> str:
+    """Run with the configured model and retry once on a model/access 404."""
+    _, Runner, _ = _load_agents()
+    candidates = [MODEL]
+    if FALLBACK_MODEL not in candidates:
+        candidates.append(FALLBACK_MODEL)
+
+    for index, model in enumerate(candidates):
+        try:
+            result = await Runner.run(_agent(language, model), prompt)
+            return str(result.final_output)
+        except Exception as exc:
+            if index == len(candidates) - 1 or not _is_model_not_found(exc):
+                raise
+
+    raise RuntimeError("No usable OpenAI model configured")
+
+
 async def generate_strategy(request: StrategyRequest, memory: dict[str, Any] | None = None) -> str:
     if request.company is None:
         raise ValueError("Company profile is required")
-    _, Runner, _ = _load_agents()
     prompt = f"""
 {_company_context(request.company)}
 
@@ -126,14 +190,12 @@ Evidence discipline:
 - For each major recommendation, label its basis as Observed data, User-provided context, or Assumption.
 - If no connected KPI/competitor evidence supports a claim, do not word it as an observed performance fact.
 """
-    result = await Runner.run(_agent(request.company.language), prompt)
-    return str(result.final_output)
+    return await _run_with_model_fallback(request.company.language, prompt)
 
 
 async def generate_campaign(request: CampaignRequest, memory: dict[str, Any] | None = None) -> str:
     if request.company is None:
         raise ValueError("Company profile is required")
-    _, Runner, _ = _load_agents()
     prompt = f"""
 {_company_context(request.company)}
 
@@ -164,14 +226,12 @@ Evidence discipline:
 - Separate known company/customer facts from targeting or creative assumptions.
 - Label material assumptions that should be validated before launch.
 """
-    result = await Runner.run(_agent(request.company.language), prompt)
-    return str(result.final_output)
+    return await _run_with_model_fallback(request.company.language, prompt)
 
 
 async def run_agent(request: AgentRequest, memory: dict[str, Any] | None = None) -> str:
     if request.company is None:
         raise ValueError("Company profile is required")
-    _, Runner, _ = _load_agents()
     prompt = f"""
 {_company_context(request.company)}
 
@@ -182,13 +242,11 @@ USER REQUEST
 
 Act as the company's strategic marketing operator. Distinguish observed data and user-provided facts from assumptions in recommendations. If the request implies publishing, spending, contacting people or modifying an external account, prepare the action but stop at an approval gate.
 """
-    result = await Runner.run(_agent(request.company.language), prompt)
-    return str(result.final_output)
+    return await _run_with_model_fallback(request.company.language, prompt)
 
 
 async def generate_daily_brief(company: Any, memory: dict[str, Any] | None = None) -> str:
     """Generate an executive morning brief from persisted workspace signals."""
-    _, Runner, _ = _load_agents()
     prompt = f"""
 {_company_context(company)}
 
@@ -210,5 +268,4 @@ For each recommended action, make clear whether it is supported by Observed data
 For any recommendation that would spend money, publish content, contact customers, or mutate an external account, explicitly label it as REQUIRES APPROVAL.
 Do not claim that an action has been executed.
 """
-    result = await Runner.run(_agent(getattr(company, "language", "en")), prompt)
-    return str(result.final_output)
+    return await _run_with_model_fallback(getattr(company, "language", "en"), prompt)
