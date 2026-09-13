@@ -29,6 +29,27 @@ def test_framework_docs_and_schema_are_hidden_on_vercel(monkeypatch):
         assert response.headers["x-robots-tag"] == "noindex, nofollow"
 
 
+def test_framework_docs_do_not_leak_route_existence_through_other_methods_on_vercel(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+
+    probes = (
+        ("POST", "/openapi.json"),
+        ("PUT", "/docs"),
+        ("PATCH", "/redoc"),
+        ("DELETE", "/docs/oauth2-redirect"),
+        ("OPTIONS", "/openapi.json"),
+    )
+    with TestClient(app) as client:
+        responses = [client.request(method, path, follow_redirects=False) for method, path in probes]
+
+    for response in responses:
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Not Found"}
+        assert response.headers["cache-control"].startswith("no-store")
+        assert response.headers["x-robots-tag"] == "noindex, nofollow"
+        assert "allow" not in response.headers
+
+
 def test_production_docs_guard_does_not_block_product_api_or_static_assets(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
 
