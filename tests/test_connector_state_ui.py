@@ -46,6 +46,14 @@ def test_blocking_provider_warnings_cannot_render_as_healthy_empty_state():
     assert "text.includes('no campaign data found')" in STATE_UI
 
 
+def test_empty_state_requires_explicit_empty_signal_or_row_telemetry():
+    assert "const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows']" in STATE_UI
+    assert "Object.prototype.hasOwnProperty.call(lastSync, key)" in STATE_UI
+    assert "if (explicitEmpty) return 'empty'" in STATE_UI
+    assert "if (hasRowTelemetry && rows === 0) return 'empty'" in STATE_UI
+    assert "if (explicitEmpty || rows === 0) return 'empty'" not in STATE_UI
+
+
 def test_persistent_state_uses_saved_last_sync_metadata_read_only():
     assert "connection?.metadata?.last_sync" in STATE_UI
     assert "const data = await api(ws('/api/connectors'))" in STATE_UI
