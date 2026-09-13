@@ -24,7 +24,8 @@ SENSITIVE_ENV_NAMES = (
 _SENSITIVE_FIELD_NAMES = (
     r"developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
     r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
-    r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state"
+    r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state|authorization|"
+    r"proxy[-_ ]?authorization|cookie|set[-_ ]?cookie|vezmora[-_ ]?session"
 )
 
 _SENSITIVE_INLINE_PATTERNS = (
