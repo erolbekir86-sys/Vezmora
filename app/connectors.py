@@ -194,6 +194,50 @@ def _date_range(days: int) -> tuple[str, str]:
     return start.isoformat(), end.isoformat()
 
 
+async def _discover_analytics_property(
+    headers: dict[str, str],
+) -> tuple[str | None, list[dict[str, str]], str | None]:
+    """Discover GA4 properties available to the already-authorized Google user."""
+    properties: dict[str, dict[str, str]] = {}
+    page_token: str | None = None
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            while True:
+                params: dict[str, str] = {"pageSize": "200"}
+                if page_token:
+                    params["pageToken"] = page_token
+                response = await client.get(
+                    "https://analyticsadmin.googleapis.com/v1beta/accountSummaries",
+                    headers=headers,
+                    params=params,
+                )
+                if response.status_code >= 400:
+                    return None, [], f"Analytics property discovery failed ({response.status_code})"
+                payload = response.json()
+                for account in payload.get("accountSummaries", []):
+                    for property_summary in account.get("propertySummaries", []):
+                        resource_name = str(property_summary.get("property") or "").strip()
+                        property_id = resource_name.removeprefix("properties/")
+                        if not property_id.isdigit():
+                            continue
+                        properties[property_id] = {
+                            "id": property_id,
+                            "name": str(property_summary.get("displayName") or property_id),
+                        }
+                page_token = str(payload.get("nextPageToken") or "").strip() or None
+                if not page_token:
+                    break
+    except (httpx.TransportError, ValueError, TypeError):
+        return None, [], "Analytics property discovery failed"
+
+    choices = list(properties.values())
+    if len(choices) == 1:
+        return choices[0]["id"], choices, None
+    if len(choices) > 1:
+        return None, choices, "Multiple GA4 properties found; enter one Property ID"
+    return None, [], "No GA4 properties found for this Google account"
+
+
 async def sync_google(workspace_id: int, days: int = 7) -> dict[str, object]:
     connector = get_connector(workspace_id, "google", include_secret=True)
     if not connector or connector.get("status") != "connected":
@@ -206,6 +250,24 @@ async def sync_google(workspace_id: int, days: int = 7) -> dict[str, object]:
     synced = {"analytics_rows": 0, "ads_rows": 0, "campaign_rows": 0, "base_currency": base_currency, "warnings": []}
 
     property_id = (metadata.get("analytics_property_id") or "").replace("properties/", "")
+    discovery_warning: str | None = None
+    if not property_id:
+        property_id, discovered_properties, discovery_warning = await _discover_analytics_property(headers)
+        if discovered_properties:
+            update_connector_metadata(
+                workspace_id,
+                "google",
+                {"available_analytics_properties": discovered_properties},
+            )
+        if property_id:
+            update_connector_metadata(
+                workspace_id,
+                "google",
+                {
+                    "analytics_property_id": property_id,
+                    "analytics_property_name": discovered_properties[0]["name"],
+                },
+            )
     if property_id:
         payload = {
             "dimensions": [{"name": "date"}],
@@ -231,7 +293,7 @@ async def sync_google(workspace_id: int, days: int = 7) -> dict[str, object]:
         else:
             synced["warnings"].append(f"Analytics sync failed ({response.status_code})")
     else:
-        synced["warnings"].append("Google Analytics property ID is missing")
+        synced["warnings"].append(discovery_warning or "Google Analytics property ID is missing")
 
     customer_id = "".join(ch for ch in str(metadata.get("ads_customer_id") or "") if ch.isdigit())
     if customer_id:
