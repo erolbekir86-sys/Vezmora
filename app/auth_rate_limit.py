@@ -136,4 +136,8 @@ class AuthRateLimitMiddleware:
 
 
 def install_auth_rate_limit(app) -> None:
+    """Install the auth limiter once so repeated app setup cannot double-count requests."""
+    if getattr(app.state, "vexmera_auth_rate_limit_installed", False):
+        return
     app.add_middleware(AuthRateLimitMiddleware)
+    app.state.vexmera_auth_rate_limit_installed = True

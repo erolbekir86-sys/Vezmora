@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 
-from app.auth_rate_limit import AuthRateLimitMiddleware, _Limit
+from fastapi import FastAPI
+
+from app.auth_rate_limit import AuthRateLimitMiddleware, _Limit, install_auth_rate_limit
 
 
 def _scope(*, path: str = "/api/auth/login", ip: str = "203.0.113.9", forwarded: str | None = None):
@@ -107,3 +109,14 @@ def test_unrelated_route_is_not_limited(monkeypatch):
     middleware = _middleware(clock=lambda: 100.0)
     start, _ = _request(middleware, _scope(path="/api/feedback", forwarded="198.51.100.40"))
     assert start["status"] == 204
+
+
+def test_install_auth_rate_limit_is_idempotent() -> None:
+    app = FastAPI()
+
+    install_auth_rate_limit(app)
+    middleware_count = len(app.user_middleware)
+    install_auth_rate_limit(app)
+
+    assert len(app.user_middleware) == middleware_count
+    assert app.state.vexmera_auth_rate_limit_installed is True
