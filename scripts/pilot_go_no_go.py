@@ -9,12 +9,16 @@ from scripts.public_legal_preflight import build_public_legal_preflight
 from scripts.public_runtime_preflight import build_public_runtime_preflight
 
 
-def build_go_no_go_snapshot(base_url: str | None = None) -> dict[str, Any]:
+def build_go_no_go_snapshot(
+    base_url: str | None = None,
+    expected_revision: str | None = None,
+) -> dict[str, Any]:
     """Combine existing non-mutating pilot checks into one operator snapshot.
 
     This deliberately does not claim that the pilot is approved. It only combines
     machine-checkable configuration, public execution-lock evidence, runtime health
     and public legal discoverability. Manual gates in the pilot runbook remain mandatory.
+    When an expected revision is supplied, deployed runtime identity must match it.
     """
     configuration = build_preflight_snapshot()
     result: dict[str, Any] = {
@@ -31,7 +35,11 @@ def build_go_no_go_snapshot(base_url: str | None = None) -> dict[str, Any]:
 
     if base_url:
         live = build_live_preflight(base_url)
-        runtime = build_public_runtime_preflight(base_url)
+        runtime = (
+            build_public_runtime_preflight(base_url, expected_revision=expected_revision)
+            if expected_revision
+            else build_public_runtime_preflight(base_url)
+        )
         legal = build_public_legal_preflight(base_url)
         result["live"] = live
         result["runtime"] = runtime
@@ -50,9 +58,13 @@ def main(argv: list[str] | None = None) -> int:
         "--base-url",
         help="Optionally add GET-only deployed checks, e.g. https://vexmera.com",
     )
+    parser.add_argument(
+        "--expected-revision",
+        help="Optional exact deployment revision expected from /health/runtime",
+    )
     args = parser.parse_args(argv)
 
-    result = build_go_no_go_snapshot(args.base_url)
+    result = build_go_no_go_snapshot(args.base_url, expected_revision=args.expected_revision)
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["ok"] else 1
 
