@@ -43,6 +43,35 @@ html body .vex-art-section:hover > .vex-section-art {
   transform: none !important;
   transition: none !important;
 }
+
+/* 2026-09 brand refresh: one consistent Vexmera icon everywhere on the public site.
+   This is the selected asymmetric, earthy-gold V mark on a charcoal field. */
+:root{
+  --vexmera-v-mark:url("data:image/webp;base64,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");
+}
+html body .brand-mark,
+html body .hero-visual .mini-brand,
+html body #produkt .vexmera-core > span,
+html body #hur .v-node{
+  color:transparent!important;
+  font-size:0!important;
+  background-color:#0d0f12!important;
+  background-image:var(--vexmera-v-mark)!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:86% 86%!important;
+  border:1px solid rgba(213,174,114,.22)!important;
+  border-radius:10px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 5px 16px rgba(0,0,0,.14)!important;
+  overflow:hidden!important;
+}
+html body .brand-mark svg,
+html body #produkt .vexmera-core > span svg,
+html body #hur .v-node svg{display:none!important}
+html body .brand-mark{width:42px!important;height:42px!important;flex:0 0 42px!important}
+html body #produkt .vexmera-core > span{background-size:82% 82%!important}
+html body #hur .v-node{background-size:84% 84%!important}
+
 @media (max-width: 760px) {
   html body .hero-visual .dashboard-window {
     grid-template-columns: 76px minmax(0, 1fr) !important;
