@@ -6,7 +6,7 @@ This is a non-secret operational snapshot for the five-company private beta. It 
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `5c2c50a7fc67e5901ad49084be717b8511fedcdf`.
+The latest verified `main` baseline at this refresh is `f1d3e2596f10ced5b3c944c1c21c7eeb8ee1f248`.
 
 Recent merged hardening includes:
 
@@ -19,6 +19,7 @@ Recent merged hardening includes:
 - Origin / Fetch Metadata protection now covers public browser login, registration and password-reset POSTs as well as authenticated state-changing API requests;
 - ordinary mutating API requests have a separate 1 MiB streaming/pre-buffer body ceiling, while Stripe retains its dedicated webhook limiter;
 - OAuth diagnostic URLs redact authorization code/state/token/client-secret capabilities;
+- Vexmera diagnostic URL redaction now also masks password-reset, workspace-invite and Stripe Checkout `session_id` capability values while preserving non-secret URL context;
 - reset/invite emails fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
 - Stripe Checkout and Customer Portal return URLs fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
 - Google and Meta production OAuth redirect URIs must exactly match the canonical HTTPS app origin plus the expected provider callback path, otherwise that connector fails closed in the process;
