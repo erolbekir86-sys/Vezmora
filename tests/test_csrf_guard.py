@@ -155,6 +155,25 @@ def test_configured_app_origin_is_used_instead_of_spoofed_host(monkeypatch):
     assert allowed.status_code == 200
 
 
+def test_authenticated_mutation_uses_configured_origin_instead_of_spoofed_host(monkeypatch):
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://vexmera.com")
+    client = _client()
+    client.cookies.set(SESSION_COOKIE, "session-token")
+
+    blocked = client.post(
+        "/api/write",
+        headers={"Host": "attacker.example", "Origin": "https://attacker.example"},
+    )
+    allowed = client.post(
+        "/api/write",
+        headers={"Host": "attacker.example", "Origin": "https://vexmera.com"},
+    )
+
+    assert blocked.status_code == 403
+    assert blocked.json() == {"detail": "Cross-origin authenticated request blocked"}
+    assert allowed.status_code == 200
+
+
 def test_non_browser_api_client_without_origin_metadata_can_use_public_auth():
     client = _client()
     assert client.post("/api/auth/login").status_code == 200
