@@ -1,12 +1,12 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-09-12
+Last reviewed: 2026-09-13
 
 This is a non-secret operational snapshot for the five-company private beta. It records evidence that can be verified safely without changing credentials, billing, permissions, domains, DNS or live advertising settings.
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `f66299775e85835af5ec8c46c4985ffd7573c0a6`.
+The latest verified `main` baseline at this refresh is `52871c52d00670e0e3fa77dbcabd7c3be80aa78d`.
 
 Recent merged hardening includes:
 
@@ -24,6 +24,10 @@ Recent merged hardening includes:
 - Google and Meta production OAuth redirect URIs must exactly match the canonical HTTPS app origin plus the expected provider callback path, otherwise that connector fails closed in the process;
 - transactional email uses certificate-verifying STARTTLS and Vercel rejects explicitly disabled STARTTLS;
 - deployment preflight and `/health/beta-readiness` now agree that production transport is unsafe when SMTP is configured but STARTTLS is disabled;
+- live pilot preflight now also requires `production_transport_safe=true` and fails closed when that signal is false or missing;
+- operator runtime preflight can pin an expected deployment revision and fails closed on `deployment_revision_mismatch` without echoing revision values in the result;
+- Stripe webhook processing fails closed before billing or ledger writes when signed event metadata conflicts with an already-bound workspace/customer relationship;
+- HTTP transport logging remains pinned away from INFO-level request URL logging, with regression coverage protecting token-bearing OAuth/provider paths from future logging regressions;
 - CI verifies the installed dependency graph with `python -m pip check` before compile/tests and includes bounded dependency-update checks.
 
 ## Verified healthy from code and CI
@@ -38,10 +42,11 @@ Recent merged hardening includes:
 - Session cookies remain HttpOnly, SameSite and Secure on Vercel; logout/account deletion clear them with aligned attributes.
 - API auth-surface tests prevent newly introduced `/api/...` endpoints from silently becoming public unless deliberately allowlisted.
 - Public production health/readiness responses remain intentionally minimal; they do not expose provider credentials, database connection strings, SMTP credentials, OAuth secrets or Stripe identifiers.
-- Stripe webhook payload/signature bounds and signed-event idempotency protections remain in place.
+- Stripe webhook payload/signature bounds, signed-event idempotency protections and workspace/customer ownership consistency checks remain in place.
 - Public auth inputs are bounded before KDF/token processing: login/register passwords max out at 200 characters and reset tokens at 300 characters.
 - Competitor scanning retains SSRF controls for scheme, DNS resolution, public IPs, redirects and response-size limits.
 - Repository dynamic SQL identified during this review remains limited to fixed allowlists/internal field construction rather than direct user-controlled SQL fragments.
+- GA legacy session rows are translated at the read boundary so website sessions cannot inflate paid-ad clicks, CTR or CPC without requiring an in-place production data migration.
 - The public marketing page uses illustrative demo metrics and identifies them as demo data.
 - The pilot remains recommendation-only; external campaign, budget, bid and ad mutations are not part of the approved private-beta posture.
 
@@ -81,9 +86,9 @@ Keep Google advertising behavior read-only/recommendation-only until a real depl
 
 Code distinguishes healthy empty accounts from provider/configuration failures, but a deployed authenticated walkthrough is still required for real pilot accounts. Confirm success, empty-data and failure states using non-sensitive evidence.
 
-### 5. Google Analytics metric-model cleanup
+### 5. Google Analytics semantic verification
 
-Current safeguards prevent GA `sessions` from being presented as paid-ad click truth, but the long-term model should represent website sessions separately from advertising clicks. Until then, incorrect GA click labeling or cross-channel aggregation remains a stop condition.
+The code-level paid-media contamination gap is closed: GA legacy `sessions` values are translated out of paid-click semantics at the read boundary. A deployed authenticated QA pass is still required to confirm the UI and recommendations consistently present website sessions separately from paid-ad clicks.
 
 ### 6. Legal and privacy sign-off
 
@@ -98,6 +103,7 @@ Perform an authenticated browser pass on the actual deployed Command Center. At 
 Do not start the five-company external pilot until all of the following are true:
 
 - the intended production deployment is directly confirmed and its revision/runtime health can be inspected;
+- the operator preflight confirms that the deployed revision matches the intended release revision;
 - `/health/beta-readiness` reports `private_beta_execution_safe=true` and `production_transport_safe=true`;
 - configuration readiness has no machine-checkable blockers;
 - external execution remains disabled;
@@ -115,7 +121,7 @@ While direct Vercel project visibility is unavailable, safe autonomous work rema
 When direct Vercel visibility becomes available, the next low-risk checks are:
 
 1. inspect production runtime errors and non-secret health diagnostics;
-2. confirm the active deployment revision matches GitHub `main`;
+2. run the public/runtime preflight pinned to the intended release revision and confirm it matches the active deployment;
 3. verify execution, transport and public-readiness flags remain fail-closed;
 4. inspect unresolved deployment feedback;
 5. run authenticated browser QA on the deployed Command Center;
