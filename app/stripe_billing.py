@@ -259,8 +259,12 @@ def apply_webhook(event: dict[str, Any]) -> dict[str, Any]:
             raise HTTPException(status_code=400, detail="Stripe checkout workspace reference mismatch")
 
     customer = obj.get("customer")
-    if workspace_id is None and customer:
-        workspace_id = workspace_id_by_stripe_customer(str(customer))
+    if customer:
+        customer_workspace_id = workspace_id_by_stripe_customer(str(customer))
+        if workspace_id is not None and customer_workspace_id is not None and customer_workspace_id != workspace_id:
+            raise HTTPException(status_code=400, detail="Stripe customer is linked to a different workspace")
+        if workspace_id is None:
+            workspace_id = customer_workspace_id
 
     # Sequential duplicate deliveries remain side-effect free. The final unique
     # insert below still protects the ledger if two deliveries race; the billing
