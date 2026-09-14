@@ -27,6 +27,7 @@ def _clear(monkeypatch):
         "STRIPE_PRICE_START",
         "STRIPE_PRICE_GROWTH",
         "STRIPE_PRICE_PRO",
+        "STRIPE_BILLING_PORTAL_CONFIGURATION_ID",
         "VEZMORA_STRIPE_PRICING_VERSION",
         "STRIPE_WEBHOOK_SECRET",
         "GOOGLE_CLIENT_ID",
@@ -49,6 +50,7 @@ def _set_current_stripe_sandbox(monkeypatch, *, key: str = "sk_test_private") ->
     monkeypatch.setenv("STRIPE_PRICE_START", "price_start_private")
     monkeypatch.setenv("STRIPE_PRICE_GROWTH", "price_growth_private")
     monkeypatch.setenv("STRIPE_PRICE_PRO", "price_pro_private")
+    monkeypatch.setenv("STRIPE_BILLING_PORTAL_CONFIGURATION_ID", "bpc_private_beta")
     monkeypatch.setenv("VEZMORA_STRIPE_PRICING_VERSION", CURRENT_PRICING_VERSION)
 
 
@@ -72,6 +74,7 @@ def test_beta_readiness_is_safe_by_default_and_reports_privacy_controls(monkeypa
     assert snapshot["stripe_key_mode"] == "missing"
     assert snapshot["stripe_catalog_env_configured"] is False
     assert snapshot["stripe_pricing_version_reconciled"] is False
+    assert snapshot["stripe_portal_configuration_env_configured"] is False
     assert snapshot["stripe_sandbox_ready"] is False
     assert snapshot["google_ads_developer_token_configured"] is False
     assert snapshot["google_ads_login_customer_id_configured"] is False
@@ -177,7 +180,19 @@ def test_beta_readiness_marks_current_stripe_sandbox_ready(monkeypatch):
     assert snapshot["stripe_catalog_env_configured"] is True
     assert snapshot["stripe_pricing_version_reconciled"] is True
     assert snapshot["stripe_webhook_env_configured"] is True
+    assert snapshot["stripe_portal_configuration_env_configured"] is True
     assert snapshot["stripe_sandbox_ready"] is True
+
+
+def test_beta_readiness_rejects_missing_portal_configuration(monkeypatch):
+    _clear(monkeypatch)
+    _set_current_stripe_sandbox(monkeypatch)
+    monkeypatch.delenv("STRIPE_BILLING_PORTAL_CONFIGURATION_ID")
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+    assert snapshot["stripe_portal_configuration_env_configured"] is False
+    assert snapshot["stripe_sandbox_ready"] is False
+    assert "stripe_sandbox_ready" in snapshot["pilot_readiness"]["configuration_blockers"]
 
 
 def test_beta_readiness_rejects_live_key_or_wrong_pricing_version(monkeypatch):
@@ -267,6 +282,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
         "STRIPE_PRICE_START": "price_start_private",
         "STRIPE_PRICE_GROWTH": "price_growth_private",
         "STRIPE_PRICE_PRO": "price_pro_private",
+        "STRIPE_BILLING_PORTAL_CONFIGURATION_ID": "bpc_private_beta",
         "VEZMORA_STRIPE_PRICING_VERSION": CURRENT_PRICING_VERSION,
         "GOOGLE_CLIENT_ID": "google-client-private",
         "GOOGLE_CLIENT_SECRET": "google-secret-private",
@@ -292,6 +308,7 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     assert payload["stripe_catalog_env_configured"] is True
     assert payload["stripe_pricing_version_reconciled"] is True
     assert payload["stripe_webhook_env_configured"] is True
+    assert payload["stripe_portal_configuration_env_configured"] is True
     assert payload["stripe_key_mode"] == "test"
     assert payload["stripe_sandbox_ready"] is True
     assert payload["google_oauth_configured"] is True
@@ -309,6 +326,5 @@ def test_beta_readiness_endpoint_never_returns_secret_values(monkeypatch):
     rendered = response.text
     for secret in values.values():
         if secret == CURRENT_PRICING_VERSION:
-            # The expected version identifier is intentionally public metadata.
             continue
         assert secret not in rendered
