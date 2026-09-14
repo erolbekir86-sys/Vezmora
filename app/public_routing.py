@@ -11,7 +11,7 @@ from fastapi.routing import APIRoute
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
 CANONICAL_ORIGIN = "https://vexmera.com"
-PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing", "connected", "view"})
+PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing", "connected", "view", "plan"})
 
 _raw_build_id = (os.getenv("VERCEL_GIT_COMMIT_SHA") or "local").strip()
 BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
@@ -62,6 +62,38 @@ def _link_public_legal_pages(html: str) -> str:
     return _FOOTER_LINK_RE.sub(replace, html)
 
 
+def _link_pricing_checkout_intents(html: str) -> str:
+    """Preserve the selected monthly plan while auth happens in the product shell.
+
+    The Private Beta Stripe catalog currently contains monthly recurring prices
+    only. Keep the annual preview unavailable on the public route so a customer
+    can never select an annual-looking price and silently enter monthly Checkout.
+    """
+    ctas = {
+        '<a class="button button-ghost full" href="/"><span class="pricing-sv">Välj Start</span>':
+            '<a class="button button-ghost full" href="/app?plan=start"><span class="pricing-sv">Välj Start</span>',
+        '<a class="button button-primary full" href="/"><span class="pricing-sv">Välj Growth</span>':
+            '<a class="button button-primary full" href="/app?plan=growth"><span class="pricing-sv">Välj Growth</span>',
+        '<a class="button button-ghost full" href="/"><span class="pricing-sv">Välj Pro</span>':
+            '<a class="button button-ghost full" href="/app?plan=pro"><span class="pricing-sv">Välj Pro</span>',
+    }
+    for source, target in ctas.items():
+        html = html.replace(source, target, 1)
+
+    html = html.replace(
+        '<button data-billing="yearly" type="button">',
+        '<button data-billing="yearly" type="button" disabled aria-disabled="true" '
+        'title="Årsbetalning öppnas efter privat beta">',
+        1,
+    )
+    html = html.replace(
+        '<span class="pricing-sv">Spara 10 %</span><span class="pricing-en">Save 10%</span>',
+        '<span class="pricing-sv">Efter privat beta</span><span class="pricing-en">After private beta</span>',
+        1,
+    )
+    return html
+
+
 def install_public_routing(app: FastAPI) -> None:
     """Expose the marketing site at `/` and keep the authenticated product at `/app`.
 
@@ -84,9 +116,10 @@ def install_public_routing(app: FastAPI) -> None:
     ]
 
     async def marketing_home(request: Request) -> Response:
-        # Existing private-beta reset/invite links plus connector and billing
-        # return URLs were built against the old product-at-root layout. Preserve
-        # those links while the canonical marketing URL remains the apex domain.
+        # Existing private-beta reset/invite links plus connector, billing and
+        # checkout-intent return URLs were built against the old product-at-root
+        # layout. Preserve those links while the canonical marketing URL remains
+        # the apex domain.
         if PRODUCT_QUERY_KEYS.intersection(request.query_params.keys()):
             target = "/app"
             if request.url.query:
@@ -94,8 +127,9 @@ def install_public_routing(app: FastAPI) -> None:
             return RedirectResponse(target, status_code=302)
 
         html = (STATIC / "landing.html").read_text(encoding="utf-8")
+        html = _link_pricing_checkout_intents(html)
         # The landing page was originally shipped beside the app while `/`
-        # pointed to login. Keep all existing CTA copy/design, but send those
+        # pointed to login. Keep all existing CTA copy/design, but send remaining
         # root links to the authenticated product route now.
         html = html.replace('href="/"', 'href="/app"')
         html = _link_public_legal_pages(html)
@@ -171,6 +205,7 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/onboarding-save-guard.js"></script>\n'
             '  <script src="/static/dashboard-read-guard.js"></script>\n'
             '  <script src="/static/self-service-alignment.js"></script>\n'
+            '  <script src="/static/checkout-intent.js"></script>\n'
             '  <script src="/static/app-accessibility-guard.js"></script>\n'
             '  <script src="/static/connector-state-ui.js"></script>\n'
             '  <script src="/static/view-loading-state.js"></script>',
