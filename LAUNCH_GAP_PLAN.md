@@ -10,19 +10,20 @@ Do not use a hard-coded commit SHA in this document as release truth. Before eve
 
 ## Current verified position
 
-- PR #228 passed Vexmera CI #1418, was merged to `main`, and produced merge commit `e2ec57d7061e6639dd76c00458e2cda8436de02d`.
-- The corresponding Vercel production deployment reached `READY`, is attached to `vexmera.com`, and `/health/runtime` reports the same merge revision.
+- The latest verified production baseline before the portal-policy branch is `1b3e5e9722acc44577d1b91a4e275e2be5e4c33f` from PR #236.
+- Its Vercel production deployment reached `READY` and matches the `main` revision.
+- A runtime-error check over the latest one-hour production window found no active runtime-error group.
 - `/health/beta-readiness` reports the private-beta execution and production-transport safety signals as safe while external execution remains disabled.
-- Current post-deploy runtime inspection found no active runtime-error group in the checked window.
-- Deployed browser-security headers now include Vercel edge/static parity for popup-compatible COOP, disabled DNS prefetch and Origin-Agent-Cluster isolation.
+- Deployed browser-security headers include the established CSP/HSTS/frame/MIME/referrer protections plus popup-compatible COOP, disabled DNS prefetch and Origin-Agent-Cluster isolation.
 - Production `/docs`, `/redoc` and `/openapi.json` return 404.
-- Google Ads **Explorer Access** was approved for the Cloud project owning the Vexmera OAuth client on 2026-09-12. Explorer is a production access level and is sufficient for the current read-only five-company pilot while its quota and feature set remain adequate.
+- Google Ads **Explorer Access** is approved for the Cloud project owning the Vexmera OAuth client and is sufficient for the current read-only five-company pilot while its quota and feature set remain adequate.
 - A real production Google Ads read-only sync has returned and persisted campaign-level rows without provider warnings. Google Analytics has also returned real rows.
 - GA website sessions are translated out of paid-click semantics at the read boundary, preventing them from inflating paid CTR/CPC.
-- The Google manager-to-client relationship is recorded as accepted and active, and successful production reads provide practical evidence that the current account path works.
 - Meta is connected and the latest verified read-only sync produced a legitimate zero-row empty-data state rather than an authentication/provider error.
+- Google/Meta OAuth configuration detection now fails closed on effectively blank values while preserving the existing callback and token-refresh safety wrappers.
 - The current Stripe test catalog contains active monthly Start / Growth / Pro prices at 995 / 1,495 / 2,995 SEK with current pricing-version metadata. The test webhook endpoint exists.
-- Stripe still lacks fresh Checkout/trial/webhook/Customer Portal E2E evidence, and the connected sandbox currently has no Billing Portal configuration.
+- The Stripe sandbox still lacks fresh Checkout/trial/webhook/Customer Portal E2E evidence and currently exposes no Billing Portal configuration.
+- The owner-approved Private Beta Customer Portal policy is now fixed: payment-method updates allowed, cancellation allowed at period/trial end, self-service plan changes disabled, no automatic refund rule, and cancellation is separate from account/data deletion.
 - Public Privacy and Terms routes are live, but legal entity/contact and longer-lived retention/subprocessor decisions are not final.
 
 ## Priority 0: finish Stripe sandbox E2E
@@ -36,17 +37,23 @@ Completed foundations:
 - the canonical catalog verifier rejects live-mode, inactive, wrong-currency, wrong-interval and wrong-amount Price objects;
 - Checkout is fail-closed until the current pricing version and required Stripe configuration are reconciled;
 - signed webhook handling includes payload/signature limits, idempotency and workspace/customer integrity checks;
-- the test webhook endpoint is present for the canonical Vexmera webhook URL.
+- the test webhook endpoint is present for the canonical Vexmera webhook URL;
+- the owner-approved Customer Portal policy is recorded in `STRIPE_PORTAL_POLICY.md`;
+- application-side plan switching through a second Checkout is blocked while a workspace has an active subscription;
+- Customer Portal creation is being pinned to an explicit reviewed configuration id rather than silently inheriting an unknown Stripe default policy.
 
 Remaining gates:
 
 - confirm the deployed Stripe Price environment variables and test secret belong to the same verified sandbox account;
 - run `python scripts/verify_stripe_catalog.py` in the configured deployment environment and require `catalog_ok=true`;
 - confirm the current pricing-version marker only after catalog verification;
-- create or intentionally configure a **test-mode Billing Portal configuration** with owner-approved cancellation/plan/payment-method policy;
-- run fresh Vexmera Checkout -> remaining 14-day trial -> signed webhook -> workspace billing update -> Customer Portal -> safe return;
+- create the **test-mode Billing Portal configuration** using the already approved policy;
+- set the resulting non-secret `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` in the intended test deployment environment;
+- run fresh Vexmera Checkout -> remaining trial -> signed webhook -> workspace billing update -> Customer Portal -> safe return;
 - verify one idempotent billing projection/event for the intended test workspace;
 - keep VAT/tax and live-mode billing as a separate owner/legal/accounting decision.
+
+The currently connected Stripe tool surface can read Billing Portal configurations but does not expose creation/update of them, so that account-side mutation remains an external tooling gate rather than an unresolved product-policy decision.
 
 ## Priority 1: authenticated desktop and mobile browser QA
 
@@ -97,7 +104,7 @@ Do not replace the current contact mismatch with an unverified domain alias sole
 
 Google Ads production access is no longer a five-company pilot blocker. Explorer Access is approved and a real read-only production sync works.
 
-**Basic Access is a future scaling/functionality upgrade, not the current pilot gate.** Google retired the legacy pending-application workflow on 2026-09-09. If Vexmera later needs more than the Explorer quota or Explorer-restricted API functionality, complete OAuth Brand Verification and use the current Cloud Console upgrade flow.
+**Basic Access is a future scaling/functionality upgrade, not the current pilot gate.** If Vexmera later needs more than the Explorer quota or Explorer-restricted API functionality, complete the current Google verification/upgrade flow then; do not block the read-only Private Beta on that future scaling step.
 
 For every pilot company, still verify the user's account authorization and perform a fresh read-only sync. A new customer's permission error must never be presented as healthy zero data.
 
@@ -115,12 +122,13 @@ These percentages are planning estimates, not release certification.
 - Final authenticated browser QA: 65%
 - Overall private-beta readiness: approximately 94%
 
-The release-candidate merge/deployment gate is complete. Remaining work is concentrated in Stripe sandbox E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
+The remaining work is concentrated in the Stripe sandbox configuration/E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
 
 ## Immediate next action
 
-1. Reconfirm the deployed Stripe sandbox variables/catalog with operator preflight and the catalog verifier.
-2. Configure the Stripe **test-mode** Billing Portal only after the owner selects the intended portal policy, then complete Checkout/trial/webhook/Portal E2E.
-3. Run full authenticated desktop and mobile QA in an interactive browser session.
-4. Finalize verified legal entity/contact details, longer-lived retention/subprocessor decisions and legal review.
-5. Start the five-company pilot only after the applicable gates above are clear.
+1. Require fresh green CI for the explicit Customer Portal policy guardrails.
+2. Create the approved Stripe **test-mode** Billing Portal configuration when an authorized write surface is available and set its non-secret configuration id in the intended test deployment.
+3. Complete Checkout/trial/webhook/Portal E2E and verify idempotent billing projection.
+4. Run full authenticated desktop and mobile QA in an interactive browser session.
+5. Finalize verified legal entity/contact details, longer-lived retention/subprocessor decisions and legal review.
+6. Start the five-company pilot only after the applicable gates above are clear.
