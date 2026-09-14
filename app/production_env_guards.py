@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import urlsplit
 
 
 _PRIVATE_BETA_DISABLED_FLAGS = (
@@ -14,6 +15,19 @@ _OAUTH_CALLBACK_PATHS = {
     "GOOGLE_REDIRECT_URI": "/api/connectors/google/callback",
     "META_REDIRECT_URI": "/api/connectors/meta/callback",
 }
+
+
+def _plain_https_origin(value: str) -> str | None:
+    if not value:
+        return None
+    parts = urlsplit(value)
+    if parts.scheme.lower() != "https" or not parts.netloc:
+        return None
+    if parts.username is not None or parts.password is not None:
+        return None
+    if parts.path not in {"", "/"} or parts.query or parts.fragment:
+        return None
+    return f"https://{parts.netloc}"
 
 
 def apply_production_env_guards() -> None:
@@ -31,13 +45,14 @@ def apply_production_env_guards() -> None:
     for name in _PRIVATE_BETA_DISABLED_FLAGS:
         os.environ[name] = "false"
 
-    # Password-reset, invite and billing return links use VEZMORA_APP_URL. Never
-    # allow a production value that is not HTTPS. Removing the value makes the
-    # runtime/preflight checks fail closed instead of falling back to localhost.
-    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().rstrip("/")
-    if app_url and not app_url.lower().startswith("https://"):
+    # Password-reset, invite and billing return links use VEZMORA_APP_URL. Require
+    # one plain HTTPS origin rather than merely an https:// prefix. Removing an
+    # unsafe value makes runtime/preflight checks and downstream link builders fail
+    # closed instead of accepting credentials, paths, queries or fragments.
+    raw_app_url = (os.getenv("VEZMORA_APP_URL") or "").strip()
+    app_url = _plain_https_origin(raw_app_url) or ""
+    if raw_app_url and not app_url:
         os.environ.pop("VEZMORA_APP_URL", None)
-        app_url = ""
 
     # OAuth authorization codes and state are capabilities. A production OAuth
     # callback must land on the exact canonical Vexmera origin and provider path.
