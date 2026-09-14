@@ -33,6 +33,16 @@ def _stored_plan(value: object) -> str:
         return "start"
 
 
+def _configured(name: str) -> bool:
+    """Treat empty and whitespace-only environment values as unconfigured.
+
+    Deployment dashboards can accidentally persist a value containing only
+    spaces. Billing readiness must fail closed in that case instead of exposing
+    Checkout as ready and only failing later during a Stripe request.
+    """
+    return bool((os.getenv(name) or "").strip())
+
+
 def billing_status(workspace_id: int) -> dict[str, Any]:
     settings = get_workspace_settings(workspace_id)
     plan = _stored_plan(settings.get("plan"))
@@ -41,8 +51,8 @@ def billing_status(workspace_id: int) -> dict[str, Any]:
     stripe_ready = bool(
         checkout_pricing_reconciled()
         and current_stripe_prices_configured()
-        and os.getenv("STRIPE_SECRET_KEY")
-        and os.getenv("STRIPE_WEBHOOK_SECRET")
+        and _configured("STRIPE_SECRET_KEY")
+        and _configured("STRIPE_WEBHOOK_SECRET")
     )
     return {
         "plan": plan,
