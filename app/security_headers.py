@@ -35,21 +35,29 @@ def _query_keys(request: Request) -> frozenset[str]:
     return frozenset(key.casefold() for key in request.query_params.keys())
 
 
-def _protect_private_cache(request: Request, response) -> None:
+def _is_private_or_capability_surface(request: Request) -> bool:
     path = request.url.path
-    query_keys = _query_keys(request)
-    protected = (
+    return (
         path == "/api"
         or path.startswith("/api/")
         or path == "/health"
         or path.startswith("/health/")
         or path in _PRODUCT_PATHS
-        or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys))
+        or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(_query_keys(request)))
     )
-    if not protected:
+
+
+def _protect_private_cache(request: Request, response) -> None:
+    if not _is_private_or_capability_surface(request):
         return
     for name, value in _API_NO_STORE_HEADERS.items():
         response.headers.setdefault(name, value)
+
+
+def _protect_private_indexing(request: Request, response) -> None:
+    """Keep private, diagnostic and one-time capability URLs out of search indexes."""
+    if _is_private_or_capability_surface(request):
+        response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
 
 
 def _protect_capability_referrer(request: Request, response) -> None:
@@ -75,6 +83,7 @@ def install_security_headers(app: FastAPI) -> None:
     async def _security_headers(request: Request, call_next):
         response = await call_next(request)
         _protect_private_cache(request, response)
+        _protect_private_indexing(request, response)
         _protect_capability_referrer(request, response)
         response.headers.setdefault("Content-Security-Policy", _BASELINE_CSP)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
