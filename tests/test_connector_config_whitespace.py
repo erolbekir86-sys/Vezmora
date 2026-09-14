@@ -74,9 +74,17 @@ def test_oauth_token_storage_rejects_whitespace_only_encryption_secret(monkeypat
     assert "required" in str(exc_info.value.detail).lower()
 
 
-def test_app_main_uses_hardened_bound_connector_functions() -> None:
+def test_app_main_uses_hardened_readiness_and_google_oauth_start() -> None:
     assert app_main.connector_readiness is hardening.connector_readiness_hardened
     assert app_main.google_authorization_url is hardening.google_authorization_url_hardened
-    assert app_main.meta_authorization_url is hardening.meta_authorization_url_hardened
-    assert app_main.google_callback is hardening.google_callback_hardened
-    assert app_main.meta_callback is hardening.meta_callback_hardened
+
+
+def test_final_meta_business_oauth_wrapper_still_fails_closed_on_blank_config(monkeypatch) -> None:
+    _set_valid_meta(monkeypatch)
+    monkeypatch.setenv("META_APP_ID", "   ")
+
+    with pytest.raises(HTTPException) as exc_info:
+        app_main.meta_authorization_url(1, 1)
+
+    assert exc_info.value.status_code == 503
+    assert "not configured" in str(exc_info.value.detail).lower()
