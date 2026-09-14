@@ -18,6 +18,7 @@ BILLING = [
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
     *STRIPE_PRICE_ENV.values(),
+    "STRIPE_BILLING_PORTAL_CONFIGURATION_ID",
     "VEZMORA_STRIPE_PRICING_VERSION",
 ]
 
@@ -25,8 +26,6 @@ SMTP = ["SMTP_HOST", "SMTP_FROM"]
 GOOGLE_OAUTH = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"]
 META_OAUTH = ["META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"]
 
-# These flags must remain false during the private beta. The preflight treats an
-# accidental enablement as a safety failure rather than merely informational.
 BETA_LOCKED_FLAGS = [
     "VEZMORA_EXECUTION_ENABLED",
     "VEZMORA_AUTOPILOT_EXECUTION_ENABLED",
@@ -65,7 +64,6 @@ def _stripe_key_mode() -> str:
 
 
 def _smtp_starttls_enabled() -> bool:
-    # Match the runtime default: an unset SMTP_STARTTLS means secure STARTTLS.
     raw = os.getenv("SMTP_STARTTLS")
     if raw is None:
         return True
@@ -95,11 +93,13 @@ def build_report() -> dict[str, Any]:
     stripe_key_mode = _stripe_key_mode()
     stripe_prices_configured = all(configured(name) for name in STRIPE_PRICE_ENV.values())
     stripe_pricing_version_reconciled = checkout_pricing_reconciled()
+    stripe_portal_configuration_configured = configured("STRIPE_BILLING_PORTAL_CONFIGURATION_ID")
     stripe_sandbox_ready = (
         stripe_key_mode == "test"
         and configured("STRIPE_WEBHOOK_SECRET")
         and stripe_prices_configured
         and stripe_pricing_version_reconciled
+        and stripe_portal_configuration_configured
     )
     google_oauth_ready = not google_oauth_missing
     google_ads_developer_token_ready = configured("GOOGLE_ADS_DEVELOPER_TOKEN")
@@ -128,6 +128,7 @@ def build_report() -> dict[str, Any]:
         "stripe_key_mode": stripe_key_mode,
         "stripe_current_price_env_configured": stripe_prices_configured,
         "stripe_pricing_version_reconciled": stripe_pricing_version_reconciled,
+        "stripe_portal_configuration_configured": stripe_portal_configuration_configured,
         "stripe_expected_pricing_version": CURRENT_PRICING_VERSION,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "smtp_ready": smtp_ready,
@@ -183,6 +184,7 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"database: {_status(bool(report['database_ready']))}")
     print(f"billing variables: {_status(bool(report['billing_ready']))}")
     print(f"current pricing model: {'RECONCILED' if report['stripe_pricing_version_reconciled'] else 'LOCKED'}")
+    print(f"Stripe portal configuration: {_status(bool(report['stripe_portal_configuration_configured']))}")
     print(f"Stripe sandbox: {'READY' if report['stripe_sandbox_ready'] else 'NOT READY'}")
     print(f"transactional email: {_status(bool(report['smtp_ready']))}")
     print(f"Google OAuth: {_status(bool(report['google_oauth_ready']))}")
