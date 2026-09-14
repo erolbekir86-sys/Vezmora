@@ -87,8 +87,38 @@ def test_preflight_rejects_insecure_production_transport(monkeypatch):
     report = preflight.build_report()
     assert report["production_transport_safe"] is False
     assert report["transport_issues"] == [
-        "VEZMORA_APP_URL must use https in production",
+        "VEZMORA_APP_URL must be a plain HTTPS origin in production",
         "VEZMORA_COOKIE_SECURE must not be disabled in production",
+    ]
+    assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
+
+
+def test_preflight_rejects_missing_production_app_origin(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+
+    report = preflight.build_report()
+
+    assert report["production_transport_safe"] is False
+    assert report["transport_issues"] == [
+        "VEZMORA_APP_URL must be a plain HTTPS origin in production"
+    ]
+    assert "VEZMORA_APP_URL" in report["missing"]["core"]
+    assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
+
+
+def test_preflight_rejects_malformed_https_production_app_origin(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test/app?next=private")
+
+    report = preflight.build_report()
+
+    assert report["production_transport_safe"] is False
+    assert report["transport_issues"] == [
+        "VEZMORA_APP_URL must be a plain HTTPS origin in production"
     ]
     assert "production_transport_safe" in report["pilot_readiness"]["configuration_blockers"]
 
