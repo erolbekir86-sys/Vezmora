@@ -10,35 +10,22 @@ Do not use a hard-coded commit SHA in this document as release truth. Before eve
 
 ## Current verified position
 
-- Direct Vercel project/runtime inspection is working again.
-- Production serves Vexmera over HTTPS and `/health/runtime` identified revision `009a8bb07397589b509afef6599409478f4295bc` during the latest check.
+- PR #228 passed Vexmera CI #1418, was merged to `main`, and produced merge commit `e2ec57d7061e6639dd76c00458e2cda8436de02d`.
+- The corresponding Vercel production deployment reached `READY`, is attached to `vexmera.com`, and `/health/runtime` reports the same merge revision.
 - `/health/beta-readiness` reports the private-beta execution and production-transport safety signals as safe while external execution remains disabled.
-- Current production runtime inspection found no active runtime-error group for the checked release window.
+- Current post-deploy runtime inspection found no active runtime-error group in the checked window.
+- Deployed browser-security headers now include Vercel edge/static parity for popup-compatible COOP, disabled DNS prefetch and Origin-Agent-Cluster isolation.
 - Production `/docs`, `/redoc` and `/openapi.json` return 404.
 - Google Ads **Explorer Access** was approved for the Cloud project owning the Vexmera OAuth client on 2026-09-12. Explorer is a production access level and is sufficient for the current read-only five-company pilot while its quota and feature set remain adequate.
 - A real production Google Ads read-only sync has returned and persisted campaign-level rows without provider warnings. Google Analytics has also returned real rows.
 - GA website sessions are translated out of paid-click semantics at the read boundary, preventing them from inflating paid CTR/CPC.
 - The Google manager-to-client relationship is recorded as accepted and active, and successful production reads provide practical evidence that the current account path works.
 - Meta is connected and the latest verified read-only sync produced a legitimate zero-row empty-data state rather than an authentication/provider error.
-- The current Stripe test catalog contains active monthly Start / Growth / Pro prices at 995 / 1,495 / 2,995 SEK with the current pricing-version metadata. The test webhook endpoint exists.
+- The current Stripe test catalog contains active monthly Start / Growth / Pro prices at 995 / 1,495 / 2,995 SEK with current pricing-version metadata. The test webhook endpoint exists.
 - Stripe still lacks fresh Checkout/trial/webhook/Customer Portal E2E evidence, and the connected sandbox currently has no Billing Portal configuration.
 - Public Privacy and Terms routes are live, but legal entity/contact and longer-lived retention/subprocessor decisions are not final.
-- PR #228 contains the current edge-header parity change plus this evidence refresh. A fresh green CI run is required after the documentation commits before merge.
 
-## Priority 0: merge and verify the current release candidate
-
-Goal: ensure the reviewed hardening is actually on `main` and deployed.
-
-Remaining gates:
-
-- require a fresh green Vexmera CI run for the current PR #228 head;
-- review the final PR diff and merge it to `main`;
-- confirm the resulting production revision and runtime safety after deployment;
-- keep external advertising execution and Autopilot execution disabled.
-
-The connected GitHub action is currently blocked from performing the final merge by an external safety control, so the final merge may require the repository owner to click Merge after CI is green.
-
-## Priority 1: finish Stripe sandbox E2E
+## Priority 0: finish Stripe sandbox E2E
 
 Goal: prove the commercial flow without touching live-mode billing.
 
@@ -61,7 +48,7 @@ Remaining gates:
 - verify one idempotent billing projection/event for the intended test workspace;
 - keep VAT/tax and live-mode billing as a separate owner/legal/accounting decision.
 
-## Priority 2: authenticated desktop and mobile browser QA
+## Priority 1: authenticated desktop and mobile browser QA
 
 Goal: prove that real users can complete the product journey on the deployed release.
 
@@ -80,7 +67,7 @@ Remaining gates:
 
 This requires an authenticated interactive browser session. Static HTTP fetches and code inspection are not substitutes.
 
-## Priority 3: legal and pilot operations
+## Priority 2: legal and pilot operations
 
 Goal: make the private beta supportable and legally reviewable without inventing company facts or retention promises.
 
@@ -123,18 +110,17 @@ These percentages are planning estimates, not release certification.
 - Backend / diagnostics / safety foundations: 97%
 - Google + Meta production-read integration readiness: 95%
 - Billing sandbox readiness: 85%
-- Five-company pilot operations / documentation: 95%
-- Production observability: 95%
+- Five-company pilot operations / documentation: 96%
+- Production observability and release deployment: 100%
 - Final authenticated browser QA: 65%
-- Overall private-beta readiness: approximately 93%
+- Overall private-beta readiness: approximately 94%
 
-The remaining work is concentrated in PR merge/deployment confirmation, Stripe sandbox E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
+The release-candidate merge/deployment gate is complete. Remaining work is concentrated in Stripe sandbox E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
 
 ## Immediate next action
 
-1. Get a fresh green CI result on the current PR #228 head and merge it.
-2. Confirm the resulting production revision and safety flags.
-3. Configure the Stripe **test-mode** Billing Portal only after the owner selects the intended portal policy, then complete Checkout/trial/webhook/Portal E2E.
-4. Run full authenticated desktop and mobile QA in an interactive browser session.
-5. Finalize verified legal entity/contact details, longer-lived retention/subprocessor decisions and legal review.
-6. Start the five-company pilot only after the applicable gates above are clear.
+1. Reconfirm the deployed Stripe sandbox variables/catalog with operator preflight and the catalog verifier.
+2. Configure the Stripe **test-mode** Billing Portal only after the owner selects the intended portal policy, then complete Checkout/trial/webhook/Portal E2E.
+3. Run full authenticated desktop and mobile QA in an interactive browser session.
+4. Finalize verified legal entity/contact details, longer-lived retention/subprocessor decisions and legal review.
+5. Start the five-company pilot only after the applicable gates above are clear.
