@@ -63,6 +63,18 @@ def test_local_http_can_explicitly_disable_secure_cookie_for_development(monkeyp
     assert "SameSite=lax" in header
 
 
+def test_malformed_secure_cookie_override_fails_secure(monkeypatch):
+    header = _set_cookie_header(
+        monkeypatch,
+        VEZMORA_COOKIE_SECURE="definitely-not-a-boolean",
+        VEZMORA_APP_URL="http://127.0.0.1:8000",
+    )
+
+    assert "Secure" in header
+    assert "HttpOnly" in header
+    assert "SameSite=lax" in header
+
+
 def test_vercel_session_deletion_matches_secure_cookie_attributes(monkeypatch):
     header = _delete_cookie_header(
         monkeypatch,
