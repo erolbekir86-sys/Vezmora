@@ -48,9 +48,6 @@ def _transport_snapshot() -> dict[str, object]:
             and not smtp_starttls_disabled
         )
 
-    # Keep the established operator diagnostic shape stable. SMTP readiness is
-    # reported separately below while the public endpoint exposes only the
-    # aggregate production_transport_safe boolean.
     return {
         "production_like": production_like,
         "app_url_configured": bool(app_url),
@@ -156,11 +153,13 @@ def beta_safety_snapshot() -> dict[str, object]:
     stripe_catalog_configured = _all_configured(*STRIPE_PRICE_ENV.values())
     stripe_pricing_version_reconciled = checkout_pricing_reconciled()
     stripe_webhook_configured = _configured("STRIPE_WEBHOOK_SECRET")
+    stripe_portal_configuration_configured = _configured("STRIPE_BILLING_PORTAL_CONFIGURATION_ID")
     stripe_sandbox_ready = (
         stripe_key_mode == "test"
         and stripe_catalog_configured
         and stripe_pricing_version_reconciled
         and stripe_webhook_configured
+        and stripe_portal_configuration_configured
     )
     google_oauth_configured = _all_configured(
         "GOOGLE_CLIENT_ID",
@@ -209,6 +208,7 @@ def beta_safety_snapshot() -> dict[str, object]:
         "stripe_pricing_version_reconciled": stripe_pricing_version_reconciled,
         "stripe_expected_pricing_version": CURRENT_PRICING_VERSION,
         "stripe_webhook_env_configured": stripe_webhook_configured,
+        "stripe_portal_configuration_env_configured": stripe_portal_configuration_configured,
         "stripe_sandbox_ready": stripe_sandbox_ready,
         "google_oauth_configured": google_oauth_configured,
         "google_ads_developer_token_configured": google_ads_developer_token_configured,
@@ -228,7 +228,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings and token values are never returned.",
             "Legacy Turso readiness requires both TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, matching operator preflight semantics.",
-            "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, and the exact pricing-version marker; no Stripe identifiers are returned.",
+            "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, the exact pricing-version marker, and the explicitly reviewed Private Beta Billing Portal configuration id; no Stripe identifiers are returned.",
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Transactional email readiness requires minimum SMTP configuration and, in production, STARTTLS must not be disabled.",
             "Pilot readiness is configuration-only; production observability, live read-only connector verification and other manual gates remain required before external onboarding.",
