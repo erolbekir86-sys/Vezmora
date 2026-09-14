@@ -23,7 +23,7 @@ def test_product_shell_loads_dashboard_read_guard_after_app_bundle():
 
 
 def test_dashboard_read_failure_clears_potentially_stale_metrics():
-    assert "value.split('?')[0]" in GUARD
+    assert "String(path || '').split('?')[0]" in GUARD
     assert "pathname.endsWith('/api/dashboard')" in GUARD
     assert "pathname.endsWith('/api/kpis')" in GUARD
     assert "node.textContent = '—'" in GUARD
@@ -32,14 +32,21 @@ def test_dashboard_read_failure_clears_potentially_stale_metrics():
 
 
 def test_dashboard_guard_covers_kpis_with_or_without_query_string():
-    assert "const pathname = value.split('?')[0].replace(/\\/+$/, '')" in GUARD
+    assert "String(path || '').split('?')[0].replace(/\\/+$/, '')" in GUARD
     assert "pathname.endsWith('/api/kpis')" in GUARD
-    assert "value.includes('/api/kpis?')" not in GUARD
+    assert "includes('/api/kpis?')" not in GUARD
 
 
-def test_dashboard_guard_only_targets_get_reads():
+def test_notification_read_failure_does_not_look_like_empty_or_current_signal_data():
+    assert "pathname.endsWith('/api/notifications')" in GUARD
+    assert "count.textContent = '—'" in GUARD
+    assert 'Aktuella signaler kunde inte verifieras. Försök uppdatera igen.' in GUARD
+    assert "if (isNotificationRead(path, options)) showNotificationReadFailure()" in GUARD
+
+
+def test_read_guard_only_targets_get_reads():
     assert "const method = String(options.method || 'GET').toUpperCase()" in GUARD
-    assert "if (method !== 'GET') return false" in GUARD
+    assert "if (method !== 'GET') return ''" in GUARD
 
 
 def test_dashboard_guard_does_not_load_obsolete_disconnect_helper():
@@ -50,7 +57,7 @@ def test_dashboard_guard_does_not_load_obsolete_disconnect_helper():
     assert (ROOT / 'static' / 'connector-disconnect-ui.js').exists()
 
 
-def test_dashboard_guard_does_not_expose_raw_errors_or_touch_sensitive_actions():
+def test_read_guard_does_not_expose_raw_errors_or_touch_sensitive_actions():
     forbidden = (
         '${err.message}',
         '.textContent = err.message',
