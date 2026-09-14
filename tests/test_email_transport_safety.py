@@ -44,16 +44,25 @@ def _configure(monkeypatch):
     monkeypatch.setenv("SMTP_PASSWORD", "password")
 
 
-def test_vercel_requires_https_canonical_app_url_for_capability_links(monkeypatch):
+def test_vercel_requires_plain_https_canonical_app_url_for_capability_links(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
 
-    monkeypatch.delenv("VEZMORA_APP_URL", raising=False)
-    with pytest.raises(RuntimeError, match="must be configured as HTTPS"):
-        emailer.app_url()
+    invalid_values = [
+        None,
+        "http://vexmera.example",
+        "https://user:secret@vexmera.example",
+        "https://vexmera.example/app",
+        "https://vexmera.example?next=reset",
+        "https://vexmera.example#invite",
+    ]
 
-    monkeypatch.setenv("VEZMORA_APP_URL", "http://vexmera.example")
-    with pytest.raises(RuntimeError, match="must be configured as HTTPS"):
-        emailer.app_url()
+    for value in invalid_values:
+        if value is None:
+            monkeypatch.delenv("VEZMORA_APP_URL", raising=False)
+        else:
+            monkeypatch.setenv("VEZMORA_APP_URL", value)
+        with pytest.raises(RuntimeError, match="plain HTTPS origin"):
+            emailer.app_url()
 
     monkeypatch.setenv("VEZMORA_APP_URL", "https://vexmera.example/")
     assert emailer.app_url() == "https://vexmera.example"
@@ -63,6 +72,12 @@ def test_local_development_keeps_localhost_fallback(monkeypatch):
     monkeypatch.delenv("VERCEL", raising=False)
     monkeypatch.delenv("VEZMORA_APP_URL", raising=False)
     assert emailer.app_url() == "http://localhost:8000"
+
+
+def test_local_configured_origin_keeps_existing_trailing_slash_normalization(monkeypatch):
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://local-preview.example///")
+    assert emailer.app_url() == "https://local-preview.example"
 
 
 def test_vercel_refuses_plaintext_smtp(monkeypatch):
