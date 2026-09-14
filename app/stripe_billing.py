@@ -207,7 +207,15 @@ def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
         event = client.construct_event(payload, signature, secret)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid Stripe webhook signature") from None
-    return dict(event)
+    # stripe-python returns an Event resource, which deliberately does not
+    # implement the mapping protocol. Use its public conversion method before
+    # the rest of the webhook safety pipeline inspects nested event data.
+    to_dict = getattr(event, "to_dict", None)
+    if callable(to_dict):
+        return to_dict()
+    if isinstance(event, dict):
+        return event
+    raise HTTPException(status_code=400, detail="Invalid Stripe webhook payload")
 
 
 def _trial_end_iso(obj: dict[str, Any]) -> str | None:
