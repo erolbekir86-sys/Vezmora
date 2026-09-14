@@ -61,6 +61,26 @@ Use one row per company. Do not store credentials, tokens, account secrets, paym
 | 4 |  | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | Not started |
 | 5 |  | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | Not started |
 
+## Evidence packet per company
+
+Keep one small, non-secret evidence packet for each pilot company so a green checklist can be traced back to the exact build and test session. Store only operational metadata and sanitized evidence.
+
+Record:
+
+- [ ] UTC date/time of the onboarding or QA pass
+- [ ] deployed revision / commit SHA tested
+- [ ] browser and device class used for the smoke test
+- [ ] `/health/beta-readiness` outcome as booleans/status only, never raw environment values
+- [ ] `pilot_go_no_go.py` final status and blocker names, without copying credentials or headers
+- [ ] which connectors were exercised and whether each result was `connected`, `empty`, `error`, or `not tested`
+- [ ] whether data shown was demo, live connected, or intentionally unavailable
+- [ ] sanitized screenshot references for confusing states only when they contain no tokens, email links, account IDs, payment details, or unnecessary personal data
+- [ ] issue/PR reference for every failed gate that required a code or documentation change
+
+A screenshot by itself is not proof of release identity. Every evidence packet must include the deployed revision so results from an older preview cannot accidentally be treated as validation of the current release candidate.
+
+Do not paste request/response headers, OAuth callback URLs, cookies, webhook payloads, signed URLs, reset links, invite links, or provider tokens into the evidence packet.
+
 ## Per-company onboarding sequence
 
 ### 1. Preflight
@@ -182,6 +202,7 @@ The five-company pilot is operationally complete only when:
 3. empty states and connector failures are distinguishable and understandable,
 4. disconnect/privacy controls have been exercised successfully,
 5. final browser QA has been completed on the deployed build,
-6. feedback has been converted into a prioritized post-pilot backlog.
+6. each company has a non-secret evidence packet tied to the deployed revision that was actually tested,
+7. feedback has been converted into a prioritized post-pilot backlog.
 
 Configuration readiness alone does not prove these criteria; the existing manual gates still apply.
