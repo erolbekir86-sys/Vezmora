@@ -6,7 +6,7 @@ This document tracks the shortest safe path from the current build to a five-com
 
 ## How to read this file
 
-Do not use this document alone as a release pointer. Before every launch check, verify the current `main` SHA, open pull requests, GitHub Actions status and the active production deployment. Code/CI evidence, deployed-runtime evidence and authenticated browser evidence are separate gates.
+Do not use a hard-coded commit SHA in this document as release truth. Before every launch check, verify the current `main` SHA, open pull requests, GitHub Actions status and the active production deployment. Code/CI evidence, deployed-runtime evidence and authenticated browser evidence are separate gates.
 
 ## Current verified position
 
