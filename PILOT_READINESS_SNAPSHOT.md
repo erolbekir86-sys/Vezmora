@@ -4,132 +4,121 @@ Last reviewed: 2026-09-14
 
 This is a non-secret operational snapshot for the five-company private beta. It records evidence that can be verified safely without changing credentials, billing, permissions, domains, DNS or live advertising settings.
 
-## Current code baseline
+## Current release baseline
 
-The latest verified `main` baseline at this refresh is `f1959c5042c46281080b01f9b9e4a48308afdfe5`.
+The latest verified `main` baseline at this refresh is `009a8bb07397589b509afef6599409478f4295bc`.
 
-Recent merged hardening includes:
+PR #228 is the current release-candidate hardening delta. Its runtime change only mirrors the already-verified application browser headers at Vercel's edge/static layer and adds regression coverage. Vexmera CI #1407 passed before the later documentation-only evidence refresh on the PR branch; CI must be green again before merge after any added commit.
 
-- public auth IP burst limiting on Vercel for login, registration and password-reset POSTs;
-- login-only account-enumeration timing equalization;
-- PBKDF2-HMAC-SHA256 upgraded to a versioned 600,000-iteration record for new and rotated credentials;
-- legacy 310,000-iteration password records remain compatible and are opportunistically rehashed to the current policy after a successful login using compare-and-set semantics;
-- password reset continues to revoke all existing authenticated sessions atomically with credential rotation;
-- active sessions are bounded to the 20 newest sessions per user after expired-session pruning;
-- Origin / Fetch Metadata protection now covers public browser login, registration and password-reset POSTs as well as authenticated state-changing API requests;
-- ordinary mutating API requests have a separate 1 MiB streaming/pre-buffer body ceiling, while Stripe retains its dedicated webhook limiter;
-- OAuth diagnostic URLs redact authorization code/state/token/client-secret capabilities;
-- Vexmera diagnostic URL redaction now also masks password-reset, workspace-invite and Stripe Checkout `session_id` capability values while preserving non-secret URL context;
-- shared diagnostic redaction now also masks Authorization and Proxy-Authorization values, Cookie and Set-Cookie fields, and raw `vezmora_session=...` assignments before diagnostic text is exposed or persisted;
-- Stripe webhook diagnostics now redact the complete `Stripe-Signature` header value, including comma-separated timestamp and rotated `v1` signature fragments;
-- reset/invite emails fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
-- Stripe Checkout and Customer Portal return URLs fail closed on Vercel unless the canonical app URL is explicitly HTTPS;
-- Google and Meta production OAuth redirect URIs must exactly match the canonical HTTPS app origin plus the expected provider callback path, otherwise that connector fails closed in the process;
-- transactional email uses certificate-verifying STARTTLS and Vercel rejects explicitly disabled STARTTLS;
-- deployment preflight and `/health/beta-readiness` now agree that production transport is unsafe when SMTP is configured but STARTTLS is disabled;
-- live pilot preflight now also requires `production_transport_safe=true` and fails closed when that signal is false or missing;
-- operator runtime preflight can pin an expected deployment revision and fails closed on `deployment_revision_mismatch` without echoing revision values in the result;
-- Stripe webhook processing fails closed before billing or ledger writes when signed event metadata conflicts with an already-bound workspace/customer relationship;
-- HTTP transport logging remains pinned away from INFO-level request URL logging, with regression coverage protecting token-bearing OAuth/provider paths from future logging regressions;
-- production FastAPI docs/OpenAPI routes are now hidden consistently for every HTTP method, preventing 405/Allow method probes from revealing internal framework route existence;
-- shared browser hardening now sets `Cross-Origin-Opener-Policy: same-origin-allow-popups` to reduce unrelated cross-origin window coupling while preserving OAuth/payment popup compatibility;
-- speculative DNS prefetching is disabled by default with `X-DNS-Prefetch-Control: off`, while explicit route-level overrides remain possible;
-- supporting browsers are now asked to isolate the Vexmera origin into its own agent cluster with `Origin-Agent-Cluster: ?1`, while explicit route-level compatibility overrides remain possible;
-- CI verifies the installed dependency graph with `python -m pip check` before compile/tests and includes bounded dependency-update checks.
+## Verified healthy from code, deployment and live read-only evidence
 
-## Verified healthy from code and CI
-
-- GitHub repository access is healthy and the default branch is `main`.
-- The hardening PRs described above passed the repository CI before merge.
-- External marketing execution and Autopilot execution remain fail-closed for Vercel Private Beta.
-- Meta production scope hardening keeps `ads_management` disabled on Vercel.
-- Google/Meta token-bearing network paths retain bounded retries, provider/input validation, no-redirect transport where required and sanitized customer-visible failures.
-- OAuth state is single-use, provider-scoped, bounded and stored hashed for newly issued state values.
-- Password-reset tokens and workspace invites are hashed one-time capabilities and newer reset/invite issuance supersedes older outstanding capabilities for the same target where appropriate.
-- Session cookies remain HttpOnly, SameSite and Secure on Vercel; logout/account deletion clear them with aligned attributes.
-- API auth-surface tests prevent newly introduced `/api/...` endpoints from silently becoming public unless deliberately allowlisted.
-- Public production health/readiness responses remain intentionally minimal; they do not expose provider credentials, database connection strings, SMTP credentials, OAuth secrets or Stripe identifiers.
-- Stripe webhook payload/signature bounds, signed-event idempotency protections and workspace/customer ownership consistency checks remain in place.
-- Public auth inputs are bounded before KDF/token processing: login/register passwords max out at 200 characters and reset tokens at 300 characters.
-- Competitor scanning retains SSRF controls for scheme, DNS resolution, public IPs, redirects and response-size limits.
-- Repository dynamic SQL identified during this review remains limited to fixed allowlists/internal field construction rather than direct user-controlled SQL fragments.
-- GA legacy session rows are translated at the read boundary so website sessions cannot inflate paid-ad clicks, CTR or CPC without requiring an in-place production data migration.
-- The public marketing page uses illustrative demo metrics and identifies them as demo data.
-- The pilot remains recommendation-only; external campaign, budget, bid and ad mutations are not part of the approved private-beta posture.
+- Production is reachable at `https://vexmera.com` over HTTPS and serves the expected Vexmera application.
+- Production runtime evidence identifies the deployed revision as `009a8bb07397589b509afef6599409478f4295bc`.
+- `/health/beta-readiness` reports `private_beta_execution_safe=true` and `production_transport_safe=true`.
+- Current production runtime inspection found no active runtime-error groups for the checked release window. The 404 traffic observed was generic internet scanning, not application failure.
+- Production `/docs`, `/redoc` and `/openapi.json` return 404 and do not expose the framework documentation surface.
+- Browser security headers are present on deployed application responses. PR #228 adds parity for the Vercel edge/static layer.
+- External marketing execution, Autopilot execution and Meta execution scope remain fail-closed for Private Beta.
+- Session, CSRF, one-time capability, secret-redaction, webhook-integrity, transport logging and public-health hardening remain covered by regression tests.
+- Stripe webhook processing verifies signatures, bounds payload/header size, records events idempotently and rejects workspace/customer ownership mismatches before billing mutation.
+- The approved Stripe **test-mode** catalog contains active monthly Start / Growth / Pro prices at 995 / 1,495 / 2,995 SEK with the current pricing-version metadata.
+- The test webhook endpoint exists for the production Vexmera webhook URL.
+- Google Ads API **Explorer Access** was approved for the Cloud project that owns the Vexmera OAuth client on 2026-09-12. Explorer is a production access level and currently allows up to 2,880 production operations per rolling 24 hours.
+- A real production Google Ads read-only sync has succeeded and persisted campaign-level rows without provider warnings or API errors.
+- Google Analytics has also persisted real rows. GA sessions are translated at the read boundary so they do not inflate paid-ad clicks, CTR or CPC.
+- Meta is connected and the latest verified read-only sync produced a legitimate zero-row result classified as an empty-data state rather than an authentication/provider failure.
+- Both Google and Meta connector state handling distinguishes verified empty data from provider/configuration errors.
+- The manager-to-client Google Ads relationship is recorded as accepted and active, and the successful live read provides practical evidence that the intended account is reachable through the deployed OAuth path.
+- The public Privacy and Terms routes are reachable over HTTPS and receive the normal security headers.
+- Production onboarding records exist and completed onboarding has been observed in the production database.
 
 ## Evidence boundary
 
-Vexmera deliberately separates three evidence classes:
+Vexmera separates three evidence classes:
 
-1. **Code/CI evidence** — automated tests, syntax checks, dependency consistency and security-contract regression coverage.
-2. **Deployment/runtime evidence** — direct evidence that the intended Vercel deployment is active, inspectable and serving the expected revision.
-3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, current Stripe sandbox E2E evidence, legal/privacy review and external provider approvals.
+1. **Code/CI evidence** — automated tests, syntax checks, dependency consistency and regression coverage.
+2. **Deployment/runtime evidence** — direct evidence that the intended Vercel deployment is active and serving the expected revision.
+3. **Pilot/manual evidence** — authenticated browser walkthroughs, fresh billing completion evidence and final legal/owner decisions.
 
-A green CI run does not substitute for direct deployed-runtime evidence. A GitHub-side Vercel check is useful deployment-path evidence, but it is not treated as full production observability.
+A green CI run does not substitute for browser QA, and a successful read-only provider sync does not authorize external campaign mutation.
 
-## Current blockers requiring manual or external resolution
+## Remaining blockers
 
-### 1. Direct Vercel project/runtime visibility
+### 1. PR #228 merge
 
-The connected Vercel integration can see the Vezmora team but currently does not enumerate the existing project. Direct project/deployment/runtime inspection therefore remains unavailable through that connector.
+PR #228 is mergeable and its original runtime/test delta passed Vexmera CI #1407. The connector used for autonomous work is currently blocked from performing the final merge by an external safety control. After the documentation refresh on the PR branch, require a fresh green CI result and then merge manually if the diff remains acceptable.
 
-GitHub-side Vercel checks have continued to provide preview/deployment-path evidence, so this visibility problem is not treated as proof that the project is missing. Direct runtime observability remains a manual launch gate.
+### 2. Stripe fresh sandbox E2E and Customer Portal configuration
 
-Do not change domains, DNS, credentials, secrets or project permissions merely to satisfy this document. Re-authorize the Vercel connection only when direct project inspection is intentionally performed.
+The Stripe sandbox catalog and webhook endpoint are present, but the connected sandbox currently has no completed Vexmera Checkout evidence: no Checkout Sessions, Customers or Subscriptions were found during the latest verification, and no production-database billing events were present.
 
-### 2. Stripe pricing/catalog reconciliation and fresh sandbox E2E
+The Stripe sandbox also has no Billing Portal configuration. Therefore Customer Portal E2E cannot be declared green yet.
 
-Keep Checkout blocked until the approved Start / Growth / Pro public model, backend metadata, tests and Stripe **test-mode** catalog describe the same verified prices and pricing-version marker.
+Required evidence before enabling pilot billing:
 
-After reconciliation, perform a fresh sandbox Checkout/trial/webhook/Customer Portal pass. Do not autonomously change Stripe keys, Price IDs, products, bank information, tax configuration or live-mode settings.
+1. create or verify an intentional **test-mode** Billing Portal configuration;
+2. run Vexmera Checkout against the canonical Start / Growth / Pro test catalog;
+3. complete the 14-day trial Checkout using Stripe test data;
+4. verify the signed webhook updates only the intended workspace and records one idempotent billing event;
+5. open Customer Portal for the attached test customer and return safely to Vexmera;
+6. verify billing state in the UI after reload.
 
-### 3. Google Ads external access
+Do not modify live-mode payment settings, bank details, tax configuration, KYC or production customer billing as part of this verification.
 
-Google Ads Basic Access and any required manager/client-account relationship remain external prerequisites. Test Account Access is not proof of normal production-client read access.
+### 3. Final authenticated browser QA
 
-Keep Google advertising behavior read-only/recommendation-only until a real deployed read-only sync is independently verified.
+A full browser walkthrough is still required on the deployed Command Center:
 
-### 4. Live Google/Meta connector verification
+- registration and login;
+- password reset and session invalidation;
+- onboarding completion and post-onboarding routing;
+- Google and Meta connector success, legitimate empty data and safe failure states;
+- disconnect and synchronized-history deletion controls;
+- billing UI, Checkout return handling and Customer Portal once Stripe E2E is available;
+- account privacy/deletion preview;
+- GA sessions presented separately from paid-ad clicks;
+- mobile viewport navigation, forms, tables and modals;
+- recommendation-only execution posture.
 
-Code distinguishes healthy empty accounts from provider/configuration failures, but a deployed authenticated walkthrough is still required for real pilot accounts. Confirm success, empty-data and failure states using non-sensitive evidence.
+This gate requires an authenticated interactive browser session. Static fetches and API/code inspection are not a substitute.
 
-### 5. Google Analytics semantic verification
+### 4. Legal and privacy sign-off
 
-The code-level paid-media contamination gap is closed: GA legacy `sessions` values are translated out of paid-click semantics at the read boundary. A deployed authenticated QA pass is still required to confirm the UI and recommendations consistently present website sessions separately from paid-ad clicks.
+Engineering can verify the product behavior, but final legal readiness still requires owner/legal decisions that must not be invented in code:
 
-### 6. Legal and privacy sign-off
+- legal entity name and registration details;
+- postal/registered address where required;
+- one verified privacy/support contact channel;
+- concrete retention rules that match actual infrastructure behavior;
+- verified subprocessor/contract/transfer disclosures;
+- final Privacy Policy and Beta Terms review;
+- VAT/tax treatment before live paid launch.
 
-Finalize Privacy Policy and Beta Terms with the real legal entity/contact details, retention periods and subprocessor disclosures. Legal review remains a launch gate.
+A public contact inconsistency remains: the marketing footer and published legal pages do not currently use one verified contact address. Do not replace it with an unverified domain alias merely for appearance.
 
-### 7. Final deployed browser QA
+## Google Ads access interpretation
 
-Perform an authenticated browser pass on the actual deployed Command Center. At minimum verify onboarding, login/reset, connector success/empty/failure states, disconnect, account privacy controls, GA semantics, recommendation-only behavior, responsive rendering and the public marketing page.
+Basic Access is **not** a blocker for the current five-company read-only pilot. Explorer Access already permits production-account requests and supports the reporting pattern Vexmera currently uses. Basic becomes a scaling or functionality upgrade when the Explorer quota is insufficient or Vexmera needs Explorer-restricted API functionality.
+
+Google retired the legacy Basic application path on 2026-09-09. Any future Basic upgrade must follow the current Cloud Console flow and requires OAuth Brand Verification first. The old manager-account application should not be represented as pending review.
 
 ## Pilot safety gate
 
-Do not start the five-company external pilot until all of the following are true:
+Do not start a billing-enabled five-company external pilot until all of the following are true:
 
-- the intended production deployment is directly confirmed and its revision/runtime health can be inspected;
-- the operator preflight confirms that the deployed revision matches the intended release revision;
-- `/health/beta-readiness` reports `private_beta_execution_safe=true` and `production_transport_safe=true`;
-- configuration readiness has no machine-checkable blockers;
+- PR #228 or its equivalent reviewed hardening is merged and deployed;
+- the intended production revision is directly confirmed;
+- `/health/beta-readiness` continues to report safe execution and transport;
 - external execution remains disabled;
-- required pilot connectors pass live read-only checks;
-- legitimate empty accounts and provider failures are visually distinguishable in deployed QA;
+- required pilot connectors pass read-only checks for each pilot account;
+- legitimate empty accounts and provider failures remain distinguishable;
 - GA sessions are not presented or aggregated as paid-ad clicks;
-- the current Stripe sandbox catalog is reconciled and fresh E2E billing evidence passes if billing is included in the pilot;
-- Privacy Policy and Beta Terms are finalized;
-- authenticated browser QA passes.
+- fresh Stripe sandbox Checkout/trial/webhook/Customer Portal evidence passes if billing is included in the pilot;
+- Privacy Policy and Beta Terms are finalized with verified entity/contact details;
+- authenticated desktop and mobile browser QA passes.
+
+A non-billing pilot can proceed without live payment activation only if the pilot terms and product UI accurately reflect that billing is not enabled.
 
 ## Safe autonomous work remaining
 
-While direct Vercel project visibility is unavailable, safe autonomous work remains limited to reversible code quality, tests, diagnostics, documentation, onboarding, read-only connector reliability and beta-safety hardening that does not alter live ads, billing accounts, secrets, permissions, DNS or customer data.
-
-When direct Vercel visibility becomes available, the next low-risk checks are:
-
-1. inspect production runtime errors and non-secret health diagnostics;
-2. run the public/runtime preflight pinned to the intended release revision and confirm it matches the active deployment;
-3. verify execution, transport and public-readiness flags remain fail-closed;
-4. inspect unresolved deployment feedback;
-5. run authenticated browser QA on the deployed Command Center;
-6. update this snapshot only from newly observed evidence.
+Safe autonomous work can continue on reversible code quality, tests, diagnostics, documentation, onboarding, read-only connector reliability and beta-safety hardening. Do not alter live ads, campaign budgets/bids, DNS/domain ownership, credentials/secrets, payment/bank details, KYC or external account permissions.
