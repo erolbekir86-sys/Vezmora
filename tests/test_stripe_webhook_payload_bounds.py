@@ -102,6 +102,32 @@ def test_payload_at_limit_still_reaches_signature_verification(monkeypatch):
     assert secret == "whsec_private_test_value"
 
 
+def test_stripe_event_resource_is_converted_with_public_to_dict(monkeypatch):
+    class StripeEventLike:
+        def to_dict(self):
+            return {
+                "id": "evt_resource",
+                "type": "checkout.session.completed",
+                "data": {"object": {"metadata": {"workspace_id": "1"}}},
+            }
+
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_private_test_value")
+    monkeypatch.setattr(
+        stripe_billing,
+        "_stripe_client",
+        lambda: type(
+            "Client",
+            (),
+            {"construct_event": lambda self, payload, signature, secret: StripeEventLike()},
+        )(),
+    )
+
+    event = stripe_billing.parse_webhook(b"{}", "sig_test")
+
+    assert event["id"] == "evt_resource"
+    assert event["data"]["object"]["metadata"]["workspace_id"] == "1"
+
+
 def test_invalid_signature_does_not_chain_provider_exception(monkeypatch):
     class RejectingClient:
         def construct_event(self, payload: bytes, signature: str, secret: str):
