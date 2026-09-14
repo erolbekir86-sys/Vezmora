@@ -6,6 +6,16 @@
       "excludeFiles": "{tests/**,docs/**,data/**,**/__pycache__/**,**/*.pyc,render.yaml,Dockerfile}"
     }
   },
+  "rewrites": [
+    {
+      "source": "/app",
+      "destination": "/"
+    },
+    {
+      "source": "/app/",
+      "destination": "/"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
