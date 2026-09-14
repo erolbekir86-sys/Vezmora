@@ -43,24 +43,34 @@ def test_launch_docs_keep_current_pricing_gate_explicit():
     assert "2026-09-start-growth-pro" in docs
 
 
-def test_google_manager_link_is_not_listed_as_pending_work():
+def test_google_production_access_matches_current_verified_evidence():
     checklist = _read("DEPLOY_CHECKLIST.md")
     launch_plan = _read("LAUNCH_GAP_PLAN.md")
 
-    assert "Accept the pending manager-account link request" not in checklist
     assert "Manager-to-client relationship accepted and active" in checklist
-    assert "manager-to-client relationship is accepted and active" in launch_plan
-    assert "Receive Google approval for Basic Access" in checklist
+    assert "Explorer Access approved 2026-09-12" in checklist
+    assert "Complete Google Ads sync against the real linked account" in checklist
+    assert "Basic Access is a future scaling/functionality upgrade" in launch_plan
+    assert "Basic Access approval still requires external verification" not in launch_plan
 
 
-def test_launch_plan_keeps_external_gates_distinct_from_completed_code():
-    launch_plan = _read("LAUNCH_GAP_PLAN.md")
+def test_launch_plan_keeps_remaining_manual_gates_explicit():
+    launch_plan = _read("LAUNCH_GAP_PLAN.md").lower()
 
     for required_gate in (
-        "direct Vercel",
-        "Google Ads Basic Access",
-        "Stripe sandbox",
-        "authenticated browser QA",
-        "legal sign-off",
+        "fresh green ci",
+        "billing portal configuration",
+        "authenticated desktop and mobile browser qa",
+        "legal entity",
+        "legal review",
     ):
-        assert required_gate.lower() in launch_plan.lower()
+        assert required_gate in launch_plan
+
+
+def test_launch_plan_does_not_reopen_completed_observability_or_google_gates():
+    launch_plan = _read("LAUNCH_GAP_PLAN.md").lower()
+
+    assert "direct vercel project/runtime inspection is working again" in launch_plan
+    assert "explorer access" in launch_plan
+    assert "real production google ads read-only sync" in launch_plan
+    assert "direct chatgpt to vercel production runtime/log inspection remains unavailable" not in launch_plan
