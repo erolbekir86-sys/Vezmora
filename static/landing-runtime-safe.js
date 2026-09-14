@@ -62,8 +62,16 @@
     });
   }
 
+  function alignPrivateBetaPricingCopy() {
+    const sv = document.querySelector('.pricing-note .pricing-sv');
+    const en = document.querySelector('.pricing-note .pricing-en');
+    if (sv) sv.textContent = 'Priser exkl. moms. Årsbetalning öppnas efter privat beta.';
+    if (en) en.textContent = 'Prices exclude VAT. Annual billing opens after the private beta.';
+  }
+
   function boot() {
     enhanceIconsOnce();
+    alignPrivateBetaPricingCopy();
     document.documentElement.dataset.vexmeraRuntimeStable = '1';
   }
 
