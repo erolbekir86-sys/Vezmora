@@ -88,6 +88,9 @@ def install_security_headers(app: FastAPI) -> None:
         # Isolate Vexmera's browsing context from unrelated cross-origin windows
         # while preserving OAuth/payment popup compatibility.
         response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
+        # Ask supporting browsers to isolate this origin into its own agent cluster.
+        # setdefault keeps route-specific compatibility overrides possible.
+        response.headers.setdefault("Origin-Agent-Cluster", "?1")
         if _https_runtime():
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
