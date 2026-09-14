@@ -6,7 +6,7 @@ This is a non-secret operational snapshot for the five-company private beta. It 
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `bf08f0f2b56e1b11e9ee347ba2f4347437703a53`.
+The latest verified `main` baseline at this refresh is `f1959c5042c46281080b01f9b9e4a48308afdfe5`.
 
 Recent merged hardening includes:
 
@@ -34,6 +34,7 @@ Recent merged hardening includes:
 - production FastAPI docs/OpenAPI routes are now hidden consistently for every HTTP method, preventing 405/Allow method probes from revealing internal framework route existence;
 - shared browser hardening now sets `Cross-Origin-Opener-Policy: same-origin-allow-popups` to reduce unrelated cross-origin window coupling while preserving OAuth/payment popup compatibility;
 - speculative DNS prefetching is disabled by default with `X-DNS-Prefetch-Control: off`, while explicit route-level overrides remain possible;
+- supporting browsers are now asked to isolate the Vexmera origin into its own agent cluster with `Origin-Agent-Cluster: ?1`, while explicit route-level compatibility overrides remain possible;
 - CI verifies the installed dependency graph with `python -m pip check` before compile/tests and includes bounded dependency-update checks.
 
 ## Verified healthy from code and CI
