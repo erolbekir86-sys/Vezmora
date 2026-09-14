@@ -82,6 +82,9 @@ def install_security_headers(app: FastAPI) -> None:
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+        # Prevent speculative DNS lookups from leaking third-party hostnames before
+        # the user actually navigates or a resource is intentionally requested.
+        response.headers.setdefault("X-DNS-Prefetch-Control", "off")
         # Isolate Vexmera's browsing context from unrelated cross-origin windows
         # while preserving OAuth/payment popup compatibility.
         response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
