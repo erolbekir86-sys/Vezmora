@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Awaitable, Callable
 
 from . import connectors as _connectors
+from . import connector_config_hardening as _connector_config_hardening
 
 
 Syncer = Callable[[int, int], Awaitable[dict[str, object]]]
