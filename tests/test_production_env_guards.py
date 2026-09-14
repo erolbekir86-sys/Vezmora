@@ -36,22 +36,37 @@ def test_vercel_forces_private_beta_unsafe_flags_off(monkeypatch):
         assert os.getenv(name) == "false"
 
 
-def test_vercel_removes_insecure_app_url_used_for_absolute_email_links(monkeypatch):
+def test_vercel_removes_malformed_app_url_used_for_absolute_capability_links(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
-    monkeypatch.setenv("VEZMORA_APP_URL", "http://example.test")
 
-    apply_production_env_guards()
+    for value in (
+        "http://example.test",
+        "https://user:secret@example.test",
+        "https://example.test/app",
+        "https://example.test?next=private",
+        "https://example.test#fragment",
+    ):
+        monkeypatch.setenv("VEZMORA_APP_URL", value)
+        apply_production_env_guards()
+        assert os.getenv("VEZMORA_APP_URL") is None
 
-    assert os.getenv("VEZMORA_APP_URL") is None
 
-
-def test_vercel_preserves_https_app_url(monkeypatch):
+def test_vercel_preserves_plain_https_app_url(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test")
 
     apply_production_env_guards()
 
     assert os.getenv("VEZMORA_APP_URL") == "https://example.test"
+
+
+def test_vercel_accepts_single_trailing_slash_for_canonical_origin(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test/")
+
+    apply_production_env_guards()
+
+    assert os.getenv("VEZMORA_APP_URL") == "https://example.test/"
 
 
 def test_vercel_clears_stale_legacy_only_stripe_price_aliases(monkeypatch):
