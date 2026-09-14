@@ -163,13 +163,31 @@ def create_checkout(workspace_id: int, email: str, plan: str) -> dict[str, Any]:
 
 
 def create_portal(workspace_id: int) -> dict[str, Any]:
-    client = _stripe_client()
     settings = get_workspace_settings(workspace_id)
     customer = settings.get("stripe_customer_id")
     if not customer:
         raise HTTPException(status_code=409, detail="No Stripe customer is attached to this workspace")
+
+    # Private Beta uses an explicitly reviewed Stripe Customer Portal policy.
+    # Never silently fall back to whatever account-default configuration happens
+    # to exist, because that could accidentally enable plan switching or immediate
+    # cancellation without a matching Vexmera billing policy.
+    configuration = _configured_value("STRIPE_BILLING_PORTAL_CONFIGURATION_ID")
+    if not configuration:
+        raise HTTPException(
+            status_code=503,
+            detail="Stripe Billing Portal is not ready until the approved Private Beta portal configuration is set",
+        )
+
+    client = _stripe_client()
     base_url = _billing_return_base_url()
-    session = client.v1.billing_portal.sessions.create({"customer": customer, "return_url": f"{base_url}/?view=team"})
+    session = client.v1.billing_portal.sessions.create(
+        {
+            "customer": customer,
+            "configuration": configuration,
+            "return_url": f"{base_url}/?view=team",
+        }
+    )
     return {"url": session.url}
 
 
