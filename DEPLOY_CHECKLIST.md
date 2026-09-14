@@ -55,9 +55,11 @@
 - [x] Correct production environment whitespace issue and trigger clean redeploy
 - [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
 - [x] Fail closed on insecure `http://` `VEZMORA_APP_URL` values in Vercel production
-- [ ] Restore direct Vercel connector visibility for read-only project/log inspection without changing production permissions
-- [ ] Re-run current public runtime/readiness evidence after final environment reconciliation
-- [ ] Add any remaining Vercel Sensitive Environment Variables required by final launch configuration
+- [x] Restore direct Vercel connector visibility for read-only project/log inspection without changing production permissions
+- [x] Re-run current public runtime/readiness evidence and confirm production revision `009a8bb07397589b509afef6599409478f4295bc`
+- [x] Confirm current production runtime inspection has no active runtime-error group for the checked release window
+- [x] Confirm `/docs`, `/redoc`, and `/openapi.json` return 404 in production
+- [ ] Add any remaining Vercel Sensitive Environment Variables only if a final launch check proves they are required
 
 ## Billing and email
 - [x] 14-day Stripe Checkout trial flow implemented in the application
@@ -76,12 +78,13 @@
 - [x] Verify the catalog checker never emits Stripe secrets, configured Price IDs or raw Stripe exceptions
 - [x] Gate final catalog success on the explicit `2026-09-start-growth-pro` pricing-version marker
 - [x] Confirm the previously connected Stripe test account had no webhook endpoint at the time of the historical audit
-- [ ] Create or independently verify current **Start / Growth / Pro** test-mode Prices at 995 / 1,495 / 2,995 SEK monthly
-- [ ] Point Vercel `STRIPE_PRICE_START`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_PRO` to those independently verified current test Prices
+- [x] Independently verify current **Start / Growth / Pro** test-mode Prices at 995 / 1,495 / 2,995 SEK monthly with current pricing-version metadata
+- [ ] Confirm Vercel `STRIPE_PRICE_START`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_PRO` point to those independently verified test Prices
 - [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same Stripe test account as all three current Price IDs
 - [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment and require `catalog_ok=true`
-- [ ] Set `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` only after the current catalog verification passes
-- [ ] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
+- [ ] Confirm `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` is set only after current catalog verification passes
+- [x] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
+- [ ] Create or intentionally configure a **test-mode Billing Portal configuration** before Customer Portal E2E
 - [ ] Confirm `/health/beta-readiness` reports the expected Stripe sandbox readiness state after reconciliation
 - [ ] Run a fresh end-to-end sandbox Checkout + 14-day trial + signed webhook + Customer Portal test
 - [ ] Make a separate VAT/tax decision before any live-mode paid launch
@@ -97,17 +100,18 @@
 - [x] Save a Google Ads customer ID in Vexmera
 - [x] Create a Google Ads Manager account for Vexmera
 - [x] Keep the historical developer token recorded in Vercel for compatibility; read-only sync no longer sends or requires it
-- [ ] Verify Explorer access or higher for the Google Cloud project that owns the OAuth client (the current production access workflow is Cloud-managed)
-- [ ] Reconcile any historical Google Ads API Basic Access application in the new Cloud project access workflow
+- [x] Verify Explorer access or higher for the Google Cloud project that owns the OAuth client: Explorer Access approved 2026-09-12
+- [x] Reconcile the historical Google Ads API Basic Access application: the legacy pending-review path was retired after the 2026-09-09 migration
 - [x] Send manager-account link request from Vexmera MCC to the target Google Ads account
 - [x] Manager-to-client relationship accepted and active in Google Ads on 2026-09-05
 - [x] Add owner/admin-only Google disconnect backend with local credential deletion and best-effort upstream revocation
 - [x] Add customer-facing owner/admin Google disconnect control with explicit confirmation
 - [x] Add bounded retries and safe response validation to Google token refresh, Analytics reads and Ads reads
 - [x] Keep Google read reliability underneath diagnostics and customer empty-state wrappers
-- [ ] Receive Google approval for Basic Access or another sufficient production access level on the OAuth client's Cloud project (the API Center application process changed 2026-09-09)
-- [ ] Configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` if required for the active manager hierarchy
-- [ ] Complete Google Ads sync against the real linked account and confirm campaign-level rows
+- [x] Confirm a sufficient production access level for the current pilot: Explorer Access permits production reporting and the current read-only sync pattern
+- [x] Confirm current manager/account topology can return production campaign-level rows; configure `GOOGLE_ADS_LOGIN_CUSTOMER_ID` only if a future account hierarchy requires it
+- [x] Complete Google Ads sync against the real linked account and confirm campaign-level rows without provider warnings
+- [ ] Complete OAuth Brand Verification and apply for Basic Access later if quota or Explorer-restricted functionality becomes necessary; this is not a five-company read-only pilot blocker
 
 ## Meta
 - [x] Add Meta OAuth production runbook and read-only safety tests
@@ -116,6 +120,7 @@
 - [x] End-to-end test Meta OAuth with a beta test account
 - [x] Connect Meta ad account and verify account-level read access
 - [x] Confirm read-only Meta sync handles an account with no campaigns correctly
+- [x] Verify the current connected Meta account produces a legitimate zero-row empty-data state instead of a provider/authentication error
 - [x] Add bounded retry and bounded read-only Insights pagination
 - [x] Add owner/admin-only Meta disconnect backend with local credential deletion and best-effort upstream revocation
 - [x] Add customer-facing owner/admin Meta disconnect control with explicit confirmation
@@ -149,7 +154,10 @@
 - [x] Cover analytics-consent loading, denial, withdrawal and no-preconsent-tag guarantees with regression tests
 - [x] Create a legal-review preparation inventory for entity details, processors, retention, rights workflow and beta terms
 - [x] Refresh Privacy Policy and Beta Terms drafts to match current deletion, consent and private-beta controls
-- [ ] Finalize concrete production retention periods and subprocessor disclosures
+- [x] Verify implemented short-lived capability retention: sessions 14 days, password-reset links 60 minutes, workspace invites 7 days, with expired/superseded capability pruning
+- [x] Verify Neon project recovery/PITR history setting is currently 6 hours; do not describe that as a universal processor backup-retention promise without legal/provider review
+- [ ] Finalize retention rules for longer-lived product data, AI history, provider logs, billing records and subprocessors
+- [ ] Finalize one verified public privacy/support contact and align marketing + legal pages
 
 ## Product and launch
 - [x] Improve Google Ads error diagnostics so sync exposes a safe Google API reason instead of only an HTTP status
@@ -168,8 +176,8 @@
 - [x] Add regression tests for marketing demo window, GA4 status and hero clipping guard
 - [x] Keep the expanding automated suite green across deployment, billing, privacy, integrations, marketing UI and execution safety
 - [x] Bound malformed/oversized session-cookie input before session-store lookup
-- [ ] Perform final authenticated browser QA on the deployed Command Center
-- [ ] Reconfirm production runtime/log observability after direct Vercel connector visibility is restored
-- [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details and legal review before external pilot onboarding
-- [ ] Confirm the canonical production domain is attached, HTTPS-valid and matches all OAuth/billing return URLs
+- [x] Reconfirm production runtime/log observability through the connected Vercel project
+- [x] Confirm the canonical production domain responds over HTTPS and the application uses it as the public app origin
+- [ ] Perform final authenticated browser QA on the deployed Command Center, including a real mobile viewport pass
+- [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details, longer-lived retention decisions and legal review before external pilot onboarding
 - [ ] Run five-company pilot
