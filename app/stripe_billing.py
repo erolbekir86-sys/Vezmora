@@ -6,6 +6,7 @@ import secrets
 import string
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 
@@ -65,22 +66,37 @@ def _integration_identifier() -> str:
     return f"vezmora_beta_{suffix}"
 
 
+def _production_https_origin(value: str) -> str | None:
+    """Return a normalized HTTPS origin, rejecting URL components unsafe for billing redirects."""
+    if not value:
+        return None
+    parts = urlsplit(value)
+    if parts.scheme.lower() != "https" or not parts.netloc:
+        return None
+    if parts.username is not None or parts.password is not None:
+        return None
+    if parts.path not in {"", "/"} or parts.query or parts.fragment:
+        return None
+    return f"https://{parts.netloc}"
+
+
 def _billing_return_base_url() -> str:
     """Return the canonical origin used for Stripe Checkout/Portal redirects.
 
     Local development keeps the historical localhost fallback. Vercel must never
-    create Stripe return URLs pointing at localhost or plaintext HTTP when the
-    canonical application URL is missing or unsafe.
+    create Stripe return URLs pointing at localhost, plaintext HTTP, or a configured
+    URL that contains credentials, path, query string, or fragment.
     """
-    configured = (os.getenv("VEZMORA_APP_URL") or "").strip().rstrip("/")
+    configured = (os.getenv("VEZMORA_APP_URL") or "").strip()
     if os.getenv("VERCEL"):
-        if not configured or not configured.lower().startswith("https://"):
+        origin = _production_https_origin(configured)
+        if origin is None:
             raise HTTPException(
                 status_code=503,
-                detail="VEZMORA_APP_URL must be configured as HTTPS before billing redirects can be created",
+                detail="VEZMORA_APP_URL must be configured as a plain HTTPS origin before billing redirects can be created",
             )
-        return configured
-    return configured or "http://localhost:8000"
+        return origin
+    return configured.rstrip("/") or "http://localhost:8000"
 
 
 def _trial_days(settings: dict[str, Any]) -> int:
