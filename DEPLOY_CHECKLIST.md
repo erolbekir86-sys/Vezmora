@@ -36,9 +36,9 @@
 - [x] Re-enter `OPENAI_API_KEY` through the secure OpenAI Platform flow
 - [x] Verify production `/health` endpoint responds
 - [x] Verify production app boots with persistent database connection configured
-- [x] Verify `/health/runtime` sees `DATABASE_URL` and `OPENAI_API_KEY` in the active production deployment
-- [x] Confirm explicit `database_connection_ok` health ping on a verified deployment
-- [x] Confirm explicit `openai_connection_ok` production API connectivity
+- [x] Verify `/health/runtime` sees the intended production runtime/deployment identity without exposing secret inventory
+- [x] Confirm explicit `database_connection_ok` health ping on a verified deployment during the infrastructure setup phase
+- [x] Confirm explicit `openai_connection_ok` production API connectivity during the infrastructure setup phase
 - [x] Diagnose Core/Pulse/Launch production blocker as OpenAI `insufficient_quota` (HTTP 429)
 - [x] Activate sufficient OpenAI API billing/quota for the production project
 - [x] Run a live OpenAI smoke test through Core/Pulse/Launch
@@ -53,11 +53,14 @@
 - [x] Trigger clean production redeploy after adding internal Vercel secrets
 - [x] Retry production deployment after environment propagation
 - [x] Correct production environment whitespace issue and trigger clean redeploy
-- [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production
+- [x] Verify `VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, and `CRON_SECRET` in production without exposing their values
 - [x] Fail closed on insecure `http://` `VEZMORA_APP_URL` values in Vercel production
 - [x] Restore direct Vercel connector visibility for read-only project/log inspection without changing production permissions
-- [x] Re-run current public runtime/readiness evidence and confirm production revision `009a8bb07397589b509afef6599409478f4295bc`
-- [x] Confirm current production runtime inspection has no active runtime-error group for the checked release window
+- [x] Merge PR #228 after Vexmera CI #1418 passed
+- [x] Confirm PR #228 production deployment reached Vercel `READY`
+- [x] Re-run public runtime/readiness evidence and confirm production revision `e2ec57d7061e6639dd76c00458e2cda8436de02d`
+- [x] Verify Vercel edge/static responses now carry `Cross-Origin-Opener-Policy: same-origin-allow-popups`, `X-DNS-Prefetch-Control: off`, and `Origin-Agent-Cluster: ?1`
+- [x] Confirm post-deploy production runtime inspection has no active runtime-error group for the checked window
 - [x] Confirm `/docs`, `/redoc`, and `/openapi.json` return 404 in production
 - [ ] Add any remaining Vercel Sensitive Environment Variables only if a final launch check proves they are required
 
@@ -85,8 +88,8 @@
 - [ ] Confirm `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` is set only after current catalog verification passes
 - [x] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
 - [ ] Create or intentionally configure a **test-mode Billing Portal configuration** before Customer Portal E2E
-- [ ] Confirm `/health/beta-readiness` reports the expected Stripe sandbox readiness state after reconciliation
-- [ ] Run a fresh end-to-end sandbox Checkout + 14-day trial + signed webhook + Customer Portal test
+- [ ] Confirm operator/local Stripe readiness via `scripts/preflight.py` after reconciliation; do not expect the minimal public `/health/beta-readiness` endpoint to expose Stripe configuration
+- [ ] Run a fresh end-to-end sandbox Checkout + remaining private-beta trial + signed webhook + Customer Portal test
 - [ ] Make a separate VAT/tax decision before any live-mode paid launch
 
 ## Google
@@ -178,6 +181,7 @@
 - [x] Bound malformed/oversized session-cookie input before session-store lookup
 - [x] Reconfirm production runtime/log observability through the connected Vercel project
 - [x] Confirm the canonical production domain responds over HTTPS and the application uses it as the public app origin
+- [x] Confirm current release candidate is merged, deployed and serving the intended revision with safe execution/transport signals
 - [ ] Perform final authenticated browser QA on the deployed Command Center, including a real mobile viewport pass
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details, longer-lived retention decisions and legal review before external pilot onboarding
 - [ ] Run five-company pilot
