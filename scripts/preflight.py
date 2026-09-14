@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from typing import Any
+from urllib.parse import urlsplit
 
 from app.pricing import CURRENT_PRICING_VERSION, STRIPE_PRICE_ENV, checkout_pricing_reconciled
 
@@ -70,6 +71,17 @@ def _smtp_starttls_enabled() -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _valid_https_origin(value: str) -> bool:
+    if not value:
+        return False
+    parts = urlsplit(value)
+    if parts.scheme.lower() != "https" or not parts.netloc:
+        return False
+    if parts.username is not None or parts.password is not None:
+        return False
+    return parts.path in {"", "/"} and not parts.query and not parts.fragment
+
+
 def build_report() -> dict[str, Any]:
     core_missing = _missing(CORE_REQUIRED)
     if not database_configured():
@@ -81,14 +93,14 @@ def build_report() -> dict[str, Any]:
     meta_oauth_missing = _missing(META_OAUTH)
     unsafe_flags = [name for name in BETA_LOCKED_FLAGS if enabled(name)]
 
-    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().lower()
+    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip()
     production_like = enabled("VERCEL") or (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
-    insecure_app_url = bool(production_like and app_url and not app_url.startswith("https://"))
+    invalid_production_app_url = bool(production_like and not _valid_https_origin(app_url))
     insecure_cookie_override = bool(production_like and configured("VEZMORA_COOKIE_SECURE") and not enabled("VEZMORA_COOKIE_SECURE"))
     insecure_smtp_transport = bool(production_like and not smtp_missing and not _smtp_starttls_enabled())
 
     beta_execution_locked = not unsafe_flags
-    production_transport_safe = not insecure_app_url and not insecure_cookie_override and not insecure_smtp_transport
+    production_transport_safe = not invalid_production_app_url and not insecure_cookie_override and not insecure_smtp_transport
     core_internal_secrets_configured = configured("VEZMORA_SECRET_KEY") and configured("CRON_SECRET")
     stripe_key_mode = _stripe_key_mode()
     stripe_prices_configured = all(configured(name) for name in STRIPE_PRICE_ENV.values())
@@ -164,7 +176,7 @@ def build_report() -> dict[str, Any]:
         "transport_issues": [
             issue
             for issue, active in (
-                ("VEZMORA_APP_URL must use https in production", insecure_app_url),
+                ("VEZMORA_APP_URL must be a plain HTTPS origin in production", invalid_production_app_url),
                 ("VEZMORA_COOKIE_SECURE must not be disabled in production", insecure_cookie_override),
                 ("SMTP_STARTTLS must not be disabled in production", insecure_smtp_transport),
             )
