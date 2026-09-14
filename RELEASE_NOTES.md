@@ -1,4 +1,4 @@
-# Vexmera 0.6.1 Private Beta — Deployment Release
+# Vexmera 0.6.1 Private Beta - Deployment Release
 
 Built on Vexmera 0.6 with the beta product features intact, plus:
 
@@ -36,10 +36,10 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - process-local IP abuse limiting for public login, registration and password-reset POST endpoints on Vercel, with `Retry-After` and no-store responses; this is defense in depth and does not replace distributed edge controls
 - versioned PBKDF2-HMAC-SHA256 password records for new/rotated credentials using a 600,000-iteration work factor, while historical 310,000-iteration records remain verifiable with timing padding
 - successful login of a legacy 310,000-iteration account opportunistically rehashes it to the current 600,000-iteration format using compare-and-set semantics, without revoking unrelated active sessions or overwriting concurrent credential changes
-- active session capabilities are bounded to the 20 newest sessions per user after expired-session pruning, preventing unbounded session growth while retaining multi-device use
+- active session capabilities bounded to the 20 newest sessions per user after expired-session pruning, retaining multi-device use without unbounded capability growth
 - transactional SMTP transport fails closed on Vercel when STARTTLS is disabled, validates SMTP ports before network I/O and uses a certificate-verifying default TLS context before reset/invite mail or SMTP credentials are sent
 - reset/invite capability links fail closed on Vercel unless `VEZMORA_APP_URL` is explicitly HTTPS, preventing a production fallback to `http://localhost:8000`
-- deployment preflight and live `/health/beta-readiness` now agree that production transport is unsafe when SMTP is configured but STARTTLS is disabled; the public health surface remains aggregate/minimal and does not expose SMTP configuration details
+- deployment preflight and live `/health/beta-readiness` agree that production transport is unsafe when SMTP is configured but STARTTLS is disabled; the public health surface remains aggregate/minimal and does not expose SMTP configuration details
 - diagnostic secret redaction extended to OAuth callback/provider URL capabilities such as authorization `code`, `state`, access/refresh tokens and client secrets while preserving ordinary non-URL error-code context
 - API auth-surface regression coverage so newly introduced `/api/...` routes cannot silently become public unless explicitly allowlisted
 - repository secret-hygiene regression coverage for common provider-key and webhook-secret formats
@@ -60,24 +60,36 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 ## Important private-beta boundaries
 
 - The public marketing page uses illustrative demo metrics and labels them as demo data.
-- Google Ads and Meta Ads are private-beta integrations, not general-availability claims.
-- External marketing execution and Autopilot execution remain disabled by default and require separate server-side enablement.
-- Google connector transport hardening is code/CI verified, but Google Ads Basic Access, direct deployed runtime inspection and live read-only account evidence remain external/manual pilot gates.
-- Meta connector transport hardening is code/CI verified across OAuth exchange, discovery/probe/campaign reads and the canonical Insights path, but direct deployed runtime inspection and live read-only account evidence remain manual pilot gates.
-- Stripe transport, request-body and webhook hardening are code/CI verified, but current sandbox catalog reconciliation and a fresh Checkout/webhook/Portal pass remain manual evidence before billing is treated as pilot-ready.
-- SMTP, canonical-origin and live-readiness hardening are code/CI verified; direct deployment/runtime evidence remains separate from repository CI evidence.
-- Stripe live mode is **not** enabled by these release notes. Test-mode catalog evidence must not be treated as live billing approval.
-- VAT/tax handling, final legal terms, Google Ads Basic Access, production runtime observability and the five-company pilot remain launch work.
-- The connected Vercel integration has not provided direct project/runtime visibility in the latest checks, so GitHub-side Vercel statuses are not treated as full runtime observability.
+- Google Ads and Meta Ads remain private-beta integrations, not general-availability claims.
+- External marketing execution and Autopilot execution remain disabled by default and require separate explicit production review before any future enablement.
+- Google Ads **Explorer Access** was approved for the Cloud project owning the Vexmera OAuth client on 2026-09-12. A real production read-only sync has returned campaign-level rows without provider warnings. Basic Access is a future quota/functionality upgrade, not a current five-company read-only pilot blocker.
+- Meta read-only access has been verified against a connected account, including a legitimate zero-row empty-data result that is kept distinct from provider/authentication failure.
+- Direct Vercel production project/runtime inspection is available again. The latest checked deployment served the intended `main` baseline with safe private-beta execution/transport flags and no active runtime-error group in the inspected release window.
+- Production FastAPI documentation routes are hidden and return 404.
+- Stripe transport, request-body and webhook hardening are code/CI verified, and the current Start / Growth / Pro test catalog plus test webhook endpoint have been independently observed. Fresh Checkout/trial/webhook/Customer Portal E2E is still required before billing is treated as pilot-ready.
+- The connected Stripe sandbox had no Billing Portal configuration at the latest check. Portal cancellation, plan-change and payment-method policy remains an owner/business decision.
+- Stripe live mode is **not** enabled by these release notes. Test-mode evidence must not be treated as live billing approval.
+- VAT/tax handling, final legal terms, authenticated desktop/mobile browser QA and the five-company pilot remain launch work.
+- Published marketing/legal contact details are not yet normalized to one verified support/privacy channel. Do not invent a domain alias or legal entity detail merely to close the checklist.
 
 ## Current release verification posture
 
-The repository distinguishes three different kinds of evidence:
+The repository distinguishes three kinds of evidence:
 
-1. **Code/CI evidence** — automated tests, dependency consistency, syntax checks and static/runtime contract checks in GitHub Actions.
-2. **Deployment evidence** — direct evidence that a specific Vercel Preview/Production deployment is ready, serving the intended revision and inspectable at runtime; a GitHub-side status alone is not treated as full observability.
-3. **Pilot/manual evidence** — authenticated browser QA, live read-only connector checks, legal/privacy review, pricing/catalog reconciliation, prompt-injection boundary checks using non-sensitive test text, fresh Stripe sandbox evidence and the documented five-company pilot checklist.
+1. **Code/CI evidence** - automated tests, dependency consistency, syntax checks and static/runtime contract checks in GitHub Actions.
+2. **Deployment evidence** - direct evidence that a specific Vercel Preview/Production deployment is ready, serving the intended revision and inspectable at runtime.
+3. **Pilot/manual evidence** - authenticated browser QA, per-pilot read-only connector checks, legal/privacy review, pricing/environment reconciliation, fresh Stripe sandbox E2E and the five-company pilot checklist.
 
-A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read in one environment also does not prove that a different account, OAuth grant, manager hierarchy or provider-access level is ready.
+A green CI run alone does not substitute for deployment or pilot/manual evidence. A successful provider read for one account also does not prove a different customer's OAuth grant/account permissions are ready.
 
-Secrets and credentials are never intentionally committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require correct configuration in the active deployment, and provider/account approval remains external evidence.
+Current verified evidence now closes several former manual gates:
+
+- production runtime observability is available;
+- Google Explorer production access is confirmed;
+- real Google Ads and GA read-only data has been observed;
+- Meta legitimate empty-data behavior has been observed;
+- the current Stripe test catalog and webhook endpoint have been observed.
+
+Remaining high-value gates are the current PR merge/deployment confirmation, Stripe test Billing Portal plus full E2E, authenticated desktop/mobile QA, and verified legal entity/contact/retention/subprocessor decisions.
+
+Secrets and credentials are never intentionally committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require correct configuration in the active deployment, and every new pilot customer's provider/account authorization remains separate evidence.
