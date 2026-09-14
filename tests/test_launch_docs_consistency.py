@@ -54,11 +54,11 @@ def test_google_production_access_matches_current_verified_evidence():
     assert "Basic Access approval still requires external verification" not in launch_plan
 
 
-def test_launch_plan_keeps_remaining_manual_gates_explicit():
+def test_launch_plan_marks_release_merge_complete_and_keeps_manual_gates_explicit():
     launch_plan = _read("LAUNCH_GAP_PLAN.md").lower()
 
+    assert "release-candidate merge/deployment gate is complete" in launch_plan
     for required_gate in (
-        "fresh green ci",
         "billing portal configuration",
         "authenticated desktop and mobile browser qa",
         "legal entity",
@@ -70,7 +70,7 @@ def test_launch_plan_keeps_remaining_manual_gates_explicit():
 def test_launch_plan_does_not_reopen_completed_observability_or_google_gates():
     launch_plan = _read("LAUNCH_GAP_PLAN.md").lower()
 
-    assert "direct vercel project/runtime inspection is working again" in launch_plan
+    assert "vercel production deployment reached `ready`" in launch_plan
     assert "explorer access" in launch_plan
     assert "real production google ads read-only sync" in launch_plan
     assert "direct chatgpt to vercel production runtime/log inspection remains unavailable" not in launch_plan
