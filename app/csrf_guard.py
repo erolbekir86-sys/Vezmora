@@ -18,6 +18,7 @@ _PUBLIC_BROWSER_AUTH_PATHS = frozenset(
         "/api/auth/password-reset/confirm",
     }
 )
+_INVALID_CONFIGURED_ORIGIN = ("invalid", "invalid")
 
 
 def _origin_tuple(value: str) -> tuple[str, str] | None:
@@ -27,6 +28,8 @@ def _origin_tuple(value: str) -> tuple[str, str] | None:
         return None
     parts = urlsplit(value)
     if parts.scheme not in {"http", "https"} or not parts.netloc:
+        return None
+    if parts.username is not None or parts.password is not None:
         return None
     if parts.path not in {"", "/"} or parts.query or parts.fragment:
         return None
@@ -43,11 +46,15 @@ def _trusted_origin(request: Request) -> tuple[str, str]:
     Reverse proxies normally protect Host, but CSRF validation should not depend
     on an attacker-controlled request header when the deployment already knows
     its canonical public URL. Local/test deployments without VEZMORA_APP_URL keep
-    the existing request-origin fallback.
+    the existing request-origin fallback. A non-empty but malformed configured
+    origin fails closed instead of silently restoring the Host-header fallback.
     """
 
-    configured = _origin_tuple((os.getenv("VEZMORA_APP_URL") or "").strip())
-    return configured or _request_origin(request)
+    raw_configured = (os.getenv("VEZMORA_APP_URL") or "").strip()
+    if not raw_configured:
+        return _request_origin(request)
+    configured = _origin_tuple(raw_configured)
+    return configured or _INVALID_CONFIGURED_ORIGIN
 
 
 def _is_api_path(path: str) -> bool:
