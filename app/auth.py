@@ -95,7 +95,14 @@ def _secure_cookie() -> bool:
         return True
     configured = os.getenv("VEZMORA_COOKIE_SECURE")
     if configured is not None:
-        return configured.lower() in {"1", "true", "yes", "on"}
+        normalized = configured.strip().lower()
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        # A malformed security override must not silently downgrade the cookie.
+        # Local HTTP development can still opt out explicitly with false/0/no/off.
+        return True
     return (os.getenv("VEZMORA_APP_URL") or "").lower().startswith("https://")
 
 
