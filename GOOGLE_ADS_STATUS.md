@@ -1,15 +1,24 @@
 # Vexmera Google Ads integration status
 
-_Last reviewed: 2026-09-12_
+_Last reviewed: 2026-09-14_
+
+## Verified production status
+
+- Google Ads API access is attached to the Google Cloud project that owns the deployed OAuth client. Developer tokens were retired as an access-control requirement on 2026-09-09 and are not sent by the current read-only integration.
+- Google confirmed **Explorer Access** for the Vexmera Cloud project on 2026-09-12. Explorer Access supports production-account requests with a 2,880-operation rolling 24-hour limit, which is sufficient for the current five-company read-only pilot unless usage grows materially.
+- A production read-only Google Ads sync has succeeded against the linked real account. The latest verified sync returned campaign-level rows without provider warnings or API errors.
+- Google Analytics sync also succeeds with real rows, and the application keeps GA sessions semantically separate from paid-ad clicks at the read boundary.
+- The manager-to-client relationship is recorded as accepted and active. Successful production campaign reads provide additional evidence that the active OAuth/account topology can reach the intended account.
+- External ad execution remains disabled. This status does not authorize campaign, budget, bid or targeting changes.
 
 ## Verified code findings and corrections
 
-- Production at the start of this audit used `main` revision `c63919d`.
-- Read-only Ads sync incorrectly required a developer token. The revised code uses OAuth and Cloud-project API access, without sending the retired header.
-- Google reconnection erased saved Analytics property and Ads customer IDs. The callback now preserves those settings while replacing credentials and clearing prior sync status.
-- Invalid OAuth client and expired/revoked grants now produce safe actionable errors. A rejected refresh no longer silently reuses a stale access token.
-- Ads diagnostics now retain the original API response, including array-shaped searchStream errors and request IDs. They identify Cloud-project production access failures without repeating the failed request.
-- Configuration readiness no longer treats a developer token as a prerequisite. Live account access remains a separate verification gate.
+- Read-only Ads sync previously required a developer token. The revised code uses OAuth and Cloud-project API access, without sending the retired header.
+- Google reconnection preserves saved Analytics property and Ads customer settings while replacing credentials and clearing prior sync status.
+- Invalid OAuth client and expired/revoked grants produce safe actionable errors. A rejected refresh does not silently reuse a stale access token.
+- Ads diagnostics retain the original safe API response shape needed to distinguish access failures from legitimate empty data without repeating credentials or request secrets.
+- Configuration readiness no longer treats a developer token as a prerequisite.
+- Connector empty-state handling distinguishes verified zero-row results from provider/authentication failures.
 
 ## Required production configuration
 
@@ -17,25 +26,31 @@ _Last reviewed: 2026-09-12_
 | --- | --- |
 | `VEZMORA_APP_URL` | `https://vexmera.com` |
 | `GOOGLE_REDIRECT_URI` | `https://vexmera.com/api/connectors/google/callback` |
-| Google OAuth authorized redirect URI | Exact match to `GOOGLE_REDIRECT_URI`, including scheme, host, path and trailing slash |
-| `GOOGLE_CLIENT_ID` | Same Web application OAuth client selected in Google Cloud |
+| Google OAuth authorized redirect URI | Exact match to `GOOGLE_REDIRECT_URI`, including scheme, host and path |
+| `GOOGLE_CLIENT_ID` | Same Web application OAuth client whose Cloud project holds the approved Ads API access |
 | `GOOGLE_CLIENT_SECRET` | Secret belonging to that client, stored privately in Vercel Production |
-| `GOOGLE_ADS_API_VERSION` | `v25` |
-| Vexmera Ads customer ID | Historical target `6383436270`; confirm intended account |
-| `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | `9445022492` if using the historical MCC access path; otherwise verify topology before setting |
+| `GOOGLE_ADS_API_VERSION` | Supported production version used by the deployment |
+| Vexmera Ads customer ID | Configured inside the authorized workspace; do not copy the full identifier into public release evidence |
+| `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | Configure only when required by the active manager hierarchy; do not publish the full identifier in release evidence |
 
-## External verification still required
+## Pilot interpretation
 
-1. Identify the Cloud project owning the deployed OAuth client; confirm Ads API is enabled and the project has production access.
-2. Verify the OAuth audience/publishing state, applicable test users, requested scopes and exact callback registration.
-3. Compare Vercel Production client ID, secret and callback with that Cloud client. Redeploy after any environment change.
-4. Confirm the authorized Google user can access the intended Ads account and, where required, the active MCC/client link. The deployment checklist records the historical link as accepted on 2026-09-05; this audit has not independently rechecked it.
-5. Reconnect Google in Vexmera, save/confirm source IDs, and run a read-only sync. Confirm actual campaign rows or a successful empty response with no API error. Confirm Analytics continues to work.
+Explorer Access is a valid production access level. For Vexmera's current private-beta behavior, which uses `GoogleAdsService.SearchStream` and other read-oriented reporting calls, **Basic Access is not a blocker for the five-company pilot** as long as the Explorer quota remains sufficient.
 
-The Cloud Console was unavailable in the audit browser. Vercel environment settings and Vexmera's authenticated application require sign-in. No claim of current Cloud configuration, access approval, live environment-value parity or end-to-end production sync is made from code tests alone.
+Basic Access should be treated as a scaling/feature upgrade rather than as proof that production reporting works. Apply for it when one of these becomes true:
 
-## Google access migration
+- production usage approaches the Explorer operation limit;
+- Vexmera needs functionality restricted at Explorer level;
+- commercial rollout requires additional quota headroom.
 
-Google moved Ads API access to Cloud projects on 2026-09-09. Pending old Basic Access applications were closed and must be reconsidered through Cloud Console; do not rely on the historical 2026-09-03 API Center application as proof of current status. See [Google's migration guide](https://developers.google.com/google-ads/api/docs/api-policy/developer-token) and [access levels](https://developers.google.com/google-ads/api/docs/api-policy/access-levels).
+Google's current flow requires OAuth Brand Verification before upgrading from Explorer to Basic. The legacy Basic application submitted before the 2026-09-09 migration is not an active review path and must not be treated as pending approval.
 
-The beta integration remains read-only; this work does not enable changes to campaigns, budgets, bids or targeting.
+## Remaining verification before each pilot company
+
+1. Confirm the pilot customer's Google user is authorized for the intended Ads account.
+2. Confirm the correct customer/account selection inside Vexmera without placing full identifiers in pilot evidence.
+3. Run a fresh read-only sync and record whether it returns real rows or a legitimate verified empty state.
+4. Treat authentication, permission and provider failures as errors, never as healthy zero-data states.
+5. Keep execution locks enabled throughout the private beta.
+
+See Google's current migration and access-level documentation for the external platform rules. The repo should track observed product behavior and non-secret evidence, not duplicate account credentials or raw account identifiers.
