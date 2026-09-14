@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import urlsplit
 
 from .main import app as _app
 from .pricing import CURRENT_PRICING_VERSION, STRIPE_PRICE_ENV, checkout_pricing_reconciled
@@ -29,10 +30,22 @@ def _smtp_starttls_enabled() -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _valid_https_origin(value: str) -> bool:
+    if not value:
+        return False
+    parts = urlsplit(value)
+    if parts.scheme.lower() != "https" or not parts.netloc:
+        return False
+    if parts.username is not None or parts.password is not None:
+        return False
+    return parts.path in {"", "/"} and not parts.query and not parts.fragment
+
+
 def _transport_snapshot() -> dict[str, object]:
-    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip().lower()
+    app_url = (os.getenv("VEZMORA_APP_URL") or "").strip()
     production_like = _production_like()
-    app_url_https = bool(app_url.startswith("https://")) if app_url else False
+    app_url_https = bool(app_url.lower().startswith("https://")) if app_url else False
+    app_url_valid_origin = _valid_https_origin(app_url)
     cookie_secure_override = None
     if _configured("VEZMORA_COOKIE_SECURE"):
         cookie_secure_override = _enabled("VEZMORA_COOKIE_SECURE")
@@ -43,7 +56,7 @@ def _transport_snapshot() -> dict[str, object]:
     safe = True
     if production_like:
         safe = (
-            app_url_https
+            app_url_valid_origin
             and cookie_secure_override is not False
             and not smtp_starttls_disabled
         )
@@ -52,6 +65,7 @@ def _transport_snapshot() -> dict[str, object]:
         "production_like": production_like,
         "app_url_configured": bool(app_url),
         "app_url_https": app_url_https,
+        "app_url_valid_origin": app_url_valid_origin,
         "secure_cookie_explicitly_disabled": cookie_secure_override is False,
         "safe": safe,
     }
@@ -228,6 +242,7 @@ def beta_safety_snapshot() -> dict[str, object]:
             "Core internal-secret diagnostics report only whether OAuth-token encryption and maintenance-endpoint secrets are configured; values are never returned.",
             "Database readiness reports only backend intent and configured-variable booleans; connection strings and token values are never returned.",
             "Legacy Turso readiness requires both TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, matching operator preflight semantics.",
+            "Production transport readiness requires VEZMORA_APP_URL to be a plain HTTPS origin with no credentials, path, query or fragment.",
             "Stripe readiness requires test mode, all current Start/Growth/Pro price variables, the webhook secret, the exact pricing-version marker, and the explicitly reviewed Private Beta Billing Portal configuration id; no Stripe identifiers are returned.",
             "The pricing-version marker must only be set after the current Stripe sandbox catalog has been verified against the public prices.",
             "Transactional email readiness requires minimum SMTP configuration and, in production, STARTTLS must not be disabled.",
