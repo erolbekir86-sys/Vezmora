@@ -35,11 +35,6 @@ def _query_keys(request: Request) -> frozenset[str]:
     return frozenset(key.casefold() for key in request.query_params.keys())
 
 
-def _has_sensitive_oauth_callback(request: Request) -> bool:
-    query_keys = _query_keys(request)
-    return request.url.path in _OAUTH_CALLBACK_PATHS and bool({"code", "state"}.intersection(query_keys))
-
-
 def _is_private_or_capability_surface(request: Request) -> bool:
     path = request.url.path
     return (
@@ -49,7 +44,7 @@ def _is_private_or_capability_surface(request: Request) -> bool:
         or path.startswith("/health/")
         or path in _PRODUCT_PATHS
         or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(_query_keys(request)))
-        or _has_sensitive_oauth_callback(request)
+        or path in _OAUTH_CALLBACK_PATHS
     )
 
 
@@ -72,7 +67,7 @@ def _protect_capability_referrer(request: Request, response) -> None:
     if (
         request.url.path in _PRODUCT_PATHS
         or _SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys)
-        or _has_sensitive_oauth_callback(request)
+        or request.url.path in _OAUTH_CALLBACK_PATHS
     ):
         response.headers["Referrer-Policy"] = "no-referrer"
 
