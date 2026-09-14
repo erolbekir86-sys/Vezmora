@@ -122,7 +122,7 @@ These percentages are planning estimates, not release certification.
 - Final authenticated browser QA: 65%
 - Overall private-beta readiness: approximately 94%
 
-The remaining work is concentrated in the Stripe sandbox configuration/E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
+The release-candidate merge/deployment gate is complete. The remaining work is concentrated in the Stripe sandbox configuration/E2E, authenticated desktop/mobile QA and final owner/legal decisions rather than missing core product code.
 
 ## Immediate next action
 
