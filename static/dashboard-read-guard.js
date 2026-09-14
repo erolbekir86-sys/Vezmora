@@ -14,12 +14,20 @@
     'metricAnomalies',
   ];
 
-  function isDashboardRead(path, options = {}) {
+  function readPath(path, options = {}) {
     const method = String(options.method || 'GET').toUpperCase();
-    if (method !== 'GET') return false;
-    const value = String(path || '');
-    const pathname = value.split('?')[0].replace(/\/+$/, '');
+    if (method !== 'GET') return '';
+    return String(path || '').split('?')[0].replace(/\/+$/, '');
+  }
+
+  function isDashboardRead(path, options = {}) {
+    const pathname = readPath(path, options);
     return pathname.endsWith('/api/dashboard') || pathname.endsWith('/api/kpis');
+  }
+
+  function isNotificationRead(path, options = {}) {
+    const pathname = readPath(path, options);
+    return pathname.endsWith('/api/notifications');
   }
 
   function showDashboardReadFailure() {
@@ -39,11 +47,22 @@
     }
   }
 
+  function showNotificationReadFailure() {
+    const count = document.getElementById('notificationCount');
+    if (count) count.textContent = '—';
+
+    const list = document.getElementById('notificationList');
+    if (list) {
+      list.innerHTML = '<p class="error-text">Aktuella signaler kunde inte verifieras. Försök uppdatera igen.</p>';
+    }
+  }
+
   api = async function guardedApi(path, options = {}) {
     try {
       return await originalApi(path, options);
     } catch (err) {
       if (isDashboardRead(path, options)) showDashboardReadFailure();
+      if (isNotificationRead(path, options)) showNotificationReadFailure();
       throw err;
     }
   };
