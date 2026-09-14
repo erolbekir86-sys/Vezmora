@@ -1,6 +1,6 @@
 # Vexmera production environment runbook
 
-This file documents environment variable names only. Never commit real secrets or credentials to GitHub.
+This file documents production configuration names and non-secret validation rules only. Never commit real secrets, OAuth credentials, Stripe identifiers, full advertising-account identifiers or database connection strings to GitHub.
 
 ## Core production runtime
 
@@ -14,8 +14,8 @@ Required:
 
 Optional/defaulted by the Vercel bootstrap:
 
-- `OPENAI_MODEL` — defaults to the production model configured in `main.py` when empty.
-- `VEZMORA_COOKIE_SECURE` — normally omit on Vercel; HTTPS deployments default to secure cookies.
+- `OPENAI_MODEL` — defaults to the production model configured in code when empty.
+- `VEZMORA_COOKIE_SECURE` — normally omit on Vercel; HTTPS deployments force secure cookies.
 - `VEZMORA_SERVERLESS` — forced on by the Vercel bootstrap.
 
 ## Stripe billing
@@ -35,9 +35,11 @@ The three configured Price IDs must belong to the same Stripe **test-mode** acco
 - Growth: `149500` öre = 1,495 SEK/month
 - Pro: `299500` öre = 2,995 SEK/month
 
-`VEZMORA_STRIPE_PRICING_VERSION` must remain blank until the current sandbox catalog has been independently verified. After verification, the only accepted marker for this pricing model is:
+The accepted pricing-version marker is:
 
 - `2026-09-start-growth-pro`
+
+Do not set or treat that marker as approval until the deployed sandbox catalog has been verified.
 
 Optional:
 
@@ -63,20 +65,19 @@ Before opening private-beta Checkout, run in the configured deployment environme
 python scripts/verify_stripe_catalog.py
 ```
 
-The canonical catalog verifier is read-only. It retrieves only the three configured Price objects and verifies:
+The read-only verifier requires:
 
-- configured Price ID matches the returned Price;
+- configured Price identity matches the retrieved Price;
 - `active=true`;
 - `livemode=false`;
-- currency is `sek`;
-- Price type is recurring;
-- interval is one month;
-- amount exactly matches 995 / 1,495 / 2,995 SEK;
-- the explicit current pricing-version marker matches.
+- currency `sek`;
+- recurring monthly type;
+- exact amount 995 / 1,495 / 2,995 SEK;
+- explicit current pricing-version metadata/marker alignment.
 
-The verifier never prints the Stripe secret, configured Price IDs, Product IDs, raw Stripe payloads or raw Stripe exceptions. A non-zero exit status means Checkout must remain blocked until the sandbox catalog and marker are reconciled.
+The verifier must never print Stripe secrets, configured Price IDs, Product IDs, raw Stripe payloads or raw Stripe exceptions. A non-zero exit status means Checkout stays blocked.
 
-Live-mode paid billing is a separate future launch decision. The private-beta sandbox verifier intentionally rejects live-mode Price objects.
+A **test-mode Billing Portal configuration** is a separate E2E requirement. Its customer-facing cancellation, plan-change and payment-method policy is an owner/business decision and must not be invented by automation. Live-mode paid billing, VAT/tax, bank details and KYC are separate future launch decisions.
 
 ## Transactional email
 
@@ -92,7 +93,7 @@ Usually required by the provider:
 - `SMTP_PASSWORD`
 - `SMTP_STARTTLS` — defaults to `true`.
 
-For the supported Vercel private-beta runtime, `SMTP_STARTTLS` must remain enabled. The application fails closed before connecting if it is explicitly disabled, and `scripts/preflight.py` marks production transport unsafe. This prevents password-reset and workspace-invite capability links, as well as SMTP credentials, from being sent over an accidentally plaintext SMTP connection.
+For Vercel private beta, `SMTP_STARTTLS` must remain enabled. The application fails closed before connecting if it is explicitly disabled, and operator preflight marks production transport unsafe.
 
 ## Google Analytics + Google Ads
 
@@ -102,28 +103,34 @@ OAuth connection requires:
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
 
-Google Ads data additionally requires a customer ID saved in the workspace and API access on the Google Cloud project that owns `GOOGLE_CLIENT_ID`. Since 2026-09-09, the read-only integration no longer requires or sends `GOOGLE_ADS_DEVELOPER_TOKEN`.
+Google Ads reporting additionally requires a customer ID stored in the workspace and Ads API access on the Google Cloud project owning `GOOGLE_CLIENT_ID`. Since 2026-09-09, the read-only integration does not require or send `GOOGLE_ADS_DEVELOPER_TOKEN`.
 
 Optional:
 
-- `GOOGLE_ADS_LOGIN_CUSTOMER_ID`
-- `GOOGLE_ADS_API_VERSION`
+- `GOOGLE_ADS_LOGIN_CUSTOMER_ID` — set only if the active manager hierarchy requires it.
+- `GOOGLE_ADS_API_VERSION` — use a supported production version.
 
-The redirect URI must exactly match the callback URL registered in Google Cloud.
-
-Verify production access in Google Cloud > Google Ads API for the project owning the OAuth client. A configured OAuth client alone does not prove approval or account access. Verify manager linking separately when the signed-in user accesses the customer through an MCC.
-
-Production values must agree exactly:
+The production callback relationship must be exact:
 
 ```text
 VEZMORA_APP_URL=https://vexmera.com
 GOOGLE_REDIRECT_URI=https://vexmera.com/api/connectors/google/callback
-GOOGLE_ADS_API_VERSION=v25
 ```
 
-Register that exact redirect URI on the same Web application OAuth client as the Vercel `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Set `GOOGLE_ADS_LOGIN_CUSTOMER_ID=9445022492` only when that manager is the intended access path; save customer `6383436270` in Vexmera, not the manager ID. Apply environment changes to Production and redeploy. Never paste client secrets or tokens into logs or issue comments.
+The registered Google OAuth Web application must use that callback and correspond to the same Cloud project whose Google Ads API access was approved. Keep the client secret private in Vercel.
 
-The customer-facing Google Analytics tag is separate from the connector API. In the authenticated web application, analytics storage defaults to denied and the Google Analytics script is loaded only after explicit opt-in consent. Google Signals and ad-personalization signals remain disabled.
+### Current verified access posture
+
+- Google approved **Explorer Access** for the Vexmera Cloud project on 2026-09-12.
+- Explorer is a production access level and currently supports the read-only reporting pattern used by Vexmera.
+- A real production Google Ads read-only sync has successfully returned campaign-level rows without provider warnings.
+- The manager/client relationship is recorded as accepted and active.
+
+Basic Access is therefore **not a current five-company read-only pilot blocker**. It becomes a future upgrade when Explorer quota or feature restrictions are insufficient. Google's current upgrade flow requires OAuth Brand Verification followed by the Cloud Console access-upgrade flow. The legacy pre-migration Basic application must not be treated as pending review.
+
+Do not place full customer IDs, manager IDs, OAuth client IDs, access tokens or request credentials in release evidence, logs, PRs or public documentation.
+
+The customer-facing Google Analytics tag is separate from connector APIs. In the authenticated application, analytics storage defaults to denied, the tag loads only after explicit opt-in, and Google Signals/ad-personalization remain disabled.
 
 ## Meta Ads
 
@@ -136,9 +143,9 @@ OAuth connection requires:
 Optional:
 
 - `META_GRAPH_VERSION`
-- `VEZMORA_ENABLE_META_EXECUTION_SCOPE` — must remain disabled for the read-only private beta.
+- `VEZMORA_ENABLE_META_EXECUTION_SCOPE` — must remain disabled for read-only private beta.
 
-The redirect URI must exactly match the valid OAuth redirect URI registered in the Meta app.
+The redirect URI must exactly match the valid OAuth redirect URI registered in the Meta app. Provider/authentication failure must not be converted into healthy zero data.
 
 ## External execution safety
 
@@ -150,76 +157,76 @@ These flags must remain disabled:
 - `VEZMORA_AUTOPILOT_EXECUTION_ENABLED=false`
 - `VEZMORA_ENABLE_META_EXECUTION_SCOPE=false`
 
-Vexmera may prepare recommendations and Queue items for human review while these locks remain off. Direct execution tests verify that the external Google/Meta adapter is not reached when the master execution flag is disabled, and Autopilot remains disabled unless both execution gates are deliberately enabled.
-
-Do not enable any of these flags merely because OAuth is working. External execution requires a separate production review of permissions, approval gates, account-level testing and rollback behavior.
+Vexmera may prepare recommendations and Queue items for human review while these locks remain off. Do not enable any execution flag merely because OAuth/reporting works.
 
 ## Safe deployment preflight
 
-Run the deployment preflight in the same environment that will serve Vexmera:
+Run in the same environment serving Vexmera:
 
 ```bash
 python scripts/preflight.py
 ```
 
-For machine-readable output that is safe to archive in CI logs:
+Machine-readable form:
 
 ```bash
 python scripts/preflight.py --json
 ```
 
-The preflight reports only configuration names, booleans and missing-variable names. It never prints environment values. It checks:
+The preflight reports configuration names, booleans and missing-variable names rather than secret values. During private beta it must fail closed when a core requirement is missing, an execution flag is unexpectedly enabled or production transport is unsafe.
 
-- core application secrets and persistent database configuration
-- Stripe billing variable presence
-- transactional email minimum configuration and production STARTTLS safety
-- Google OAuth and Google Ads developer-token presence
-- Meta OAuth configuration
-- serverless mode
-- private-beta execution locks
+For the Stripe catalog use:
 
-During the private beta the command intentionally exits non-zero if a core requirement is missing, if a private-beta execution flag is accidentally enabled, or if a production transport guard is unsafe.
+```bash
+python scripts/verify_stripe_catalog.py
+```
 
 ## Safe runtime diagnostics
 
-After any environment change, redeploy Vercel and inspect:
+After any deployment change inspect:
 
 - `/health/runtime`
 - `/health/beta-readiness`
 
-In production, `/health/runtime` is intentionally minimal. It exposes only liveness/deployment identity fields needed to prove which build is serving traffic, such as service/version, platform/environment and deployment revision. It must not expose database, OpenAI, Stripe, SMTP, OAuth, token or secret-configuration booleans.
+Production `/health/runtime` is intentionally minimal and should expose only liveness/deployment identity fields needed to prove which build is serving traffic. It must not expose database, OpenAI, Stripe, SMTP, OAuth or secret-configuration booleans.
 
-In production, `/health/beta-readiness` exposes only the small private-beta safety surface required by public preflight, including whether external execution, Autopilot execution and Meta execution scope are disabled as intended. Fuller configuration diagnostics remain an operator/local concern rather than a public HTTP contract.
+Production `/health/beta-readiness` exposes only the small private-beta safety surface needed to verify that external execution is still locked and transport is safe.
 
-Use `python scripts/preflight.py` in the configured deployment environment for database, Stripe, email, Google and Meta configuration checks. Use `python scripts/verify_stripe_catalog.py` for the current Stripe sandbox catalog. Neither public health endpoint should be treated as proof of third-party approval, account access, webhook delivery, billing correctness or end-to-end behavior.
+Latest direct runtime inspection verified production observability and the intended production revision for the current baseline. Re-run these checks after the next merged release.
 
 Important limitations:
 
-- liveness and safety booleans do not prove third-party approval, account access, webhook delivery or end-to-end behavior;
-- Google Ads Basic Access and manager-account linking require separate verification;
-- use `scripts/verify_stripe_catalog.py` for the Stripe sandbox catalog and run an actual test-mode Checkout/webhook/Portal flow before paid launch;
-- use controlled real-account read-only syncs to prove Google/Meta integration behavior after external access is available.
+- health/safety booleans do not prove provider authorization, billing E2E or authenticated browser behavior;
+- Google Explorer Access and real read-only sync are already verified for the current pilot baseline, but each pilot customer's authorization still needs a fresh read-only check;
+- use `scripts/verify_stripe_catalog.py` plus an actual test-mode Checkout/webhook/Customer Portal flow before billing-enabled pilot onboarding;
+- authenticated desktop/mobile QA remains a separate launch gate.
 
 ## Privacy controls in the private beta
 
-The authenticated application separates several distinct privacy operations:
+The authenticated application separates these operations:
 
-1. **Disconnect Google/Meta** — removes locally stored connector credentials, clears connector/account identifiers, stops future sync access and attempts provider-side revocation where supported. Previously synchronized reporting history remains.
-2. **Delete synchronized marketing history** — a separate owner/admin-only destructive action with typed confirmation. It removes synchronized campaign metrics, Google/Meta/Analytics KPI rows and related anomaly records while preserving manually entered KPI rows and connector credentials.
-3. **Delete Vexmera account** — a guarded full account-deletion flow that first previews blockers, requires current-password re-authentication and the exact confirmation phrase `DELETE MY ACCOUNT`, blocks deletion while an owned workspace has other members or an active Stripe subscription, best-effort revokes Google/Meta tokens for solo-owned workspaces, deletes the local account and solo-owned workspace data, and removes memberships from workspaces owned by other users.
-4. **Analytics consent** — optional Google Analytics storage defaults to denied. The tag is loaded only after opt-in, settings can be reopened later, and first-party `_ga` cookies are best-effort cleared when consent is denied or withdrawn.
+1. **Disconnect Google/Meta** — removes locally stored connector credentials, clears connector/account identifiers, stops future sync and attempts provider-side revocation where supported. Previously synchronized reporting history remains.
+2. **Delete synchronized marketing history** — owner/admin destructive action with explicit confirmation. It removes synchronized campaign metrics, provider KPI rows and related anomaly data while preserving manually entered KPI rows and connector credentials.
+3. **Delete Vexmera account** — guarded full-account flow with blocker preview, current-password re-authentication and exact confirmation. It does not promise deletion of processor-held billing/compliance records that may be legally required.
+4. **Analytics consent** — optional analytics storage defaults to denied; settings can be reopened and first-party analytics cookies are best-effort cleared when consent is withdrawn.
 
-Account deletion does not promise deletion of third-party billing/compliance records that processors may need to retain for accounting, disputes, fraud prevention, security or legal obligations. Final retention periods, processor disclosures and formal public privacy wording still require legal review before external pilot onboarding.
+Technically verified short-lived capability retention:
+
+- authenticated sessions: 14 days;
+- password reset links: 60 minutes;
+- workspace invites: 7 days;
+- expired/superseded capability rows are pruned by the application retention guards.
+
+The current Neon project history-retention setting is 6 hours. Treat that as observed infrastructure evidence, not as a universal public backup-retention promise. Longer-lived product data, provider logs, AI history, billing/compliance records and processor disclosures still require owner/legal review.
 
 ## Current recommended order
 
-1. Core internal secrets (`VEZMORA_APP_URL`, `VEZMORA_SECRET_KEY`, `CRON_SECRET`).
-2. Persistent database and OpenAI connectivity.
-3. Transactional email with STARTTLS enforced.
-4. Google/Meta read-only OAuth.
-5. Run `scripts/preflight.py` and confirm private-beta execution locks and production transport are SAFE.
-6. Reconcile and verify the current Start/Growth/Pro Stripe test catalog with `scripts/verify_stripe_catalog.py`, then run a full test-mode Checkout/webhook/Portal flow.
-7. Complete authenticated browser QA including connector disconnect, synchronized-history deletion, account deletion and analytics-consent controls.
-8. Finalize legal entity details, privacy/terms, retention/subprocessor disclosures, VAT/tax treatment and canonical domain.
-9. Stripe live billing only after the preceding launch blockers are resolved.
-10. External ad-account execution only in a later, explicitly reviewed production phase.
+1. Keep core secrets, database, OpenAI and transactional email healthy without exposing values.
+2. Keep Google/Meta read-only OAuth and external-execution locks unchanged.
+3. Get the current PR through fresh green CI, merge and confirm the deployed revision.
+4. Reconcile deployed Stripe sandbox variables, configure the test Billing Portal after owner policy selection, and run full Checkout/trial/webhook/Portal E2E.
+5. Complete authenticated desktop and mobile browser QA.
+6. Finalize legal entity/contact details, longer-lived retention/subprocessor disclosures and Privacy/Terms review.
+7. Decide VAT/tax and live billing separately.
+8. Consider Google Basic Access only when Explorer quota/functionality is insufficient.
+9. External ad-account execution remains a later explicitly reviewed production phase.
