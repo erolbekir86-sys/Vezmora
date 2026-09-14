@@ -26,6 +26,7 @@ def test_vexmera_responses_include_low_risk_browser_hardening(tmp_path, monkeypa
     assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
     assert response.headers["x-permitted-cross-domain-policies"] == "none"
+    assert response.headers["cross-origin-opener-policy"] == "same-origin-allow-popups"
     assert "strict-transport-security" not in response.headers
 
 
@@ -92,6 +93,23 @@ def test_security_middleware_preserves_explicit_route_header(monkeypatch) -> Non
     assert response.headers["x-frame-options"] == "SAMEORIGIN"
     assert response.headers["content-security-policy"] == "default-src 'none'"
     assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_cross_origin_opener_policy_preserves_explicit_route_header(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/")
+    def root(response: Response):
+        response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        response = client.get("/")
+
+    assert response.headers["cross-origin-opener-policy"] == "unsafe-none"
 
 
 def test_api_responses_are_no_store_without_changing_public_cache_policy(monkeypatch) -> None:

@@ -82,6 +82,9 @@ def install_security_headers(app: FastAPI) -> None:
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         response.headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+        # Isolate Vexmera's browsing context from unrelated cross-origin windows
+        # while preserving OAuth/payment popup compatibility.
+        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
         if _https_runtime():
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
