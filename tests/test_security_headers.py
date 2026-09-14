@@ -45,7 +45,6 @@ def test_security_header_installation_is_idempotent(monkeypatch) -> None:
     assert app.state.vexmera_security_headers_installed is True
 
 
-
 def test_hsts_is_added_for_vercel_https_runtime(monkeypatch) -> None:
     monkeypatch.setenv("VERCEL", "1")
     app = FastAPI()
@@ -297,6 +296,34 @@ def test_capability_urls_are_no_store_without_disabling_normal_public_caching(mo
 
     assert "cache-control" not in public_response.headers
     assert "cdn-cache-control" not in public_response.headers
+
+
+def test_oauth_callback_capabilities_are_no_store_no_referrer_and_noindex(monkeypatch) -> None:
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setenv("VEZMORA_APP_URL", "http://localhost:8000")
+    app = FastAPI()
+
+    @app.get("/api/connectors/google/callback")
+    def google_callback():
+        return {"ok": True}
+
+    @app.get("/api/connectors/meta/callback")
+    def meta_callback():
+        return {"ok": True}
+
+    install_security_headers(app)
+    with TestClient(app) as client:
+        responses = [
+            client.get("/api/connectors/google/callback?code=oauth-code&state=one-time-state"),
+            client.get("/api/connectors/meta/callback?code=oauth-code&state=one-time-state"),
+        ]
+
+    for response in responses:
+        assert response.headers["cache-control"] == "no-store, no-cache, must-revalidate, max-age=0"
+        assert response.headers["cdn-cache-control"] == "no-store"
+        assert response.headers["vercel-cdn-cache-control"] == "no-store"
+        assert response.headers["referrer-policy"] == "no-referrer"
+        assert response.headers["x-robots-tag"] == "noindex, nofollow, noarchive"
 
 
 def test_vexmera_auth_errors_are_no_store(tmp_path, monkeypatch) -> None:
