@@ -5,6 +5,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 from typing import Any
+from urllib.parse import urlsplit
 
 from .store import claim_email, finish_email
 
@@ -13,19 +14,34 @@ def smtp_configured() -> bool:
     return bool(os.getenv("SMTP_HOST") and os.getenv("SMTP_FROM"))
 
 
+def _production_https_origin(value: str) -> str | None:
+    """Return a normalized HTTPS origin suitable for capability links."""
+    if not value:
+        return None
+    parts = urlsplit(value)
+    if parts.scheme.lower() != "https" or not parts.netloc:
+        return None
+    if parts.username is not None or parts.password is not None:
+        return None
+    if parts.path not in {"", "/"} or parts.query or parts.fragment:
+        return None
+    return f"https://{parts.netloc}"
+
+
 def app_url() -> str:
     """Return the canonical application origin used in capability emails.
 
     Local development keeps the historical localhost fallback. Vercel must never
-    manufacture password-reset or workspace-invite links from that fallback: the
-    canonical application URL is a deployment requirement and must be HTTPS.
+    manufacture password-reset or workspace-invite links from that fallback or
+    from a configured URL containing credentials, path, query string, or fragment.
     """
-    configured = (os.getenv("VEZMORA_APP_URL") or "").strip().rstrip("/")
+    configured = (os.getenv("VEZMORA_APP_URL") or "").strip()
     if os.getenv("VERCEL"):
-        if not configured or not configured.lower().startswith("https://"):
-            raise RuntimeError("VEZMORA_APP_URL must be configured as HTTPS on Vercel")
-        return configured
-    return configured or "http://localhost:8000"
+        origin = _production_https_origin(configured)
+        if origin is None:
+            raise RuntimeError("VEZMORA_APP_URL must be configured as a plain HTTPS origin on Vercel")
+        return origin
+    return configured.rstrip("/") or "http://localhost:8000"
 
 
 def _smtp_starttls_enabled() -> bool:
