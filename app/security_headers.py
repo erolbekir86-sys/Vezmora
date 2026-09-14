@@ -35,6 +35,11 @@ def _query_keys(request: Request) -> frozenset[str]:
     return frozenset(key.casefold() for key in request.query_params.keys())
 
 
+def _has_sensitive_oauth_callback(request: Request) -> bool:
+    query_keys = _query_keys(request)
+    return request.url.path in _OAUTH_CALLBACK_PATHS and bool({"code", "state"}.intersection(query_keys))
+
+
 def _is_private_or_capability_surface(request: Request) -> bool:
     path = request.url.path
     return (
@@ -44,6 +49,7 @@ def _is_private_or_capability_surface(request: Request) -> bool:
         or path.startswith("/health/")
         or path in _PRODUCT_PATHS
         or bool(_SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(_query_keys(request)))
+        or _has_sensitive_oauth_callback(request)
     )
 
 
@@ -63,13 +69,10 @@ def _protect_private_indexing(request: Request, response) -> None:
 def _protect_capability_referrer(request: Request, response) -> None:
     """Keep private app URLs and one-time capability parameters out of Referer headers."""
     query_keys = _query_keys(request)
-    sensitive_oauth_callback = request.url.path in _OAUTH_CALLBACK_PATHS and (
-        "code" in query_keys or "state" in query_keys
-    )
     if (
         request.url.path in _PRODUCT_PATHS
         or _SENSITIVE_CAPABILITY_QUERY_KEYS.intersection(query_keys)
-        or sensitive_oauth_callback
+        or _has_sensitive_oauth_callback(request)
     ):
         response.headers["Referrer-Policy"] = "no-referrer"
 
