@@ -19,9 +19,9 @@ def test_command_center_loads_polish_assets():
 
 
 def test_command_center_pricing_matches_marketing_site():
-    assert '<strong>1 499 kr</strong>' in INDEX
-    assert '<strong>2 999 kr</strong>' in INDEX
-    assert '<strong>5 999 kr</strong>' in INDEX
+    assert '<strong>995 kr</strong>' in INDEX
+    assert '<strong>1 495 kr</strong>' in INDEX
+    assert '<strong>2 995 kr</strong>' in INDEX
     assert '<strong>499 kr</strong>' not in INDEX
     assert '<strong>3 999 kr+</strong>' not in INDEX
 
