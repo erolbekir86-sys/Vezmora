@@ -22,7 +22,19 @@ def test_product_shell_loads_onboarding_save_guard_after_app_bundle():
     assert page.text.index('/static/app.js?build=') < page.text.index('/static/onboarding-save-guard.js?build=')
 
 
-def test_onboarding_step_only_advances_after_successful_save():
+def test_onboarding_step_one_advances_locally_before_audience_exists():
+    step_one = "if (onboardingStep === 1) {"
+    local_advance = "onboardingStep = 2"
+    save_call = "await api(ws('/api/onboarding')"
+
+    assert step_one in GUARD
+    assert local_advance in GUARD
+    assert save_call in GUARD
+    assert GUARD.index(step_one) < GUARD.index(local_advance) < GUARD.index(save_call)
+    assert "return;" in GUARD[GUARD.index(local_advance):GUARD.index(save_call)]
+
+
+def test_onboarding_step_two_only_advances_after_successful_save():
     save_call = "await api(ws('/api/onboarding')"
     advance = "onboardingStep = Math.min(3, onboardingStep + 1)"
     error_message = "Kunde inte spara steget. Kontrollera anslutningen och försök igen."
