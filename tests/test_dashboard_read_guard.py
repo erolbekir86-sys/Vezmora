@@ -44,6 +44,17 @@ def test_notification_read_failure_does_not_look_like_empty_or_current_signal_da
     assert "if (isNotificationRead(path, options)) showNotificationReadFailure()" in GUARD
 
 
+def test_profile_read_failure_blocks_editing_until_saved_context_is_verified():
+    assert "pathname.endsWith('/api/company')" in GUARD
+    for field_id in ('name', 'industry', 'market', 'website', 'audience', 'offer', 'voice', 'language'):
+        assert f"'{field_id}'" in GUARD
+    assert "field.disabled = blocked" in GUARD
+    assert "state.dataset.readIntegrity = 'error'" in GUARD
+    assert 'Den sparade företagsprofilen kunde inte verifieras.' in GUARD
+    assert "if (profileRead) setProfileReadBlocked(false)" in GUARD
+    assert "if (profileRead) setProfileReadBlocked(true)" in GUARD
+
+
 def test_read_guard_only_targets_get_reads():
     assert "const method = String(options.method || 'GET').toUpperCase()" in GUARD
     assert "if (method !== 'GET') return ''" in GUARD
