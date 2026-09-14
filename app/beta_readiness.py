@@ -65,7 +65,6 @@ def _transport_snapshot() -> dict[str, object]:
         "production_like": production_like,
         "app_url_configured": bool(app_url),
         "app_url_https": app_url_https,
-        "app_url_valid_origin": app_url_valid_origin,
         "secure_cookie_explicitly_disabled": cookie_secure_override is False,
         "safe": safe,
     }
