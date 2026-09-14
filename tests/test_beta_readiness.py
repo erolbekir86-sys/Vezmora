@@ -154,9 +154,24 @@ def test_beta_readiness_detects_insecure_production_transport(monkeypatch):
         "production_like": True,
         "app_url_configured": True,
         "app_url_https": False,
+        "app_url_valid_origin": False,
         "secure_cookie_explicitly_disabled": True,
         "safe": False,
     }
+    assert "production_transport_safe" in snapshot["pilot_readiness"]["configuration_blockers"]
+
+
+def test_beta_readiness_rejects_malformed_https_production_origin(monkeypatch):
+    _clear(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VERCEL_ENV", "production")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://example.test/app?next=private")
+
+    snapshot = beta_readiness.beta_safety_snapshot()
+
+    assert snapshot["transport"]["app_url_https"] is True
+    assert snapshot["transport"]["app_url_valid_origin"] is False
+    assert snapshot["production_transport_safe"] is False
     assert "production_transport_safe" in snapshot["pilot_readiness"]["configuration_blockers"]
 
 
@@ -168,6 +183,7 @@ def test_beta_readiness_accepts_secure_production_transport(monkeypatch):
     snapshot = beta_readiness.beta_safety_snapshot()
     assert snapshot["production_transport_safe"] is True
     assert snapshot["transport"]["app_url_https"] is True
+    assert snapshot["transport"]["app_url_valid_origin"] is True
     assert snapshot["transport"]["secure_cookie_explicitly_disabled"] is False
 
 
