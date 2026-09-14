@@ -23,8 +23,14 @@ MAX_WEBHOOK_PAYLOAD_BYTES = 1_000_000
 MAX_STRIPE_SIGNATURE_CHARS = 8_192
 
 
+def _configured_value(name: str) -> str | None:
+    """Return a trimmed environment value, or None when it is effectively blank."""
+    value = (os.getenv(name) or "").strip()
+    return value or None
+
+
 def stripe_configured() -> bool:
-    return bool(os.getenv("STRIPE_SECRET_KEY"))
+    return _configured_value("STRIPE_SECRET_KEY") is not None
 
 
 def _stripe_client():
@@ -32,7 +38,7 @@ def _stripe_client():
         from stripe import StripeClient
     except ImportError as exc:
         raise HTTPException(status_code=503, detail="Stripe SDK is not installed. Run the project dependency install.") from exc
-    key = os.getenv("STRIPE_SECRET_KEY")
+    key = _configured_value("STRIPE_SECRET_KEY")
     if not key:
         raise HTTPException(status_code=503, detail="STRIPE_SECRET_KEY is not configured")
     return StripeClient(key, max_network_retries=2)
@@ -48,7 +54,7 @@ def _canonical_plan(plan: str) -> str:
 def _price_id(plan: str) -> str:
     canonical = _canonical_plan(plan)
     env = STRIPE_PRICE_ENV[canonical]
-    price = os.getenv(env)
+    price = _configured_value(env)
     if not price:
         raise HTTPException(status_code=503, detail=f"Stripe price is not configured for plan: {canonical}")
     return price
@@ -175,7 +181,7 @@ def parse_webhook(payload: bytes, signature: str | None) -> dict[str, Any]:
     if not signature:
         raise HTTPException(status_code=400, detail="Stripe-Signature header is required")
 
-    secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    secret = _configured_value("STRIPE_WEBHOOK_SECRET")
     if not secret:
         raise HTTPException(status_code=503, detail="STRIPE_WEBHOOK_SECRET is not configured")
     client = _stripe_client()

@@ -86,6 +86,40 @@ def test_checkout_has_beta_trial_and_current_test_price(tmp_path, monkeypatch):
     assert len(captured["integration_identifier"].split("_")[-1]) == 8
 
 
+def test_stripe_runtime_treats_whitespace_secret_as_unconfigured(monkeypatch):
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "   \t  ")
+    assert stripe_billing.stripe_configured() is False
+
+    with pytest.raises(Exception) as exc_info:
+        stripe_billing._stripe_client()
+
+    exc = exc_info.value
+    assert getattr(exc, "status_code", None) == 503
+    assert "STRIPE_SECRET_KEY" in str(getattr(exc, "detail", ""))
+
+
+def test_stripe_runtime_treats_whitespace_price_as_unconfigured(monkeypatch):
+    monkeypatch.setenv("STRIPE_PRICE_START", "   ")
+
+    with pytest.raises(Exception) as exc_info:
+        stripe_billing._price_id("start")
+
+    exc = exc_info.value
+    assert getattr(exc, "status_code", None) == 503
+    assert "not configured" in str(getattr(exc, "detail", "")).lower()
+
+
+def test_stripe_runtime_treats_whitespace_webhook_secret_as_unconfigured(monkeypatch):
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "  \n  ")
+
+    with pytest.raises(Exception) as exc_info:
+        stripe_billing.parse_webhook(b"{}", "t=1,v1=fake")
+
+    exc = exc_info.value
+    assert getattr(exc, "status_code", None) == 503
+    assert "STRIPE_WEBHOOK_SECRET" in str(getattr(exc, "detail", ""))
+
+
 def test_storage_backend_defaults_to_sqlite(monkeypatch):
     monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
     assert store.storage_backend() == "sqlite"
