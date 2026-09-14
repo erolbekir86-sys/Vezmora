@@ -1,12 +1,12 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-09-13
+Last reviewed: 2026-09-14
 
 This is a non-secret operational snapshot for the five-company private beta. It records evidence that can be verified safely without changing credentials, billing, permissions, domains, DNS or live advertising settings.
 
 ## Current code baseline
 
-The latest verified `main` baseline at this refresh is `de15efce50272c43de6fae382f08851d52da2fba`.
+The latest verified `main` baseline at this refresh is `bf08f0f2b56e1b11e9ee347ba2f4347437703a53`.
 
 Recent merged hardening includes:
 
@@ -32,6 +32,8 @@ Recent merged hardening includes:
 - Stripe webhook processing fails closed before billing or ledger writes when signed event metadata conflicts with an already-bound workspace/customer relationship;
 - HTTP transport logging remains pinned away from INFO-level request URL logging, with regression coverage protecting token-bearing OAuth/provider paths from future logging regressions;
 - production FastAPI docs/OpenAPI routes are now hidden consistently for every HTTP method, preventing 405/Allow method probes from revealing internal framework route existence;
+- shared browser hardening now sets `Cross-Origin-Opener-Policy: same-origin-allow-popups` to reduce unrelated cross-origin window coupling while preserving OAuth/payment popup compatibility;
+- speculative DNS prefetching is disabled by default with `X-DNS-Prefetch-Control: off`, while explicit route-level overrides remain possible;
 - CI verifies the installed dependency graph with `python -m pip check` before compile/tests and includes bounded dependency-update checks.
 
 ## Verified healthy from code and CI
