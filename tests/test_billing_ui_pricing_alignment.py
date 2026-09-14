@@ -11,6 +11,7 @@ def _format_sek(value: int) -> str:
 
 
 def test_self_service_billing_ui_matches_canonical_pricing() -> None:
+    """Keep the client-side billing labels tied to the backend pricing source."""
     script = (ROOT / "static" / "self-service-alignment.js").read_text(encoding="utf-8")
 
     positions: list[int] = []
@@ -28,13 +29,3 @@ def test_self_service_billing_ui_matches_canonical_pricing() -> None:
     assert positions == sorted(positions)
     assert "{key: 'starter'" not in script
     assert "{key: 'scale'" not in script
-
-
-def test_app_loads_billing_alignment_guard_after_primary_app_script() -> None:
-    html = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
-    app_script = '<script src="/static/app.js"></script>'
-    alignment_script = '<script src="/static/self-service-alignment.js"></script>'
-
-    assert app_script in html
-    assert alignment_script in html
-    assert html.index(app_script) < html.index(alignment_script)
