@@ -148,20 +148,11 @@ def install_public_routing(app: FastAPI) -> None:
             '  </style>\n'
             '  <script>document.documentElement.classList.remove("vexmera-reveal-js");'
             f'window.__VEXMERA_BUILD__="{BUILD_ID}";</script>\n'
-            '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg" fetchpriority="high" />\n'
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-icon-premium.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art-data.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art-decision.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art-how.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art-workflow.css" />\n'
-            '  <link rel="stylesheet" href="/static/landing-section-art-security.css" />\n'
-            '  <script src="/static/founder-photo-fix.js" defer></script>\n'
             '  <script src="/static/landing-runtime-safe.js" defer></script>\n'
-            '  <script src="/static/landing-refine.js" defer></script>\n'
-            '  <script src="/static/landing-section-art.js" defer></script>'
+            '  <script src="/static/landing-refine.js" defer></script>'
         )
         html = _inject_before_head_end(html, seo)
         # Load the visual premium layer after landing.js so it cannot be
@@ -174,6 +165,16 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/landing-premium.js" defer></script>\n'
             '  <script src="/static/landing-icon-premium.js" defer></script>',
             1,
+        )
+        # Keep the final readability layer last. The landing page has several
+        # historic visual layers, so loading this at the end guarantees a
+        # consistent type scale and removes raster artwork without rewriting
+        # the stable product interactions.
+        body_start, body_end = html.rsplit('</body>', 1)
+        html = (
+            body_start
+            + '  <link rel="stylesheet" href="/static/landing-readable.css" />\n</body>'
+            + body_end
         )
         html = _version_static_assets(html)
         return HTMLResponse(html, headers=NO_STORE_HEADERS)

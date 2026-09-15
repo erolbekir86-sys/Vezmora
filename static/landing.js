@@ -170,7 +170,6 @@
     section.id = 'founder';
     section.innerHTML = `
       <div class="founder-card reveal">
-        <div class="founder-portrait" role="img" aria-label="Erol Bekir, grundare av Vexmera"></div>
         <div class="founder-copy">
           <div class="eyebrow" data-i18n="founder.eyebrow">VARFÖR VEXMERA FINNS</div>
           <h2 data-i18n="founder.title">Byggt för att göra mer data till bättre beslut.</h2>
