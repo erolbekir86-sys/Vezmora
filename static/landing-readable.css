@@ -1,0 +1,174 @@
+/* Final readability layer: larger type, straight geometry and no raster art. */
+
+:root{
+  --read-body:18px;
+  --read-small:15px;
+}
+
+html{font-size:16px}
+body{font-size:var(--read-body);line-height:1.65}
+
+/* The generated section artwork looked soft at large viewport sizes. */
+.vex-section-art,
+.section-problem::before,
+.product-demo::after,
+.how-section::before,
+.integrations-section::before,
+.outcomes-section::before,
+.security-section::before{
+  display:none!important;
+  content:none!important;
+  background-image:none!important;
+}
+.vex-art-section{overflow:visible!important}
+
+/* Keep the page square to the viewport and remove perspective/skew effects. */
+h1,h2,h3,h4,.eyebrow,.section-heading,.split-heading,
+.dashboard-window,.hero-visual,.source-stack,.vexmera-core,
+.value-card,.step,.module-card,.workflow-node,.integration-card,
+.outcome-grid article,.plan-card,.security-card,.founder-card{
+  transform:none!important;
+  rotate:none!important;
+  font-style:normal!important;
+}
+
+.section-wrap{width:min(1320px,calc(100% - 56px))}
+.section{padding-block:clamp(96px,9vw,136px)}
+
+.eyebrow{
+  font-size:13px!important;
+  line-height:1.4!important;
+  letter-spacing:.12em!important;
+}
+.section-heading{max-width:900px!important;margin-bottom:64px!important}
+.section-heading h2,
+.feature-copy h2,
+.security-copy h2,
+.founder-copy h2{
+  font-size:clamp(42px,4.6vw,68px)!important;
+  line-height:1.08!important;
+  letter-spacing:-.035em!important;
+  text-wrap:balance;
+}
+.section-heading p,
+.split-heading p,
+.hero-lead,
+.demo-copy>p,
+.feature-copy>p,
+.security-copy>p,
+.founder-lead,
+.faq-list p{
+  font-size:var(--read-body)!important;
+  line-height:1.7!important;
+}
+
+.split-heading{
+  display:block!important;
+  max-width:900px!important;
+}
+.split-heading p{max-width:760px!important;margin-top:22px!important;justify-self:auto!important}
+
+.site-header .brand-copy strong{font-size:18px!important}
+.site-header .brand-copy small{font-size:11px!important}
+.desktop-nav a,
+.header-actions .text-link,
+.header-actions>.button{font-size:15px!important}
+
+.hero{min-height:0!important;padding-block:clamp(84px,8vw,124px)!important}
+.hero h1{
+  font-size:clamp(54px,5.4vw,82px)!important;
+  line-height:1.03!important;
+  letter-spacing:-.045em!important;
+  text-wrap:balance;
+}
+.hero-slogan{font-size:clamp(21px,1.8vw,26px)!important}
+.hero-proof span{font-size:14px!important}
+.button{font-size:16px!important;min-height:50px;padding:14px 22px!important}
+
+/* Enlarge the illustrative product interface without distorting it. */
+.dashboard-window{min-height:520px!important;grid-template-columns:148px minmax(0,1fr)!important}
+.dash-sidebar{padding:22px 14px!important}
+.dash-nav{min-height:36px!important;font-size:11px!important}
+.dash-main{padding:30px 28px!important}
+.dash-top small,.dash-date,.metric-row span,.metric-row small,
+.card-label,.rec-bottom span,.chart-head,.chart-axis,.floating-card span,
+.floating-card small{font-size:10px!important}
+.dash-top strong{font-size:26px!important}
+.dash-top p,.recommendation-card p{font-size:12px!important}
+.metric-row strong{font-size:20px!important}
+.recommendation-card h3{font-size:16px!important}
+.mini-action{font-size:12px!important}
+.floating-card strong{font-size:14px!important}
+
+.trust-strip strong{font-size:15px!important}
+.trust-strip p{font-size:14px!important;line-height:1.5!important}
+
+.source-stack b,.vexmera-core strong{font-size:23px!important}
+.source-stack small,.vexmera-core small{font-size:15px!important}
+.value-card h3,.step h3,.module-card h3,.outcome-grid article h3{
+  font-size:clamp(24px,2vw,32px)!important;
+  line-height:1.2!important;
+}
+.value-card p,.step p,.module-card p,
+.workflow-node small,.integration-card small{
+  font-size:16px!important;
+  line-height:1.65!important;
+}
+.workflow-node strong,.integration-card strong{font-size:18px!important}
+.control-points{font-size:15px!important}
+.signal-list b{font-size:15px!important;line-height:1.45!important}
+
+.plan-head>span,.popular-badge{font-size:11px!important}
+.plan-head h3{font-size:34px!important}
+.plan-head p,.plan-card li{font-size:15px!important;line-height:1.55!important}
+.plan-price b,.plan-price small,.pricing-note{font-size:14px!important}
+.billing-toggle button{font-size:16px!important}
+
+.security-grid span{font-size:16px!important}
+.faq-list summary{font-size:18px!important;padding-block:26px!important}
+.footer-grid>div>strong,.footer-grid a,.footer-brand p,.footer-bottom{font-size:15px!important}
+
+/* The previous founder JPEG is corrupt. Keep the founder story complete and
+   intentional without a broken or low-resolution placeholder. */
+.founder-card{
+  display:block!important;
+  max-width:900px!important;
+  margin-inline:auto!important;
+  padding:clamp(34px,5vw,64px)!important;
+  border:1px solid var(--line)!important;
+  border-radius:28px!important;
+  background:var(--surface)!important;
+}
+.founder-copy{max-width:780px!important;margin-inline:auto!important}
+.founder-portrait,.founder-photo-fallback{display:none!important}
+
+@media(max-width:900px){
+  :root{--read-body:17px;--read-small:14px}
+  .section-wrap{width:calc(100% - 32px)!important}
+  .section{padding-block:82px!important}
+  .section-heading{margin-bottom:44px!important}
+  .section-heading h2,.feature-copy h2,.security-copy h2,.founder-copy h2{
+    font-size:clamp(36px,8vw,52px)!important;
+  }
+  .hero h1{font-size:clamp(44px,10vw,64px)!important}
+  .site-header .brand-copy strong{font-size:16px!important}
+  .dashboard-window{min-height:460px!important;grid-template-columns:82px minmax(0,1fr)!important}
+  .dash-main{padding:18px 14px!important}
+  .value-card h3,.outcome-grid article h3{font-size:28px!important}
+  .founder-card{padding:30px 24px!important}
+}
+
+@media(max-width:600px){
+  .section{padding-block:70px!important}
+  .hero{padding-top:48px!important}
+  .hero h1{font-size:clamp(40px,11.5vw,54px)!important}
+  .section-heading h2,.feature-copy h2,.security-copy h2,.founder-copy h2{
+    font-size:clamp(34px,9vw,46px)!important;
+  }
+  .dashboard-window{grid-template-columns:76px minmax(0,1fr)!important}
+  .dash-top strong{font-size:21px!important}
+  .metric-row strong{font-size:17px!important}
+  .recommendation-card h3{font-size:15px!important}
+  .integration-card strong{font-size:17px!important}
+  .footer-grid{grid-template-columns:1fr!important}
+}
