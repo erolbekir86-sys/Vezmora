@@ -8,6 +8,12 @@ from fastapi.routing import APIRoute
 
 from . import main as _main
 from . import store as _store
+from .pricing import (
+    checkout_pricing_reconciled,
+    current_stripe_catalog_reconciled,
+    current_stripe_price_ids_match,
+    current_stripe_prices_configured,
+)
 
 _REMOTE_BACKENDS = frozenset({"postgres", "turso"})
 _POSTGRES_PREFIXES = ("postgres://", "postgresql://")
@@ -30,12 +36,16 @@ def storage_backend() -> str:
 
 
 def runtime_health_payload() -> dict[str, Any]:
-    """Build the health payload without reflecting storage connection details."""
+    """Build the health payload without reflecting storage or billing secrets."""
 
     payload = dict(_main.health())
     backend = storage_backend()
     payload["storage_backend"] = backend
     payload["data_path"] = "remote" if backend in _REMOTE_BACKENDS else "local"
+    payload["stripe_current_prices_configured"] = current_stripe_prices_configured()
+    payload["stripe_pricing_version_current"] = checkout_pricing_reconciled()
+    payload["stripe_price_ids_current"] = current_stripe_price_ids_match()
+    payload["stripe_catalog_reconciled"] = current_stripe_catalog_reconciled()
     return payload
 
 
