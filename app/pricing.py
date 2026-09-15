@@ -58,6 +58,17 @@ EXPECTED_MONTHLY_SEK_ORE = {
     "pro": 299_500,
 }
 
+# These are non-secret Stripe sandbox price identifiers independently verified
+# against the connected Vexmera-sandlåda account on 2026-09-15. Keeping the
+# expected identifiers here lets production diagnostics report only booleans
+# while still proving that the deployed environment points at the reviewed
+# Start/Growth/Pro catalog rather than historical Starter/Scale prices.
+CURRENT_TEST_PRICE_IDS = {
+    "start": "price_1UF6iOPfuS5u7PQDcKbVLWgk",
+    "growth": "price_1UF6iiPfuS5u7PQDOQC91cAR",
+    "pro": "price_1UF6j2PfuS5u7PQDMKnFvFYX",
+}
+
 
 def normalize_plan(plan: str) -> str:
     normalized = PLAN_ALIASES.get(str(plan or "").strip().lower())
@@ -78,3 +89,16 @@ def checkout_pricing_reconciled() -> bool:
 
 def current_stripe_prices_configured() -> bool:
     return all((os.getenv(name) or "").strip() for name in STRIPE_PRICE_ENV.values())
+
+
+def current_stripe_price_ids_match() -> bool:
+    """Return true only when every configured price is the reviewed test price."""
+    return all(
+        (os.getenv(STRIPE_PRICE_ENV[plan]) or "").strip() == expected
+        for plan, expected in CURRENT_TEST_PRICE_IDS.items()
+    )
+
+
+def current_stripe_catalog_reconciled() -> bool:
+    """Safe deployment gate for the reviewed Private Beta Stripe catalog."""
+    return checkout_pricing_reconciled() and current_stripe_price_ids_match()
