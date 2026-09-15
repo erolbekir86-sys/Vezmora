@@ -167,6 +167,16 @@ def test_authenticated_product_shell_lives_under_app_and_is_noindex():
     assert 'Förstå din marknadsföring.' not in response.text
 
 
+def test_product_shell_hidden_state_cannot_be_overridden_by_mobile_responsive_css():
+    with TestClient(app) as client:
+        response = client.get('/app')
+
+    assert response.status_code == 200
+    assert 'id="appShell" class="shell hidden"' in response.text
+    assert 'id="app-shell-hidden-guard"' in response.text
+    assert '#appShell.hidden{display:none!important}' in response.text
+
+
 def test_legacy_product_return_links_are_forwarded_to_app():
     with TestClient(app, follow_redirects=False) as client:
         reset = client.get('/?reset=abc123')

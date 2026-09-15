@@ -2,38 +2,47 @@
 
 Last updated: 2026-09-15
 
-Purpose: the shortest evidence-producing walkthrough required before the five-company Private Beta. This checklist intentionally covers only steps that automated code/CI and public read-only checks cannot prove.
+Purpose: the shortest evidence-producing walkthrough required before the five-company Private Beta. This checklist intentionally covers only steps that automated code/CI and production read-only checks cannot prove.
+
+## Already verified automatically or from production
+
+These items are no longer part of the manual browser burden:
+
+- Unauthenticated `/app` serves the auth shell with the authenticated app shell initially hidden.
+- Representative workspace read APIs return HTTP 401 without an authenticated session.
+- `/app` is `noindex`, `no-store` and protected by current production security headers.
+- Production runtime has no current error cluster in the latest verification window.
+- Mobile CSS now includes a fail-closed guard so responsive `display:block!important` rules cannot visually unhide `#appShell` before login.
+- Stripe sandbox Checkout, active subscription, signed webhook projection, local billing state, Billing Portal configuration and production return-origin regression coverage are already verified elsewhere.
 
 ## Desktop authenticated walkthrough
 
-1. Open `https://vexmera.com/app` in a normal desktop browser.
-2. Register a disposable QA account or log in with the intended pilot test account.
-3. Confirm login lands in the expected authenticated application state and does not expose another workspace.
-4. Complete or review onboarding. Confirm refresh does not lose saved company context.
-5. Open Core, Pulse, Launch, Brief, Queue, Autopilot, Competitors, Connections, Insights, Team and Brand.
-6. Confirm API/provider failures show a clear error or unavailable state rather than stale or zero-looking data.
-7. Confirm legitimate empty connector data is visibly different from an authentication/provider failure.
-8. Confirm Autopilot remains recommendation-only and no live external execution action is available.
-9. Open account/privacy controls and request the deletion preview only. Do not delete the account.
-10. Log out, refresh, confirm authenticated data is no longer available, then log back in.
+1. Open `https://vexmera.com/app` in a normal desktop browser and log in with the intended pilot test account.
+2. Confirm login lands in the expected workspace. If the test account has access to more than one workspace, switch between them and verify data does not bleed across workspaces.
+3. Complete or review onboarding. Confirm refresh does not lose saved company context.
+4. Open Core, Pulse, Launch, Brief, Queue, Autopilot, Konkurrenter, Anslutningar, Insikter, Team and Varumärke.
+5. Trigger or observe at least one safe read/error condition and confirm a clear unavailable/error state is shown rather than believable zero/current data.
+6. Confirm Autopilot remains recommendation-only and no live external execution action is available.
+7. Open account/privacy controls and request the deletion preview only. Do not delete the account.
+8. Log out, refresh, confirm authenticated content is not available, then log back in.
 
 ## Customer Portal return check
 
-Prerequisites already verified elsewhere: test Checkout complete, active test subscription, signed webhook projection, active Billing Portal configuration and production return-origin regression coverage.
+Only the browser round-trip remains manual.
 
 1. From the authenticated billing UI, open Customer Portal.
-2. Confirm the portal belongs to the expected Vexmera test customer and uses test mode.
+2. Confirm the portal belongs to the expected Vexmera test customer and is test mode.
 3. Do not make a destructive billing change unless specifically intended for the test account.
 4. Use the portal return control.
-5. Confirm the browser returns to `https://vexmera.com/?view=team` or the intended application route.
+5. Confirm the browser returns to Vexmera and the Team/Billing view is reachable as intended.
 6. Reload Vexmera and confirm plan/billing state still renders correctly.
 
 ## Mobile viewport pass
 
-Run at an iPhone-class width, approximately 390 px.
+Run at an iPhone-class width, approximately 390 px. The pre-login app-shell visibility risk is already regression-covered, so the remaining mobile pass is interaction/layout evidence only.
 
 - login/registration controls remain usable;
-- left navigation does not cover content;
+- mobile menu opens/closes and does not cover content incorrectly;
 - primary navigation remains reachable;
 - forms do not overflow horizontally;
 - tables/cards remain understandable;
@@ -45,4 +54,4 @@ Run at an iPhone-class width, approximately 390 px.
 
 ## Pass criteria
 
-Mark this gate green only when desktop, Customer Portal return and mobile viewport pass without a material blocker. Record screenshots only if they contain no secrets, OAuth tokens or sensitive customer data.
+Mark the final manual gate green only when the authenticated desktop walkthrough, Customer Portal return and mobile interaction pass complete without a material blocker. Record screenshots only if they contain no secrets, OAuth tokens or sensitive customer data.
