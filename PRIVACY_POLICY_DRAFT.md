@@ -1,204 +1,142 @@
 # Vexmera Privacy Policy — DRAFT
 
-> **Status:** Draft for private-beta preparation. This is not final legal text and must be reviewed and completed with the operator's legal entity, address, contact details, retention periods, verified processor/subprocessor information and any other jurisdiction-specific requirements before external launch.
+> **Status:** Private-beta draft. The technical/data-handling sections below have been aligned with the current implementation as of 2026-09-15. Legal entity, registration number, postal address, verified privacy contact, final retention commitments, VAT/tax position and final legal review remain owner/legal gates.
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-15
 
-## 1. Who this policy applies to
-This policy describes how Vexmera handles personal data when a user creates an account, connects marketing or analytics services, uses AI-powered marketing analysis, visits authenticated product pages where optional analytics may be offered, or participates in a private beta.
-
-Before external use, insert the legal controller/operator details here:
+## 1. Controller/operator details
+Before external use, insert and verify:
 - Legal entity: [TO BE ADDED]
 - Registration number: [TO BE ADDED]
 - Postal address: [TO BE ADDED]
-- Privacy contact email: [TO BE ADDED]
+- Privacy/support email: [TO BE ADDED]
 
-## 2. What Vexmera is
-Vexmera is an AI-powered marketing platform intended to help businesses understand marketing performance, identify opportunities and receive recommendations about what to do next.
+## 2. What Vexmera does
+Vexmera is an AI-powered marketing platform that helps businesses connect marketing/analytics data, understand performance and receive recommended next actions.
 
-During the private beta, connected advertising and analytics integrations are intended to operate in **read-only mode**. Vexmera must not autonomously publish ads, change budgets, bids or campaign settings unless a later production version explicitly enables those features with appropriate permissions and user controls.
+During Private Beta, supported Google Ads and Meta Ads integrations are intended to be read-only. External campaign execution, Autopilot execution and Meta execution scope are disabled in production. Vexmera must not autonomously publish ads, change budgets, bids, targeting or campaign state during this beta posture.
 
-## 3. Data Vexmera may process
-Depending on which features a user enables, Vexmera may process:
+## 3. Personal data and business data Vexmera may process
+Depending on enabled features, Vexmera may process:
 
 ### Account and workspace data
-- Email address and account authentication data
-- Session data
-- Workspace name, business profile, role and preferences
-- Invitations and team membership
-- Subscription and billing status
+- email address, password hash and authentication/session data;
+- workspace name, company profile, onboarding profile, roles and team membership;
+- invitations, preferences and product settings;
+- subscription plan and billing status.
 
 ### Connected marketing and analytics data
-When a user connects a supported provider, Vexmera may retrieve data that the user has authorized the provider to share, such as:
-- Google Analytics traffic and conversion metrics
-- Google Ads campaign names, IDs, dates, impressions, clicks, conversions, conversion value, spend and account currency
-- Meta Ads account and campaign performance data
-- Other marketing performance data added in future supported integrations
+- Google Analytics traffic/conversion metrics;
+- Google Ads account/campaign metadata and reporting metrics such as impressions, clicks, conversions, value and spend;
+- Meta Ads account/campaign reporting data;
+- provider account identifiers and encrypted OAuth credentials needed to perform authorized reads.
 
-Vexmera does not require users to paste OAuth access tokens, developer tokens or API secrets into ordinary chat or support messages.
+OAuth secrets, API keys and provider tokens are not intended to appear in normal user-facing diagnostics.
 
-### AI and product usage data
-- Questions or instructions submitted to Vexmera
-- Relevant business/workspace context supplied to AI-powered features
-- Generated recommendations and analyses
-- Product usage events, error diagnostics and technical logs
-- Approval or workflow status where applicable
+### AI and product data
+- instructions/questions submitted to Vexmera;
+- selected business/workspace context supplied to AI-powered features;
+- generated analyses and recommendations;
+- product usage events, approvals, runs, notifications and technical diagnostics.
 
-### Optional website analytics data
-The authenticated Vexmera application can offer optional Google Analytics. The current implementation defaults analytics and advertising-related Google consent storage to **denied** and does not load the Google Analytics script until the user explicitly allows statistics.
+### Billing data
+Stripe handles payment details used in Checkout. Vexmera stores billing state such as Stripe customer/subscription identifiers, plan, status, trial date and idempotent billing-event records. Vexmera does not store full payment-card numbers.
 
-Google Signals and ad-personalization signals are disabled in the current implementation. The user can reopen Cookieinställningar and change the analytics choice later. When analytics is denied or consent is withdrawn, Vexmera updates consent to denied and performs best-effort deletion of first-party `_ga` cookies visible to the application origin.
+### Transactional email
+Vexmera may process recipient email addresses, message content and delivery context needed to send account/service email through the configured email provider.
 
-The final production policy and cookie notice must document the actual cookies, lifetimes and provider roles used by the final deployment.
-
-## 4. Why Vexmera processes data
-Vexmera may process personal data to:
-- Provide and operate the service
-- Authenticate users and protect accounts
-- Retrieve authorized marketing and analytics data
-- Calculate reports, KPIs and recommendations
-- Provide AI-assisted analysis
-- Diagnose errors and improve reliability
-- Process subscriptions and payments
-- Send transactional service communications
-- Protect the service against abuse, fraud and security threats
-- Measure optional product usage where the user has provided any consent required for that analytics processing
-- Comply with applicable legal obligations
+## 4. Why data is processed
+Purposes may include:
+- providing and securing the service;
+- authenticating users and managing workspaces;
+- retrieving authorized reporting data;
+- calculating KPIs and recommendations;
+- providing AI-assisted analysis;
+- diagnosing reliability/security issues;
+- processing subscriptions and transactional email;
+- measuring optional analytics where consent is required and provided;
+- complying with applicable legal obligations.
 
 ## 5. Legal bases
-For users in the EEA/UK, the applicable legal basis depends on the processing activity and may include:
-- Performance of a contract
-- Legitimate interests, such as securing and operating the service
-- Consent, where required, including optional analytics where applicable
-- Compliance with legal obligations
-
-The final production policy must map each material processing purpose to its precise legal basis after legal review.
+For EEA/UK users, applicable bases may include contract performance, legitimate interests, consent where required and legal obligation. Final publication must map each material activity to the exact legal basis after legal review.
 
 ## 6. Google and Meta connections
-When a user connects Google or Meta, authentication occurs through the provider's authorization flow. Vexmera stores the resulting authorization credentials in encrypted form so that it can access the data the user has permitted.
+Connection occurs through provider authorization flows. Vexmera stores resulting credentials in encrypted form.
 
-Vexmera includes a product-level disconnect control for supported Google and Meta connections. Disconnecting is restricted to authorized workspace owners or administrators. When a supported account is disconnected, Vexmera removes its locally stored connector credential and saved connector/account identifiers, stops future sync access through that credential, and performs a best-effort provider-side revocation where supported.
+Authorized workspace owners/admins can disconnect supported Google/Meta connections. The current implementation removes the locally stored connector credential and saved provider/account identifiers, stops future synchronization through that credential and performs best-effort upstream revocation where supported.
 
-Provider-side revocation may also be performed directly through the relevant Google or Meta account controls. A provider or network failure during revocation does not prevent Vexmera from deleting its own stored credential copy.
+Disconnecting does **not** automatically delete previously synchronized reporting history. A separate destructive synchronized-history deletion control exists so access credentials and historical reporting are not accidentally removed together.
 
-**Disconnecting an account does not delete previously synchronized campaign or KPI history.** Vexmera provides a separate destructive control for synchronized reporting history so that connection access and retained reporting data are not accidentally deleted together.
+## 7. Synchronized-history deletion
+An authorized owner/admin can separately delete supported synchronized reporting history after explicit confirmation. The current implementation removes synchronized campaign-performance rows, imported provider KPI rows, anomalies and anomaly notifications. Manually entered KPI rows remain.
 
-Vexmera must not expose OAuth tokens, developer tokens, API keys or provider secrets in user-visible diagnostics.
-
-## 7. Deleting synchronized marketing history
-For supported private-beta workspaces, an authorized workspace owner or administrator can separately request deletion of synchronized marketing/reporting history. The current implementation requires a separate typed confirmation before the deletion request is sent.
-
-This control removes:
-- Synchronized campaign-performance rows
-- KPI rows imported from Google Analytics, Google Ads or Meta Ads
-- Anomaly records and anomaly notifications derived from synchronized reporting data
-
-The control intentionally retains:
-- Manually entered KPI rows
-- Connector credentials and connection state
-- Account and workspace records
-- Company/brand profile data
-- AI request and response history
-- Billing/subscription records
-- Other product records not listed above
-
-Accordingly, this feature is a scoped reporting-history deletion control, not the same operation as deleting a Vexmera account.
+This operation does not delete the Vexmera account, company profile, connector credential, AI history or billing records.
 
 ## 8. Self-service account deletion
-Vexmera also implements a separate guarded account-deletion flow.
+Vexmera implements a guarded account-deletion flow with a deletion preview, current-password re-authentication and exact destructive confirmation.
 
-Before irreversible deletion, the authenticated user can request a deletion preview showing whether the account can currently be deleted and what local data is in scope. The final deletion request requires the user's current password and an exact destructive confirmation phrase.
+Deletion is blocked when an owned workspace still has another member or an active attached subscription. When allowed, eligible solo-owned local workspaces and their cascaded application data are deleted, memberships in workspaces owned by others are removed, pending invitations/queued application email for the user are removed, and the active session is cleared. Google/Meta revocation is attempted before local deletion for solo-owned workspaces.
 
-Account deletion is blocked when:
-- an owned workspace still has another member; or
-- an owned workspace has an attached Stripe subscription that is still treated as active.
+Third-party billing, accounting, security, anti-fraud or compliance records are not represented as guaranteed deleted where Vexmera or a processor may be required or permitted to retain them.
 
-When deletion is allowed, the current implementation:
-- re-authenticates the user;
-- re-checks deletion blockers immediately before local deletion;
-- attempts to revoke Google and Meta OAuth credentials for solo-owned workspaces before local deletion;
-- deletes the user's solo-owned workspaces and database-cascaded local workspace data;
-- removes the user's membership from workspaces owned by someone else without deleting those shared business workspaces;
-- deletes the local user account and authentication credentials;
-- removes pending invitations and queued application email addressed to the account email;
-- clears the active Vexmera session cookie.
+## 9. Optional Vexmera analytics
+Authenticated Vexmera pages can offer optional Google Analytics. The current implementation defaults analytics and ad-related Google consent storage to denied and does not load the analytics script until the user explicitly allows statistics. Google Signals and ad-personalization signals are disabled. Cookie settings can be reopened and consent changed later. Withdrawal triggers denied consent and best-effort deletion of first-party `_ga` cookies visible to the application origin.
 
-Third-party billing, accounting, security or compliance records are **not** represented as guaranteed deleted by this local account-deletion operation. Stripe or other processors may retain records where necessary for accounting, dispute handling, fraud prevention, security or legal obligations.
+## 10. Retention
+### Implemented short-lived capability retention
+- Sessions: 14-day expiry; expired rows are pruned and active sessions are capped at 20 per user.
+- Password-reset links: 60-minute expiry; a new reset request supersedes older reset capabilities for that account.
+- Workspace invitations: 7-day expiry; re-inviting the same email to the same workspace supersedes older outstanding invitations.
+- Connector credentials: removed locally when supported disconnect completes.
+- Synchronized reporting history: removable through the dedicated owner/admin deletion control.
+- Eligible local account/workspace data: removed through self-service account deletion as described above.
+- Current Neon point-in-time recovery/history setting: 6 hours. This is infrastructure recovery configuration, not a universal processor-retention promise.
 
-The final policy must describe processor-specific retention accurately and must not promise complete third-party erasure where Vexmera cannot technically or legally guarantee it.
+### Proposed longer-lived product-data retention
+Engineering has prepared `RETENTION_POLICY_PROPOSAL.md` with proposed periods for active workspace data, synchronized marketing history, AI history, competitor snapshots, usage/security logs, beta feedback, transactional email metadata and billing records.
 
-## 9. AI providers
-Vexmera may send relevant user instructions, business context and selected marketing data to an AI service provider in order to generate analyses and recommendations.
+Those proposed periods are **not yet public commitments**. Before publication, engineering must verify/implement scheduled deletion for every category given a concrete period, and owner/legal review must confirm any statutory accounting/tax requirements.
 
-The current production engineering stack uses OpenAI API services for AI processing. Before external launch, legal review must verify the configured account's applicable data terms, retention settings, Data Processing Agreement where required, contractual role and any international-transfer safeguards before those details are converted into final public legal wording.
+## 11. Service providers and subprocessors
+The production stack currently includes Vercel (hosting/runtime), Neon (database), OpenAI API (AI processing), Stripe (billing) and Resend (transactional email). Google and Meta are connected external platforms for authorized reporting/OAuth flows.
 
-## 10. Service providers and subprocessors
-Vexmera may use service providers for functions such as hosting, databases, AI processing, payments, email delivery, analytics and connected advertising APIs.
+A technical inventory is maintained in `SUBPROCESSOR_DATA_INVENTORY.md`. Vercel, OpenAI, Stripe and Resend publish current data-processing/subprocessor materials; Neon account-specific DPA/region/subprocessor details still require final account-level verification before public legal wording is finalized.
 
-The current technical stack includes or is configured to use services from Vercel, Neon, OpenAI, Stripe, an SMTP/email delivery provider, Google and Meta. This is an engineering inventory, not yet the final legally reviewed public subprocessor list.
+Provider roles are activity-specific. Some providers may act as processors for customer data while also acting as independent controllers for certain account, payment, service-generated or compliance data.
 
-Before external launch, Vexmera must verify the actual provider accounts, contractual roles, processing locations, applicable DPAs, transfer safeguards and processor-specific retention, then publish the appropriate disclosures.
+## 12. AI processing
+The current production stack uses OpenAI API services for AI-powered analysis. Relevant user instructions, selected business context and selected marketing data may be sent to the API to generate analyses/recommendations.
 
-## 11. Data retention
-Vexmera should keep personal data only for as long as needed for the purposes described in this policy, including providing the service, resolving disputes, enforcing agreements and meeting legal obligations.
+Before external launch, the exact Vexmera API account/project data controls, applicable DPA, retention settings and transfer safeguards must be confirmed against the production account.
 
-Before external launch, define and operationally verify concrete retention rules for:
-- Active account and workspace data
-- Connected campaign and analytics data
-- OAuth credentials
-- Technical/security logs
-- AI request/response records
-- Competitor monitoring records and snapshots
-- Beta feedback
-- Transactional email delivery records
-- Database backups and recovery copies
-- Processor-held billing/compliance records
+## 13. Security
+Vexmera uses HTTPS, secure session settings, encrypted connector credential storage, access controls, execution locks, CSRF protections, security headers and safeguards intended to prevent secrets from appearing in user-visible diagnostics. No system can guarantee absolute security.
 
-Connector credentials are removed from Vexmera's active connector record when the supported self-service disconnect action completes. Synchronized reporting history can be removed separately through the scoped deletion control. The broader account-deletion flow removes the local account and eligible solo-owned workspace data as described above.
+## 14. International transfers
+Some providers may process data outside Sweden/EEA. Where required, applicable adequacy decisions, Standard Contractual Clauses or other lawful transfer mechanisms must be verified provider by provider before final publication.
 
-No concrete public retention period should be stated until engineering and legal review confirm that the infrastructure actually follows it.
+## 15. User rights
+Depending on applicable law, individuals may have rights to access, correction, deletion, restriction, objection, portability, withdrawal of consent and complaint to a data-protection authority.
 
-## 12. Security
-Vexmera uses technical and organizational safeguards intended to protect data, including encrypted credential storage, HTTPS, secure session settings, access controls, human-approval controls for sensitive product actions and safeguards designed to prevent secrets from appearing in user-visible diagnostics.
+A verified privacy contact channel must be inserted before external use. Product disconnect/history/account deletion controls support data control but do not replace a broader rights-request process.
 
-No system can guarantee absolute security.
+## 16. Business-customer data
+Where a business customer connects or supplies personal data relating to its own customers, employees or other individuals, the business may be controller and Vexmera may be processor for some activities. A Data Processing Agreement may therefore be required. Roles must be mapped per activity rather than assumed globally.
 
-## 13. International data transfers
-Some service providers may process data outside the user's country or the EEA. Where required, Vexmera should rely on legally recognized transfer safeguards such as adequacy decisions or Standard Contractual Clauses.
+## 17. Children's data
+Vexmera is intended for business users and is not designed for children. Any final age requirement must be legally reviewed and reflected in production terms.
 
-The final policy must identify the actual applicable transfer mechanisms after provider/account-specific review.
+## 18. Changes and contact
+Material policy changes should be communicated appropriately and the effective date updated.
 
-## 14. User rights
-Depending on location, users may have rights to:
-- Access personal data
-- Correct inaccurate personal data
-- Request deletion
-- Restrict or object to certain processing
-- Request data portability
-- Withdraw consent where processing relies on consent
-- Complain to a data-protection authority
-
-The final policy must provide a verified privacy contact channel for exercising these rights. Product-level disconnect, synchronized-history deletion and account deletion help users control data, but they do not replace an operating process for broader access, portability, objection or processor-escalation requests.
-
-## 15. Business-customer data
-Where a business customer provides or connects data relating to its own customers, employees or other individuals, the business may act as controller and Vexmera may act as processor for some processing activities.
-
-A Data Processing Agreement may therefore be required before external customer use. The parties' roles must be reviewed for each material processing activity rather than assumed globally.
-
-## 16. Children's data
-Vexmera is intended for business users and is not designed for children. The production service should define and enforce any minimum-age requirement that applies.
-
-## 17. Changes to this policy
-Vexmera may update this policy as the service changes. Material changes should be communicated appropriately and the effective date should be updated.
-
-## 18. Contact
-Privacy contact: [TO BE ADDED BEFORE EXTERNAL USE]
+Privacy/support contact: [TO BE ADDED BEFORE EXTERNAL USE]
 
 ## Internal review references
-Before this draft is approved for publication, review it against:
+- `RETENTION_POLICY_PROPOSAL.md`
+- `SUBPROCESSOR_DATA_INVENTORY.md`
 - `DATA_HANDLING.md`
 - `LEGAL_REVIEW_PREP.md`
 - `PRODUCTION_ENVIRONMENT.md`
 - `DEPLOY_CHECKLIST.md`
 
-Any conflict should be resolved in favor of the verified implementation and qualified legal review, not marketing convenience.
+Where documentation conflicts, verified implementation and qualified legal review control.

@@ -61,6 +61,36 @@ def test_portal_session_is_pinned_to_explicit_configuration(tmp_path, monkeypatc
     }
 
 
+def test_portal_production_return_is_pinned_to_canonical_vexmera_origin(tmp_path, monkeypatch) -> None:
+    workspace_id = _workspace_with_customer(tmp_path, monkeypatch)
+    captured: dict[str, object] = {}
+
+    class PortalSessions:
+        def create(self, params):
+            captured.update(params)
+            return SimpleNamespace(url="https://billing.stripe.test/portal")
+
+    class FakeStripeClient:
+        def __init__(self, key, **kwargs):
+            assert key == "test-only-placeholder"
+            self.v1 = SimpleNamespace(
+                billing_portal=SimpleNamespace(sessions=PortalSessions()),
+            )
+
+    monkeypatch.setitem(sys.modules, "stripe", SimpleNamespace(StripeClient=FakeStripeClient))
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "test-only-placeholder")
+    monkeypatch.setenv("STRIPE_BILLING_PORTAL_CONFIGURATION_ID", "bpc_test_private_beta")
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("VEZMORA_APP_URL", "https://vexmera.com/")
+
+    result = stripe_billing.create_portal(workspace_id)
+
+    assert result["url"] == "https://billing.stripe.test/portal"
+    assert captured["customer"] == "cus_test_portal"
+    assert captured["configuration"] == "bpc_test_private_beta"
+    assert captured["return_url"] == "https://vexmera.com/?view=team"
+
+
 def test_existing_active_subscription_cannot_switch_plan_through_checkout(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(store, "DB_PATH", tmp_path / "stripe-plan-switch.db")
     store.init_db()
