@@ -56,7 +56,7 @@ def test_authenticated_private_beta_smoke(tmp_path, monkeypatch) -> None:
 
         me = client.get("/api/auth/me")
         assert me.status_code == 200
-        assert me.json()["email"] == EMAIL
+        assert me.json()["user"]["email"] == EMAIL
 
         second = client.post("/api/workspaces", json={"name": "Vexmera QA Secondary"})
         assert second.status_code == 200
