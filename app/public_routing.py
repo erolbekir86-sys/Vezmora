@@ -216,6 +216,14 @@ def install_public_routing(app: FastAPI) -> None:
             f'  <meta name="robots" content="noindex,nofollow" />\n'
             f'  <script>window.__VEXMERA_BUILD__="{BUILD_ID}";</script>',
         )
+        # Fail closed on mobile. The responsive inline CSS in the legacy shell
+        # uses a higher-specificity `html body .shell{display:block!important}`
+        # rule below 900px. Without this guard it can visually override the
+        # initial `hidden` class on the authenticated app shell before login.
+        html = _inject_before_head_end(
+            html,
+            '  <style id="app-shell-hidden-guard">#appShell.hidden{display:none!important}</style>',
+        )
         html = _version_static_assets(html)
         return HTMLResponse(
             html,
