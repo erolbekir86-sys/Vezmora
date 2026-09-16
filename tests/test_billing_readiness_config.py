@@ -14,8 +14,7 @@ def _stub_billing_dependencies(monkeypatch) -> None:
         },
     )
     monkeypatch.setattr(billing, "usage_summary", lambda workspace_id: {})
-    monkeypatch.setattr(billing, "checkout_pricing_reconciled", lambda: True)
-    monkeypatch.setattr(billing, "current_stripe_prices_configured", lambda: True)
+    monkeypatch.setattr(billing, "current_stripe_catalog_reconciled", lambda: True)
 
 
 def test_checkout_readiness_rejects_whitespace_only_stripe_secret_key(monkeypatch):
@@ -38,7 +37,18 @@ def test_checkout_readiness_rejects_whitespace_only_webhook_secret(monkeypatch):
     assert status["checkout_ready"] is False
 
 
-def test_checkout_readiness_accepts_nonblank_stripe_configuration(monkeypatch):
+def test_checkout_readiness_rejects_unreconciled_catalog(monkeypatch):
+    _stub_billing_dependencies(monkeypatch)
+    monkeypatch.setattr(billing, "current_stripe_catalog_reconciled", lambda: False)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_example")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_test")
+
+    status = billing.billing_status(1)
+
+    assert status["checkout_ready"] is False
+
+
+def test_checkout_readiness_accepts_verified_stripe_catalog(monkeypatch):
     _stub_billing_dependencies(monkeypatch)
     monkeypatch.setenv("STRIPE_SECRET_KEY", " sk_test_example ")
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", " whsec_test ")

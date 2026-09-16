@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from .pricing import PLANS, checkout_pricing_reconciled, current_stripe_prices_configured, normalize_plan
+from .pricing import PLANS, current_stripe_catalog_reconciled, normalize_plan
 from .store import get_workspace_settings, usage_summary
 
 
@@ -48,9 +48,12 @@ def billing_status(workspace_id: int) -> dict[str, Any]:
     plan = _stored_plan(settings.get("plan"))
     usage = usage_summary(workspace_id)
     limits = PLANS[plan]
+    # Checkout must only open when the deployed environment points at the exact
+    # independently reviewed Start/Growth/Pro sandbox catalog. A current pricing
+    # version marker plus merely non-empty price variables is not strong enough:
+    # a stale or mistyped price ID would otherwise still report ready.
     stripe_ready = bool(
-        checkout_pricing_reconciled()
-        and current_stripe_prices_configured()
+        current_stripe_catalog_reconciled()
         and _configured("STRIPE_SECRET_KEY")
         and _configured("STRIPE_WEBHOOK_SECRET")
     )
