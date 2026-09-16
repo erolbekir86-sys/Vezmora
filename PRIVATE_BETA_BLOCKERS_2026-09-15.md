@@ -1,4 +1,4 @@
-# Vexmera Private Beta blockers — 2026-09-15
+# Vexmera Private Beta blockers — current through 2026-09-16
 
 This is the canonical current blocker list. Older checklists should defer to this file when they conflict.
 
@@ -6,44 +6,35 @@ This is the canonical current blocker list. Older checklists should defer to thi
 
 - Private Beta execution posture: external execution disabled, Autopilot execution disabled, Meta execution scope disabled.
 - Production transport/readiness endpoint reports safe execution and safe production transport.
-- Latest verified production deployment after PR #255 reached READY on vexmera.com with no runtime error group in the checked window.
+- Production deployment containing PR #264 is READY on `vexmera.com`.
 - Google Ads read-only production sync has returned real campaign rows.
 - Meta read-only sync correctly distinguishes legitimate zero-row data from auth/provider failure.
 - Current Stripe test catalog is Start 995 SEK, Growth 1,495 SEK and Pro 2,995 SEK monthly with pricing version `2026-09-start-growth-pro`.
-- Stripe test Checkout evidence exists for Start 995 SEK and completed successfully.
-- Resulting Stripe subscription is active and uses the current Start price/pricing version.
-- Vexmera workspace billing projection matches the Stripe customer/subscription and reports active status.
-- Signed billing events are persisted idempotently for `checkout.session.completed` and `customer.subscription.created`.
+- Stripe test Checkout evidence exists and signed billing events are persisted idempotently.
 - Active default test-mode Billing Portal configuration exists.
 - Customer Portal code requires owner/admin role, an attached Stripe customer, an explicit reviewed portal configuration and canonical return origin.
-- Regression coverage now includes the production Customer Portal return URL `https://vexmera.com/?view=team`.
+- Regression coverage includes the production Customer Portal return URL `https://vexmera.com/?view=team`.
+- Production Checkout readiness now fails closed unless the deployed `STRIPE_PRICE_START/GROWTH/PRO` values exactly match the independently reviewed sandbox price IDs, the pricing version is current, and Stripe secret/webhook configuration is present.
+- After PR #264 reached production, an authenticated synthetic workspace still reported `checkout_ready=true`; therefore the deployed Start/Growth/Pro catalog is reconciled under the stricter exact-ID gate.
+- Authenticated production desktop QA completed with a synthetic account: registration, login/logout/re-login, onboarding, routing/navigation, overview, company/profile, Team/Billing reads, account-deletion preview, connector empty states and recommendation-only execution posture were exercised without connecting Google/Meta or changing external systems.
+- Production billing UI rendered Start 995 SEK, Growth 1,495 SEK and Pro 2,995 SEK.
 - Privacy/Terms technical drafts are aligned with the current implementation.
 - Engineering retention proposal and processor/data-flow inventory are documented.
 
-## Orange — real remaining technical/manual gates
+## Orange — remaining technical/manual evidence gates
 
-1. **Authenticated browser QA**
-   - desktop authenticated walkthrough;
-   - mobile viewport walkthrough;
-   - registration/login/reset/session behavior;
-   - onboarding/routing/navigation;
-   - privacy/deletion preview;
-   - safe connector states;
-   - recommendation-only execution posture.
-   Current automated browser tooling is blocked before interaction by the browser platform/security layer, so this gate is not falsely marked green.
+1. **Real mobile viewport walkthrough**
+   - verify the authenticated product at approximately 390×844;
+   - confirm the existing mobile menu toggle/responsive breakpoints operate correctly in a real narrow viewport;
+   - verify header controls, cards, forms, tables and modals without clipping or inaccessible controls.
+   The connected browser automation completed authenticated desktop traversal but cannot set or prove a mobile viewport. Source and regression coverage contain responsive/mobile safeguards; this remains an evidence gate, not a currently reproduced code defect.
 
 2. **Customer Portal live browser return**
-   - open Customer Portal from an authenticated Vexmera workspace using the test customer;
-   - confirm Stripe session opens with the reviewed configuration;
+   - open Customer Portal from an authenticated Vexmera test workspace that already has a Stripe test customer/subscription attached;
+   - confirm the Stripe test portal opens with the reviewed configuration;
    - return to Vexmera and reload;
-   - confirm billing/team view remains healthy.
-   Code/configuration behavior is covered by regression tests, but the live authenticated browser round trip remains unverified.
-
-3. **Production Stripe environment reconciliation**
-   - confirm deployed `STRIPE_PRICE_START/GROWTH/PRO` resolve to the independently verified test prices;
-   - confirm deployed Stripe secret belongs to the same sandbox account;
-   - run deployment-context catalog/preflight and require success.
-   Existing successful Checkout strongly supports configuration correctness, but secret/env identity should still be verified explicitly rather than inferred.
+   - confirm billing/team state remains healthy without changing plan, payment method or cancellation.
+   The Stripe sandbox contains existing test subscriptions and the reviewed portal configuration, but the available synthetic production QA workspace has no attached Stripe customer. Prior billing E2E evidence for the existing Stripe-linked test workspace does not include reusable Vexmera login credentials, and the connected Stripe permission cannot create a Billing Portal session directly. This gate must not be fabricated by attaching unrelated records or touching a real customer.
 
 ## Orange — owner/legal gates
 
