@@ -84,20 +84,20 @@
       sidebar.dataset.enhanced = 'true';
       sidebar.innerHTML = `
         <div class="mini-brand">V</div>
-        <div class="dash-nav active"><b></b><span data-i18n="dash.overview">Översikt</span></div>
-        <div class="dash-nav"><b></b><span>Core</span></div>
-        <div class="dash-nav"><b></b><span>Pulse</span></div>
+        <div class="dash-nav active dash-priority"><b></b><span data-i18n="dash.overview">Översikt</span></div>
+        <div class="dash-nav dash-priority"><b></b><span>Core</span></div>
+        <div class="dash-nav dash-priority"><b></b><span>Pulse</span></div>
+        <div class="dash-nav dash-priority"><b></b><span data-i18n="dash.competitors">Konkurrenter</span></div>
+        <div class="dash-nav-divider" aria-hidden="true"></div>
         <div class="dash-nav"><b></b><span>Launch</span></div>
         <div class="dash-nav"><b></b><span>Brief</span></div>
         <div class="dash-nav"><b></b><span>Queue</span></div>
         <div class="dash-nav"><b></b><span>Autopilot</span></div>
-        <div class="dash-nav"><b></b><span data-i18n="dash.competitors">Konkurrenter</span></div>
         <div class="dash-nav"><b></b><span data-i18n="dash.connections">Anslutningar</span></div>
         <div class="dash-nav"><b></b><span data-i18n="dash.insights">Insikter</span></div>
         <div class="dash-nav"><b></b><span>Team</span></div>
         <div class="dash-nav"><b></b><span data-i18n="dash.brandProfile">Varumärke</span></div>
-        <div class="dash-spacer"></div>
-        <div class="dash-nav muted"><b></b><span data-i18n="dash.settings">Inställningar</span></div>`;
+        <div class="dash-spacer"></div>`;
     }
 
     const dashTop = document.querySelector('.dash-top');
