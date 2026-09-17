@@ -77,10 +77,12 @@ from .store import (
     create_approval,
     create_user,
     create_workspace_invite,
+    create_beta_invite,
     create_workspace,
     dashboard_summary,
     decide_approval,
     consume_workspace_invite,
+    consume_beta_invite,
     enqueue_job,
     delete_competitor,
     delete_kpi,
@@ -136,6 +138,10 @@ STATIC = ROOT / "static"
 
 def serverless_mode() -> bool:
     return os.getenv("VEZMORA_SERVERLESS", "0").lower() in {"1", "true", "yes", "on"}
+
+
+def private_beta_invite_only() -> bool:
+    return (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
 
 
 def _require_cron(authorization: str | None) -> None:
@@ -242,14 +248,25 @@ def _require_key() -> None:
 
 @app.post("/api/auth/register")
 def register(request: RegisterRequest, response: Response) -> dict[str, Any]:
+    email = str(request.email).lower().strip()
+    if private_beta_invite_only():
+        if get_user_by_email(email):
+            raise HTTPException(status_code=409, detail="An account with that email already exists")
+        token = (request.beta_invite or "").strip()
+        if not token:
+            raise HTTPException(status_code=403, detail="Private beta registration requires an invitation")
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        if not consume_beta_invite(token_hash, email):
+            raise HTTPException(status_code=403, detail="Private beta invitation is invalid or expired")
+
     salt, password_hash = hash_password(request.password)
     try:
-        user_id, workspace_id = create_user(str(request.email), salt, password_hash, request.workspace_name)
+        user_id, workspace_id = create_user(email, salt, password_hash, request.workspace_name)
     except sqlite3.IntegrityError as exc:
         raise HTTPException(status_code=409, detail="An account with that email already exists") from exc
     set_workspace_billing(workspace_id, billing_status="trialing", trial_ends_at=(datetime.now(timezone.utc) + timedelta(days=14)).isoformat())
     start_session(response, user_id)
-    return {"ok": True, "user": {"id": user_id, "email": str(request.email)}, "workspace_id": workspace_id}
+    return {"ok": True, "user": {"id": user_id, "email": email}, "workspace_id": workspace_id}
 
 
 @app.post("/api/auth/login")

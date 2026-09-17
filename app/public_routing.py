@@ -11,7 +11,7 @@ from fastapi.routing import APIRoute
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
 CANONICAL_ORIGIN = "https://vexmera.com"
-PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "billing", "connected", "view", "plan"})
+PRODUCT_QUERY_KEYS = frozenset({"reset", "invite", "beta_invite", "billing", "connected", "view", "plan"})
 
 _raw_build_id = (os.getenv("VERCEL_GIT_COMMIT_SHA") or "local").strip()
 BUILD_ID = re.sub(r"[^A-Za-z0-9._-]", "", _raw_build_id)[:16] or "local"
@@ -212,10 +212,11 @@ def install_public_routing(app: FastAPI) -> None:
             '  <script src="/static/view-loading-state.js"></script>',
             1,
         )
+        invite_only = (os.getenv("VERCEL_ENV") or "").strip().lower() == "production"
         html = _inject_before_head_end(
             html,
             f'  <meta name="robots" content="noindex,nofollow" />\n'
-            f'  <script>window.__VEXMERA_BUILD__="{BUILD_ID}";</script>',
+            f'  <script>window.__VEXMERA_BUILD__="{BUILD_ID}";window.__VEXMERA_INVITE_ONLY__={str(invite_only).lower()};</script>',
         )
         # Fail closed on mobile. The responsive inline CSS in the legacy shell
         # uses a higher-specificity `html body .shell{display:block!important}`

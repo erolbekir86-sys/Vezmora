@@ -16,11 +16,28 @@ function inlineFormat(v){return v.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'
 function renderMarkdownLite(value){const safe=escapeHtml(value),lines=safe.split('\n');let list=false,html='';for(const raw of lines){const line=raw.trimEnd(),m=line.match(/^[-*]\s+(.+)/);if(m){if(!list){html+='<ul>';list=true;}html+=`<li>${inlineFormat(m[1])}</li>`;continue;}if(list){html+='</ul>';list=false;}if(!line.trim()){html+='<div class="spacer"></div>';continue;}if(line.startsWith('### '))html+=`<h3>${inlineFormat(line.slice(4))}</h3>`;else if(line.startsWith('## '))html+=`<h2>${inlineFormat(line.slice(3))}</h2>`;else if(line.startsWith('# '))html+=`<h1>${inlineFormat(line.slice(2))}</h1>`;else html+=`<p>${inlineFormat(line)}</p>`;}if(list)html+='</ul>';return html;}
 async function api(path,options={}){const res=await fetch(path,{headers:{'Content-Type':'application/json',...(options.headers||{})},...options});let data=null;try{data=await res.json();}catch(_){}if(!res.ok){const err=new Error(data?.detail||`HTTP ${res.status}`);err.status=res.status;throw err;}return data;}
 function ws(path){return `${path}${path.includes('?')?'&':'?'}workspace_id=${currentWorkspaceId}`;}
+const betaInviteToken=new URLSearchParams(location.search).get('beta_invite')||'';
+const inviteOnly=window.__VEXMERA_INVITE_ONLY__===true;
 function showAuth(){$('authScreen').classList.remove('hidden');$('appShell').classList.add('hidden');} function showApp(){$('authScreen').classList.add('hidden');$('appShell').classList.remove('hidden');}
 function setAuthTab(tab){const login=tab==='login';$('loginForm').classList.toggle('hidden',!login);$('registerForm').classList.toggle('hidden',login);$('showLogin').classList.toggle('active',login);$('showRegister').classList.toggle('active',!login);$('authError').textContent='';}
-$('showLogin').onclick=()=>setAuthTab('login');$('showRegister').onclick=()=>setAuthTab('register');
+function syncPrivateBetaRegistration(){
+  const notice=$('betaInviteNotice'),submit=$('registerSubmit'),registerTab=$('showRegister');
+  if(!inviteOnly){if(notice)notice.textContent='Privat beta.';return;}
+  if(betaInviteToken){
+    if(notice)notice.textContent='Personlig beta-inbjudan hittad. Registrera med samma e-postadress som inbjudan.';
+    if(submit)submit.disabled=false;
+    if(registerTab)registerTab.disabled=false;
+    setAuthTab('register');
+    return;
+  }
+  if(notice)notice.textContent='Privat beta är endast öppen via personlig inbjudan.';
+  if(submit)submit.disabled=true;
+  if(registerTab){registerTab.disabled=true;registerTab.title='Personlig beta-inbjudan krävs';}
+}
+$('showLogin').onclick=()=>setAuthTab('login');$('showRegister').onclick=()=>{if(!inviteOnly||betaInviteToken)setAuthTab('register');};
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('loginEmail').value,password:$('loginPassword').value})});location.reload();}catch(err){$('authError').textContent=err.message;}});
-$('registerForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({email:$('registerEmail').value,password:$('registerPassword').value,workspace_name:$('registerWorkspace').value})});location.reload();}catch(err){$('authError').textContent=err.message;}});
+$('registerForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({email:$('registerEmail').value,password:$('registerPassword').value,workspace_name:$('registerWorkspace').value,beta_invite:betaInviteToken||null})});history.replaceState({},'',location.pathname);location.reload();}catch(err){$('authError').textContent=err.message;}});
+syncPrivateBetaRegistration();
 $('logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}catch(_){}currentWorkspaceId=null;showAuth();};
 navs.forEach(btn=>btn.addEventListener('click',()=>activateView(btn.dataset.view)));
 function activateView(id){if(id==='onboarding'){openOnboarding();return;}navs.forEach(x=>x.classList.toggle('active',x.dataset.view===id));views.forEach(x=>x.classList.toggle('active',x.id===id));const meta=pageMeta[id]||[id,''];$('pageTitle').textContent=meta[0];$('pageLead').textContent=meta[1];$('aiOutputSection').classList.toggle('hidden',!['agent','strategy','campaign'].includes(id));if(id==='dashboard'){loadDashboard();loadCoreToday();}if(id==='rivals')loadCompetitors();if(id==='connect')loadConnectors();if(id==='queue')loadApprovals();if(id==='autopilot')loadAutopilot();if(id==='brief')loadBrief();if(id==='insights')loadInsights();if(id==='team')loadTeam();}

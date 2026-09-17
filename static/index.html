@@ -27,7 +27,8 @@
         <label>E-post<input id="registerEmail" type="email" required autocomplete="email" placeholder="du@foretag.se" /></label>
         <label>Lösenord<input id="registerPassword" type="password" minlength="8" required autocomplete="new-password" /></label>
         <label>Företagsnamn<input id="registerWorkspace" value="Mitt företag" required /></label>
-        <button class="primary" type="submit">Skapa Vexmera-konto</button>
+        <p id="betaInviteNotice" class="fineprint">Privat beta: konto skapas via personlig inbjudan.</p>
+        <button id="registerSubmit" class="primary" type="submit">Skapa Vexmera-konto</button>
       </form>
       <p id="authError" class="error-text"></p>
     </div>

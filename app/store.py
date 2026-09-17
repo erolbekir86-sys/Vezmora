@@ -391,6 +391,15 @@ def init_db() -> None:
                 accepted_at TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS beta_invites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL COLLATE NOCASE,
+                token_hash TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                accepted_at TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_beta_invites_email ON beta_invites(email);
             CREATE TABLE IF NOT EXISTS usage_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -786,6 +795,35 @@ def add_workspace_member(workspace_id: int, user_id: int, role: str) -> None:
 def create_workspace_invite(workspace_id: int, email: str, role: str, token_hash: str, invited_by: int, expires_at: str) -> int:
     with _connect() as con:
         return _insert_id(con, "INSERT INTO workspace_invites(workspace_id,email,role,token_hash,invited_by,expires_at) VALUES(?,?,?,?,?,?)", (workspace_id,email.lower().strip(),role,token_hash,invited_by,expires_at))
+
+
+def create_beta_invite(email: str, token_hash: str, expires_at: str) -> int:
+    normalized = email.lower().strip()
+    now = datetime.now(timezone.utc).isoformat()
+    with _connect() as con:
+        con.execute("DELETE FROM beta_invites WHERE expires_at<=? OR (email=? COLLATE NOCASE AND accepted_at IS NULL)", (now, normalized))
+        return _insert_id(
+            con,
+            "INSERT INTO beta_invites(email,token_hash,expires_at) VALUES(?,?,?)",
+            (normalized, token_hash, expires_at),
+        )
+
+
+def consume_beta_invite(token_hash: str, email: str) -> bool:
+    normalized = email.lower().strip()
+    now = datetime.now(timezone.utc).isoformat()
+    with _connect() as con:
+        row = con.execute(
+            "SELECT id FROM beta_invites WHERE token_hash=? AND email=? COLLATE NOCASE AND accepted_at IS NULL AND expires_at>?",
+            (token_hash, normalized, now),
+        ).fetchone()
+        if not row:
+            return False
+        claimed = con.execute(
+            "UPDATE beta_invites SET accepted_at=CURRENT_TIMESTAMP WHERE id=? AND accepted_at IS NULL AND expires_at>?",
+            (row["id"], now),
+        )
+        return claimed.rowcount == 1
 
 
 def consume_workspace_invite(token_hash: str, email: str) -> dict[str, Any] | None:
