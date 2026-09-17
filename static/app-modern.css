@@ -332,3 +332,86 @@ a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible,
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* 2026-09-17 — final readability overrides */
+html body .nav{
+  min-height:50px!important;
+  padding:10px 12px!important;
+  font-size:15px!important;
+  line-height:1.25!important
+}
+html body .nav>span:not(.vex-nav-icon){
+  font-size:11.5px!important;
+  line-height:1.3!important
+}
+html body .nav.nav-priority{
+  min-height:58px!important;
+  padding:13px 12px!important;
+  font-size:16px!important;
+  font-weight:760!important;
+  background:linear-gradient(105deg,rgba(199,166,106,.10),color-mix(in srgb,var(--vx-surface) 76%,transparent))!important;
+  border-color:color-mix(in srgb,var(--vx-primary) 18%,var(--vx-border))!important
+}
+html body .nav.nav-priority:hover{
+  background:linear-gradient(105deg,rgba(199,166,106,.16),color-mix(in srgb,var(--vx-surface) 78%,transparent))!important
+}
+html body .nav.nav-priority.active{
+  background:linear-gradient(105deg,rgba(199,166,106,.20),color-mix(in srgb,var(--vx-surface) 78%,transparent))!important;
+  border-color:color-mix(in srgb,var(--vx-primary) 38%,var(--vx-border))!important
+}
+html body .nav.nav-priority>span:not(.vex-nav-icon){font-size:12px!important}
+html body .nav-section-divider{
+  height:1px!important;
+  margin:10px 8px 8px!important;
+  background:linear-gradient(90deg,rgba(199,166,106,.38),rgba(86,95,108,.32),transparent)!important
+}
+
+html body .panel-title{font-size:13px!important;line-height:1.4!important}
+html body .module-head p,
+html body .muted{font-size:14px!important;line-height:1.62!important}
+html body .fineprint{font-size:12px!important;line-height:1.62!important}
+html body label{font-size:14px!important;line-height:1.42!important}
+html body select,
+html body input,
+html body textarea{font-size:15px!important;line-height:1.46!important}
+html body .primary{font-size:14px!important;min-height:44px!important}
+html body .ghost{font-size:13px!important;min-height:39px!important}
+html body .module-pill{font-size:11.5px!important}
+html body .signal-strip strong,
+html body .signal-strip span{font-size:12px!important}
+html body .metric span{font-size:11px!important}
+html body .metric strong{font-size:24px!important}
+html body .metric small{font-size:11px!important;line-height:1.35!important}
+html body table{font-size:13px!important}
+html body th{font-size:10.5px!important}
+html body th,
+html body td{padding:12px 9px!important}
+html body .output{font-size:15px!important;line-height:1.72!important}
+html body .core-priority-card .source{font-size:10px!important}
+html body .core-priority-card strong{font-size:14px!important;line-height:1.45!important}
+html body .core-priority-card p{font-size:12.5px!important;line-height:1.6!important}
+html body .notification-card strong,
+html body .approval-card strong,
+html body .competitor-card strong,
+html body .connector-card strong{font-size:13.5px!important}
+html body .notification-card p,
+html body .approval-card p,
+html body .competitor-card p,
+html body .connector-card p{font-size:13px!important;line-height:1.6!important}
+html body .notification-card time,
+html body .notification-card small,
+html body .approval-card small,
+html body .competitor-card small,
+html body .connector-card small{font-size:10.5px!important}
+html body .mode-card strong{font-size:14px!important}
+html body .mode-card span{font-size:12px!important;line-height:1.55!important}
+html body .safety-row span{font-size:13px!important}
+html body .safety-row strong{font-size:12px!important}
+
+@media(max-width:900px){
+  html body .nav{font-size:15px!important;min-height:50px!important}
+  html body .nav.nav-priority{font-size:15.5px!important;min-height:54px!important}
+  html body .nav.nav-priority>span:not(.vex-nav-icon){font-size:11.5px!important}
+  html body .nav-section-divider{grid-column:1/-1!important;margin:7px 4px 6px!important}
+}
