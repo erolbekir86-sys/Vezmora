@@ -134,6 +134,9 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
             page.locator("#registerEmail").fill("mobile-browser-qa@example.com")
             page.locator("#registerPassword").fill("VexmeraMobileQA-2026!")
             page.locator("#registerWorkspace").fill("Vexmera Mobile QA")
+            consent = page.locator('[data-consent="denied"]')
+            if consent.is_visible():
+                consent.click()
             page.locator("#registerForm button[type='submit']").click()
             page.wait_for_load_state("networkidle")
 
