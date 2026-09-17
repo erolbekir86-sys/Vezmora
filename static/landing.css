@@ -28,3 +28,96 @@ html[data-theme="dark"]{--paper:#0d1117;--paper-2:#11161d;--surface:#151b23;--su
 @media(max-width:760px){.section-wrap,.site-header{width:min(100% - 28px,1220px)}.site-header{height:64px;top:8px;margin-top:8px}.brand-copy small{display:none}.brand-mark{width:34px;height:34px}.brand-mark svg{width:23px}.header-actions .text-link,.header-actions>.button,.utility-btn.sound-toggle{display:none}.menu-toggle{display:flex}.mobile-menu{position:absolute;top:72px;left:0;right:0;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);padding:10px;display:grid;gap:2px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:.25s var(--ease)}.mobile-menu.open{opacity:1;transform:none;pointer-events:auto}.mobile-menu a{padding:12px;border-radius:9px;font-size:12px}.mobile-menu a:hover{background:var(--surface-soft)}.hero{padding:82px 0 56px;min-height:auto}.hero h1{font-size:clamp(42px,12vw,62px)}.hero-lead{font-size:15px}.hero-actions{flex-direction:column;align-items:stretch}.hero-proof{display:grid;gap:9px}.dashboard-window{grid-template-columns:76px 1fr;min-height:410px;transform:none}.dash-sidebar{padding:14px 8px}.dash-nav{padding:0 6px}.dash-nav span{display:none}.dash-main{padding:16px 12px}.metric-row{grid-template-columns:1fr 1fr}.metric-row article:nth-child(3){display:none}.dash-grid{grid-template-columns:1fr}.chart-card{display:none}.floating-one{right:-4px;top:25px}.floating-two{left:-6px;bottom:16px}.trust-strip{grid-template-columns:1fr;padding:10px 0}.trust-strip article,.trust-strip article:first-child{padding:15px 0;border-right:0;border-bottom:1px solid var(--line)}.trust-strip article:last-child{border-bottom:0}.section{padding:82px 0}.section-heading{margin-bottom:38px}.split-heading{grid-template-columns:1fr;gap:16px}.split-heading p{justify-self:start}.data-convergence{grid-template-columns:1fr}.vexmera-core{grid-column:auto;width:100%}.demo-layout{gap:38px}.value-grid,.steps,.module-grid,.outcome-grid{grid-template-columns:1fr}.steps-line{display:none}.value-card{min-height:240px}.module-card{min-height:260px}.integration-grid{grid-template-columns:1fr 1fr}.workflow{grid-template-columns:1fr;gap:8px}.workflow>i{transform:rotate(90deg);text-align:center}.workflow>i:nth-of-type(2){display:block}.control-points{justify-content:flex-start}.outcome-grid{border-top:0}.outcome-grid article{border:1px solid var(--line);border-radius:14px;margin-bottom:8px;min-height:110px}.outcome-grid h3{margin-top:25px}.billing-toggle{display:flex;width:100%;justify-content:center}.billing-toggle button{flex:1}.security-card{padding:28px 22px}.security-copy h2{font-size:38px}.security-grid{grid-template-columns:1fr}.final-cta{padding:90px 0}.footer-grid{grid-template-columns:1fr 1fr}.footer-brand{grid-column:1/-1}.footer-bottom{align-items:flex-start;gap:18px;flex-direction:column}}
 @media(max-width:460px){.utility-btn{width:32px;height:32px}.hero-visual{min-height:430px}.dashboard-window{grid-template-columns:60px 1fr}.metric-row article{padding:9px}.metric-row strong{font-size:13px}.recommendation-card h3{font-size:10px}.floating-card{min-width:140px;padding:10px}.integration-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr}.footer-brand{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}.reveal{opacity:1;transform:none}.pointer-light{display:none}}
+
+
+/* 2026-09-17 — centered marketing copy, brand marks and app-preview hierarchy */
+main .hero-copy{text-align:center}
+main .hero-copy .hero-lead{margin-left:auto;margin-right:auto}
+main .hero-actions,
+main .hero-proof{justify-content:center}
+main .hero-copy .eyebrow{justify-content:center}
+main > section:not(.hero),
+main > section:not(.hero) .section-wrap,
+main .section-heading,
+main .feature-copy,
+main .security-copy,
+main .founder-copy,
+main .final-inner{text-align:center}
+main .section-heading,
+main .feature-copy,
+main .security-copy,
+main .founder-copy{margin-left:auto;margin-right:auto}
+main .section-heading .eyebrow,
+main .feature-copy .eyebrow,
+main .security-copy .eyebrow,
+main .final-inner .eyebrow{justify-content:center}
+main .split-heading{
+  display:block!important;
+  max-width:820px!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important
+}
+main .split-heading>p{
+  max-width:700px!important;
+  margin:18px auto 0!important;
+  justify-self:auto!important
+}
+main .value-card,
+main .step,
+main .module-card,
+main .integration-card,
+main .outcome-grid article,
+main .plan-card,
+main .security-card,
+main .trust-strip article,
+main .faq-list details{text-align:center}
+main .trust-strip article{justify-content:center}
+main .value-card .icon-box,
+main .module-letter,
+main .source-logo,
+main .premium-outcome-icon{margin-left:auto;margin-right:auto}
+main .plan-card ul{padding-left:0;list-style-position:inside;text-align:center}
+main .signal-list span,
+main .control-points,
+main .security-grid{justify-content:center;text-align:center}
+main .faq-list details p{margin-left:auto;margin-right:auto}
+.footer,
+.footer .footer-grid,
+.footer .footer-brand{text-align:center}
+.footer .brand{justify-content:center}
+.footer-grid>div{align-items:center}
+
+.section-vexmera-mark{
+  width:50px;height:50px;display:block;margin:0 auto 18px;border-radius:13px;
+  background:#0d0f12 url('/static/brand/vexmera-v-mark.png') center/88% 88% no-repeat;
+  border:1px solid rgba(181,139,75,.32);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(15,17,20,.12)
+}
+.section-vexmera-mark-light{border-color:rgba(213,174,114,.44)}
+
+.hero-visual .dash-sidebar{gap:4px}
+.hero-visual .dash-nav{min-height:32px;height:auto;font-size:9.5px;font-weight:600}
+.hero-visual .dash-nav.dash-priority{
+  min-height:38px;
+  font-size:10.5px;
+  font-weight:800;
+  color:#c6a267;
+  background:linear-gradient(90deg,rgba(198,162,103,.13),rgba(198,162,103,.025))
+}
+.hero-visual .dash-nav.active.dash-priority{
+  background:linear-gradient(90deg,rgba(198,162,103,.22),rgba(198,162,103,.035));
+  color:#e0bc82
+}
+.hero-visual .dash-nav-divider{
+  height:1px;margin:7px 5px 6px;
+  background:linear-gradient(90deg,rgba(198,162,103,.42),rgba(68,76,88,.34),transparent)
+}
+.hero-visual .mini-brand{width:36px;height:36px;margin-bottom:10px}
+
+@media(max-width:760px){
+  main .section-heading{max-width:100%}
+  .section-vexmera-mark{width:44px;height:44px;margin-bottom:15px}
+  .hero-visual .dash-nav.dash-priority{min-height:34px;font-size:9.5px}
+  .hero-visual .dash-nav-divider{margin:5px 2px}
+}
