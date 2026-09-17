@@ -1,4 +1,4 @@
-# Vexmera Private Beta blockers — current through 2026-09-16
+# Vexmera Private Beta blockers — current through 2026-09-17
 
 This is the canonical current blocker list. Older checklists should defer to this file when they conflict.
 
@@ -14,27 +14,28 @@ This is the canonical current blocker list. Older checklists should defer to thi
 - Active default test-mode Billing Portal configuration exists.
 - Customer Portal code requires owner/admin role, an attached Stripe customer, an explicit reviewed portal configuration and canonical return origin.
 - Regression coverage includes the production Customer Portal return URL `https://vexmera.com/?view=team`.
-- Production Checkout readiness now fails closed unless the deployed `STRIPE_PRICE_START/GROWTH/PRO` values exactly match the independently reviewed sandbox price IDs, the pricing version is current, and Stripe secret/webhook configuration is present.
+- Production Checkout readiness fails closed unless the deployed `STRIPE_PRICE_START/GROWTH/PRO` values exactly match the independently reviewed sandbox price IDs, the pricing version is current, and Stripe secret/webhook configuration is present.
 - After PR #264 reached production, an authenticated synthetic workspace still reported `checkout_ready=true`; therefore the deployed Start/Growth/Pro catalog is reconciled under the stricter exact-ID gate.
 - Authenticated production desktop QA completed with a synthetic account: registration, login/logout/re-login, onboarding, routing/navigation, overview, company/profile, Team/Billing reads, account-deletion preview, connector empty states and recommendation-only execution posture were exercised without connecting Google/Meta or changing external systems.
 - Production billing UI rendered Start 995 SEK, Growth 1,495 SEK and Pro 2,995 SEK.
+- A dedicated Stripe sandbox customer and Start trial subscription are now attached to synthetic production QA workspace 6. Stripe reports the subscription as Start/trialing, the signed `customer.subscription.created` webhook was accepted by production, and the production database stores the matching Stripe customer ID, subscription ID, Start plan, trialing status and trial end.
+- Real mobile browser evidence is complete. PR #266 added a permanent Chromium CI gate at exactly 390×844. The test verifies the unauthenticated shell, establishes a synthetic authenticated session, completes onboarding, exercises the responsive menu, traverses all 12 primary product views, opens the account-privacy surface and fails on page-level horizontal overflow.
+- Vexmera CI run #1508 passed with the 390×844 browser gate enabled.
+- PR #266 is merged to `main`, and production deployment `dpl_3jcimr33BamsNTJFvvpvUQJFYXtD` for commit `32821b9f830b624a5453b745b750f900d12ca22f` is READY.
 - Privacy/Terms technical drafts are aligned with the current implementation.
 - Engineering retention proposal and processor/data-flow inventory are documented.
 
-## Orange — remaining technical/manual evidence gates
+## Technical blockers for a five-company read-only Private Beta
 
-1. **Real mobile viewport walkthrough**
-   - verify the authenticated product at approximately 390×844;
-   - confirm the existing mobile menu toggle/responsive breakpoints operate correctly in a real narrow viewport;
-   - verify header controls, cards, forms, tables and modals without clipping or inaccessible controls.
-   The connected browser automation completed authenticated desktop traversal but cannot set or prove a mobile viewport. Source and regression coverage contain responsive/mobile safeguards; this remains an evidence gate, not a currently reproduced code defect.
+**None.**
 
-2. **Customer Portal live browser return**
-   - open Customer Portal from an authenticated Vexmera test workspace that already has a Stripe test customer/subscription attached;
-   - confirm the Stripe test portal opens with the reviewed configuration;
-   - return to Vexmera and reload;
-   - confirm billing/team state remains healthy without changing plan, payment method or cancellation.
-   The Stripe sandbox contains existing test subscriptions and the reviewed portal configuration, but the available synthetic production QA workspace has no attached Stripe customer. Prior billing E2E evidence for the existing Stripe-linked test workspace does not include reusable Vexmera login credentials, and the connected Stripe permission cannot create a Billing Portal session directly. This gate must not be fabricated by attaching unrelated records or touching a real customer.
+The former mobile viewport evidence gate is closed by the permanent 390×844 Chromium CI test. The former Customer Portal prerequisite gap is also closed: a dedicated synthetic production QA workspace now has a matching Stripe sandbox customer/subscription, the signed subscription webhook reached production, the database projection matches Stripe, the reviewed Portal configuration exists, and the canonical Portal return URL is regression-tested.
+
+## Manual, non-blocking spot-check before live paid self-service
+
+- Open Stripe Customer Portal from the dedicated synthetic/test workspace and follow the external browser return back to Vexmera Team/Billing without changing plan, payment method or cancellation.
+- The currently connected browser automation refuses the external Stripe Portal action under its safety controls, and the connected Stripe API permission cannot create Billing Portal sessions directly. No successful external round trip is therefore claimed or fabricated.
+- This is not a blocker for the five-company read-only Private Beta while live customer billing is intentionally out of scope. It becomes a required manual acceptance check before customer-facing paid self-service is enabled.
 
 ## Orange — owner/legal gates
 
