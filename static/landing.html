@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/landing.css" />
-  <link rel="stylesheet" href="/static/landing-image-quality.css" />
+  <link rel="stylesheet" href="/static/landing.css?v=2" />
+  <link rel="stylesheet" href="/static/landing-image-quality.css?v=2" />
   <style id="hero-layout-guard">
     @media (min-width:1101px){
       .hero{grid-template-columns:minmax(0,.92fr) minmax(560px,1.08fr)!important;gap:clamp(36px,4vw,62px)!important}
@@ -127,20 +127,20 @@
         <div class="dashboard-window float-soft">
           <aside class="dash-sidebar">
             <div class="mini-brand">V</div>
-            <div class="dash-nav active"><b></b><span data-i18n="dash.overview">Översikt</span></div>
-            <div class="dash-nav"><b></b><span>Core</span></div>
-            <div class="dash-nav"><b></b><span>Pulse</span></div>
+            <div class="dash-nav active dash-priority"><b></b><span data-i18n="dash.overview">Översikt</span></div>
+            <div class="dash-nav dash-priority"><b></b><span>Core</span></div>
+            <div class="dash-nav dash-priority"><b></b><span>Pulse</span></div>
+            <div class="dash-nav dash-priority"><b></b><span data-i18n="dash.competitors">Konkurrenter</span></div>
+            <div class="dash-nav-divider" aria-hidden="true"></div>
             <div class="dash-nav"><b></b><span>Launch</span></div>
             <div class="dash-nav"><b></b><span>Brief</span></div>
             <div class="dash-nav"><b></b><span>Queue</span></div>
             <div class="dash-nav"><b></b><span>Autopilot</span></div>
-            <div class="dash-nav"><b></b><span data-i18n="dash.competitors">Konkurrenter</span></div>
             <div class="dash-nav"><b></b><span data-i18n="dash.connections">Anslutningar</span></div>
             <div class="dash-nav"><b></b><span data-i18n="dash.insights">Insikter</span></div>
             <div class="dash-nav"><b></b><span>Team</span></div>
             <div class="dash-nav"><b></b><span data-i18n="dash.brandProfile">Varumärke</span></div>
             <div class="dash-spacer"></div>
-            <div class="dash-nav muted"><b></b><span data-i18n="dash.settings">Inställningar</span></div>
           </aside>
           <div class="dash-main">
             <div class="dash-top">
@@ -239,7 +239,7 @@
 
     <section id="funktioner" class="section modules-section">
       <div class="section-wrap">
-        <div class="section-heading centered dark-heading reveal"><div class="eyebrow" data-i18n="modules.eyebrow">DIN AI MARKETING OFFICER</div><h2 data-i18n="modules.title">Ett system för hela beslutskedjan.</h2><p data-i18n="modules.body">Från analys och strategi till kampanjförslag och kontrollerad automation.</p></div>
+        <div class="section-heading centered dark-heading reveal"><span class="section-vexmera-mark" aria-hidden="true"></span><div class="eyebrow" data-i18n="modules.eyebrow">DIN AI MARKETING OFFICER</div><h2 data-i18n="modules.title">Ett system för hela beslutskedjan.</h2><p data-i18n="modules.body">Från analys och strategi till kampanjförslag och kontrollerad automation.</p></div>
         <div class="module-grid">
           <article class="module-card reveal"><div class="module-top"><span class="module-letter">C</span><span>01</span></div><h3>Core</h3><p data-i18n="modules.core">Din strategiska AI-operatör som förstår verksamheten, datan och prioriteringarna.</p><div class="module-ui"><span></span><span></span><span class="long"></span></div></article>
           <article class="module-card reveal reveal-delay"><div class="module-top"><span class="module-letter">P</span><span>02</span></div><h3>Pulse</h3><p data-i18n="modules.pulse">Upptäcker förändringar, avvikelser och möjligheter innan de blir lätta att missa.</p><div class="pulse-ui"><i></i><i></i><i></i><i></i><i></i></div></article>
@@ -255,20 +255,20 @@
     </section>
 
     <section class="section workflow-section section-wrap">
-      <div class="section-heading centered reveal"><div class="eyebrow">AUTOPILOT</div><h2 data-i18n="workflow.title">Automation utan att tappa kontrollen.</h2><p data-i18n="workflow.body">Vexmera kan hjälpa dig hela vägen från möjlighet till åtgärd, men du bestämmer hur långt automationen får gå.</p></div>
+      <div class="section-heading centered reveal"><span class="section-vexmera-mark" aria-hidden="true"></span><div class="eyebrow">AUTOPILOT</div><h2 data-i18n="workflow.title">Automation utan att tappa kontrollen.</h2><p data-i18n="workflow.body">Vexmera kan hjälpa dig hela vägen från möjlighet till åtgärd, men du bestämmer hur långt automationen får gå.</p></div>
       <div class="workflow reveal"><div class="workflow-node"><span>01</span><strong data-i18n="workflow.opportunity">Möjlighet</strong><small data-i18n="workflow.detected">Signal upptäckt</small></div><i>→</i><div class="workflow-node"><span>02</span><strong data-i18n="workflow.recommendation">Rekommendation</strong><small data-i18n="workflow.prioritized">Prioriterad åtgärd</small></div><i>→</i><div class="workflow-node approval"><span>03</span><strong data-i18n="workflow.approval">Godkännande</strong><small data-i18n="workflow.human">Mänskligt beslut</small></div><i>→</i><div class="workflow-node"><span>04</span><strong data-i18n="workflow.action">Åtgärd</strong><small data-i18n="workflow.logged">Spårad aktivitet</small></div></div>
       <div class="control-points reveal"><span>✓ <b data-i18n="workflow.control1">Mänskligt godkännande</b></span><span>✓ <b data-i18n="workflow.control2">Budgetgränser</b></span><span>✓ <b data-i18n="workflow.control3">Aktivitetslogg</b></span><span>✓ <b data-i18n="workflow.control4">Pausa när som helst</b></span></div>
     </section>
 
     <section class="section integrations-section">
       <div class="section-wrap">
-        <div class="section-heading centered reveal"><div class="eyebrow" data-i18n="integrations.eyebrow">INTEGRATIONER</div><h2 data-i18n="integrations.title">Vexmera arbetar med verktygen du redan använder.</h2></div>
+        <div class="section-heading centered reveal"><span class="section-vexmera-mark" aria-hidden="true"></span><div class="eyebrow" data-i18n="integrations.eyebrow">INTEGRATIONER</div><h2 data-i18n="integrations.title">Vexmera arbetar med verktygen du redan använder.</h2></div>
         <div class="integration-grid reveal"><article class="integration-card ready"><span class="source-logo google">G</span><strong>Google Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card ready"><span class="source-logo meta">∞</span><strong>Meta Ads</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card ready"><span class="source-logo analytics">▥</span><strong>GA4</strong><small data-i18n="integrations.connected">Privat beta</small></article><article class="integration-card"><span class="source-logo linkedin">in</span><strong>LinkedIn</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo tiktok">♪</span><strong>TikTok</strong><small data-i18n="integrations.soon">Kommer snart</small></article><article class="integration-card"><span class="source-logo shop">S</span><strong>Shopify</strong><small data-i18n="integrations.soon">Kommer snart</small></article></div>
       </div>
     </section>
 
     <section class="section outcomes-section section-wrap">
-      <div class="section-heading split-heading reveal"><div><div class="eyebrow" data-i18n="outcomes.eyebrow">VAD VEXMERA FÖRBÄTTRAR</div><h2 data-i18n="outcomes.title">Mindre analysarbete. Tydligare prioriteringar.</h2></div><p data-i18n="outcomes.body">Vexmera är byggt för att korta vägen från data till beslut, så att du kan lägga mindre tid på att tolka dashboards och mer tid på rätt nästa steg.</p></div>
+      <div class="section-heading split-heading reveal"><span class="section-vexmera-mark" aria-hidden="true"></span><div><div class="eyebrow" data-i18n="outcomes.eyebrow">VAD VEXMERA FÖRBÄTTRAR</div><h2 data-i18n="outcomes.title">Mindre analysarbete. Tydligare prioriteringar.</h2></div><p data-i18n="outcomes.body">Vexmera är byggt för att korta vägen från data till beslut, så att du kan lägga mindre tid på att tolka dashboards och mer tid på rätt nästa steg.</p></div>
       <div class="outcome-grid"><article class="reveal"><span>01</span><h3 data-i18n="outcomes.one">Mindre tid på analys</h3></article><article class="reveal reveal-delay"><span>02</span><h3 data-i18n="outcomes.two">Bättre budgetbeslut</h3></article><article class="reveal"><span>03</span><h3 data-i18n="outcomes.three">Snabbare problemupptäckt</h3></article><article class="reveal reveal-delay"><span>04</span><h3 data-i18n="outcomes.four">Tydligare nästa steg</h3></article></div>
     </section>
 
@@ -285,7 +285,7 @@
     </section>
 
     <section class="section security-section section-wrap">
-      <div class="security-card reveal"><div class="security-copy"><div class="eyebrow" data-i18n="security.eyebrow">SÄKERHET & KONTROLL</div><h2 data-i18n="security.title">Din data. Din kontroll.</h2><p data-i18n="security.body">Vexmera är byggt för att hjälpa dig fatta bättre beslut utan att ta kontrollen ifrån dig.</p></div><div class="security-grid"><span>✓ <b>GDPR</b></span><span>✓ <b data-i18n="security.permissions">Behörighetsstyrning</b></span><span>✓ <b data-i18n="security.approvals">Godkännandeflöden</b></span><span>✓ <b data-i18n="security.audit">Aktivitetslogg</b></span><span>✓ <b data-i18n="security.encrypted">Krypterad kommunikation</b></span><span>✓ <b data-i18n="security.rules">Tydliga automationsregler</b></span></div></div>
+      <div class="security-card reveal"><div class="security-copy"><span class="section-vexmera-mark" aria-hidden="true"></span><div class="eyebrow" data-i18n="security.eyebrow">SÄKERHET & KONTROLL</div><h2 data-i18n="security.title">Din data. Din kontroll.</h2><p data-i18n="security.body">Vexmera är byggt för att hjälpa dig fatta bättre beslut utan att ta kontrollen ifrån dig.</p></div><div class="security-grid"><span>✓ <b>GDPR</b></span><span>✓ <b data-i18n="security.permissions">Behörighetsstyrning</b></span><span>✓ <b data-i18n="security.approvals">Godkännandeflöden</b></span><span>✓ <b data-i18n="security.audit">Aktivitetslogg</b></span><span>✓ <b data-i18n="security.encrypted">Krypterad kommunikation</b></span><span>✓ <b data-i18n="security.rules">Tydliga automationsregler</b></span></div></div>
     </section>
 
     <section class="section faq-section section-wrap">
@@ -303,6 +303,7 @@
     <section class="final-cta">
       <div class="final-organic-light" aria-hidden="true"></div>
       <div class="section-wrap final-inner reveal">
+        <span class="section-vexmera-mark section-vexmera-mark-light" aria-hidden="true"></span>
         <div class="eyebrow">VEXMERA · AI MARKETING OFFICER</div>
         <h2 data-i18n="final.title">Väx mer med Vexmera.</h2>
         <p><span data-i18n="final.line1">Förstå vad som händer.</span><br><span data-i18n="final.line2">Vet vad du ska göra härnäst.</span></p>
@@ -322,7 +323,7 @@
     <div class="section-wrap footer-bottom"><span>© 2026 Vexmera.</span><div><button type="button" id="footerLanguage">SV / EN</button><button type="button" id="footerTheme" data-i18n="footer.theme">Tema</button></div></div>
   </footer>
 
-  <script src="/static/landing.js" defer></script>
+  <script src="/static/landing.js?v=2" defer></script>
 
 <style id="vexmera-complete-polish">
 /* Final Vexmera visual pass */
