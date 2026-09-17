@@ -34,6 +34,18 @@ jobs:
           pip install -e ".[dev]"
       - name: Verify installed dependencies
         run: python -m pip check
+      - name: Verify Chromium for mobile browser QA
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            echo "CHROMIUM_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          elif command -v google-chrome-stable >/dev/null 2>&1; then
+            echo "CHROMIUM_PATH=$(command -v google-chrome-stable)" >> "$GITHUB_ENV"
+          elif command -v chromium >/dev/null 2>&1; then
+            echo "CHROMIUM_PATH=$(command -v chromium)" >> "$GITHUB_ENV"
+          else
+            echo "No Chromium/Chrome executable available for the 390x844 browser QA gate" >&2
+            exit 1
+          fi
       - name: Compile Python
         run: python -m compileall -q app main.py scripts
       - name: Check frontend JavaScript
