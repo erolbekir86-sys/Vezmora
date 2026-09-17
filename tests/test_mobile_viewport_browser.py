@@ -106,7 +106,7 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
         env.pop(key, None)
 
     process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(port)],
+        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port)],
         cwd=Path(__file__).resolve().parents[1],
         env=env,
         stdout=subprocess.PIPE,
@@ -130,7 +130,7 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
             page = context.new_page()
             page.goto(f"{base_url}/app", wait_until="networkidle")
 
-            page.get_by_role("button", name="Skapa konto").click()
+            page.locator("#showRegister").click()
             page.locator("#registerEmail").fill("mobile-browser-qa@example.com")
             page.locator("#registerPassword").fill("VexmeraMobileQA-2026!")
             page.locator("#registerWorkspace").fill("Vexmera Mobile QA")
