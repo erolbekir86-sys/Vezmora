@@ -8,7 +8,7 @@
   <title>Vexmera — AI Marketing Officer</title>
   <!-- Google Analytics is loaded dynamically only after explicit consent. -->
   <link rel="stylesheet" href="/static/styles.css" />
-  <link rel="stylesheet" href="/static/app-polish.css?v=1" />
+  <link rel="stylesheet" href="/static/app-polish.css?v=2" />
 </head>
 <body>
   <section id="authScreen" class="auth-screen">
@@ -62,14 +62,15 @@
       <div class="brand"><div class="sigil">V</div><div><strong>VEXMERA</strong><span>AI Marketing Officer</span><span class="beta-brand-badge">Privat beta</span></div></div>
       <button id="appMenuToggle" class="ghost app-menu-toggle" type="button" aria-expanded="false" aria-controls="appNavigation">Meny</button>
       <nav id="appNavigation" aria-label="Vexmera navigation">
-        <button class="nav active" data-view="dashboard">Översikt <span>KPI:er</span></button>
-        <button class="nav" data-view="agent">Core <span>AI Marketing Officer</span></button>
-        <button class="nav" data-view="strategy">Pulse <span>Strategi</span></button>
+        <button class="nav active nav-priority" data-view="dashboard">Översikt <span>KPI:er</span></button>
+        <button class="nav nav-priority" data-view="agent">Core <span>AI Marketing Officer</span></button>
+        <button class="nav nav-priority" data-view="strategy">Pulse <span>Strategi</span></button>
+        <button class="nav nav-priority" data-view="rivals">Konkurrenter <span>Bevakning</span></button>
+        <div class="nav-section-divider" aria-hidden="true"></div>
         <button class="nav" data-view="campaign">Launch <span>Kampanjer</span></button>
         <button class="nav" data-view="brief">Brief <span>Ledning</span></button>
         <button class="nav" data-view="queue">Queue <span>Godkännanden</span></button>
         <button class="nav" data-view="autopilot">Autopilot <span>Kontroll</span></button>
-        <button class="nav" data-view="rivals">Konkurrenter <span>Bevakning</span></button>
         <button class="nav" data-view="connect">Anslutningar <span>Data</span></button>
         <button class="nav" data-view="insights">Insikter <span>Kampanjer</span></button>
         <button class="nav" data-view="team">Team <span>Workspace</span></button>
@@ -219,7 +220,7 @@
       html body .app-menu-toggle{display:block!important;min-width:64px;min-height:44px;color:var(--accent);border-color:var(--accent2)}
       html body .sidebar nav{display:none!important;grid-column:1/-1;min-width:0}
       html body .sidebar.mobile-nav-open nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;padding-top:12px;max-height:calc(100dvh - 80px);overflow-y:auto;overscroll-behavior:contain}
-      html body .sidebar .nav{width:100%;min-width:0;min-height:48px;white-space:normal;font-size:14px!important;transform:none!important}
+      html body .sidebar .nav{width:100%;min-width:0;min-height:50px;white-space:normal;font-size:15px!important;transform:none!important}
       html body .sidebar .status{display:none}
       html body main{min-width:0;max-width:100%;padding:24px 16px calc(36px + env(safe-area-inset-bottom))!important}
       html body .view,html body .panel,html body .grid>*{min-width:0;max-width:100%}
