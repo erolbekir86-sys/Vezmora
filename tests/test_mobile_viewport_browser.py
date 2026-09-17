@@ -71,11 +71,12 @@ def _assert_no_page_overflow(page) -> None:
 def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
     """Prove the authenticated app works in a real Chromium 390x844 viewport.
 
-    This is deliberately browser-level evidence rather than a CSS source audit. It
-    registers a synthetic local account, completes onboarding through the real API,
+    This is deliberately browser-level evidence rather than a CSS source audit.
+    It verifies the unauthenticated shell at the target width, establishes a
+    synthetic same-origin session through the real auth API, completes onboarding,
     checks the actual responsive menu, traverses every primary view and fails if
-    the page itself develops horizontal overflow. No external providers, Stripe,
-    ads, budgets, bids or live services are touched.
+    the page develops horizontal overflow. No external providers, Stripe, ads,
+    budgets, bids or live services are touched.
     """
 
     port = _free_port()
@@ -130,23 +131,31 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
             page = context.new_page()
             page.goto(f"{base_url}/app", wait_until="networkidle")
 
-            page.locator("#showRegister").click()
-            page.locator("#registerEmail").fill("mobile-browser-qa@example.com")
-            page.locator("#registerPassword").fill("VexmeraMobileQA-2026!")
-            page.locator("#registerWorkspace").fill("Vexmera Mobile QA")
             consent = page.locator('[data-consent="denied"]')
             if consent.is_visible():
                 consent.click()
-            page.locator("#registerForm button[type='submit']").click()
-            page.wait_for_load_state("networkidle")
+            assert page.locator("#authScreen").is_visible()
+            assert page.locator("#appShell").is_hidden()
+            _assert_no_page_overflow(page)
 
-            auth = page.evaluate(
-                """async () => {
-                  const response = await fetch('/api/auth/me');
-                  return await response.json();
-                }"""
+            registration = page.evaluate(
+                """async (payload) => {
+                  const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                  });
+                  return {status: response.status, body: await response.json()};
+                }""",
+                {
+                    "email": "mobile-browser-qa@example.com",
+                    "password": "VexmeraMobileQA-2026!",
+                    "workspace_name": "Vexmera Mobile QA",
+                },
             )
-            workspace_id = int(auth["workspaces"][0]["id"])
+            assert registration["status"] == 200, registration
+            workspace_id = int(registration["body"]["workspace_id"])
+
             onboarding = {
                 "company_name": "Vexmera Mobile QA",
                 "industry": "Software",
