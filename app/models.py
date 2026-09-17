@@ -46,6 +46,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=200)
     workspace_name: str = Field(default="My Workspace", min_length=2, max_length=120)
+    beta_invite: str | None = Field(default=None, min_length=20, max_length=300)
 
     @field_validator("workspace_name", mode="before")
     @classmethod
