@@ -65,9 +65,11 @@ def test_marketing_integrations_use_brand_icons_and_outcomes_have_no_empty_icon_
         icon_script = client.get('/static/landing-icon-premium.js').text
         conversion_css = client.get('/static/landing-conversion.css').text
 
-    for icon_name in ('googleAds', 'meta', 'analytics', 'linkedin', 'tiktok', 'shopify'):
+    for icon_name in ('googleAds', 'meta', 'instagram', 'analytics', 'linkedin', 'tiktok', 'shopify'):
         assert f'icons.{icon_name} = BRAND(' in icon_script
     assert '.integration-card .vex-brand-icon' in conversion_css
+    assert 'Instagram' in client.get('/static/landing.html').text
+    assert '<strong>Shopify</strong><small data-i18n="integrations.connected">Privat beta</small>' in client.get('/static/landing.html').text
     assert 'html body .outcomes-section .outcome-grid article::before' in conversion_css
     assert 'html body .outcomes-section .outcome-grid article > span' in conversion_css
     assert 'content:none!important' in conversion_css
