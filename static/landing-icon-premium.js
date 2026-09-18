@@ -34,6 +34,7 @@
 
   icons.googleAds = BRAND('<path d="M9.2 19.2a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0Z" fill="#34A853"/><path d="M10.35 18.7 16.9 7.35a3.2 3.2 0 0 0-5.55-3.2L4.8 15.5a4.8 4.8 0 0 1 5.55 3.2Z" fill="#4285F4"/><path d="m13.5 4.15 7.8 13.5a3.2 3.2 0 1 1-5.55 3.2L8 7.35a3.2 3.2 0 0 1 5.5-3.2Z" fill="#FBBC04"/>');
   icons.meta = BRAND('<path d="M3 15.2C4.4 8.8 6.9 5.8 9.3 5.8c2.1 0 3.8 2.5 5.4 5.3 1.4 2.5 2.4 4.2 3.7 4.2 1.1 0 1.8-1.2 1.8-3 0-3.8-2.1-6.5-5.1-6.5-3.1 0-5.2 2.7-7 6.1-1.4 2.7-2.5 4.4-3.6 4.4-.9 0-1.5-.8-1.5-2.2 0-2.2 1.1-4.3 2.8-5.6" fill="none" stroke="#168AFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>');
+  icons.instagram = BRAND('<rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.2" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="17.3" cy="6.8" r="1.25" fill="currentColor"/>');
   icons.analytics = BRAND('<rect x="3" y="13" width="5" height="8" rx="2.4" fill="#F9AB00"/><rect x="10" y="7" width="5" height="14" rx="2.4" fill="#E37400"/><rect x="17" y="3" width="4" height="18" rx="2" fill="#F9AB00"/>');
   icons.linkedin = BRAND('<rect x="2" y="2" width="20" height="20" rx="3" fill="#0A66C2"/><circle cx="7" cy="8" r="1.5" fill="#fff"/><path d="M5.7 10.5h2.7V19H5.7zm4.5 0h2.6v1.15c.72-.92 1.72-1.45 3.16-1.45 2.56 0 3.34 1.68 3.34 4.2V19h-2.7v-4.05c0-1.07-.02-2.45-1.5-2.45s-1.73 1.17-1.73 2.37V19h-2.7v-8.5Z" fill="#fff"/>');
   icons.tiktok = BRAND('<path d="M14.2 3h3.1c.35 2.05 1.55 3.45 3.7 3.9v3.15a8.5 8.5 0 0 1-3.7-1.1v6.1A5.95 5.95 0 1 1 12.15 9.1v3.2a2.85 2.85 0 1 0 2.05 2.75V3Z" fill="#25F4EE"/><path d="M15.2 3h2.1c.35 2.05 1.55 3.45 3.7 3.9v2.15a7.7 7.7 0 0 1-4.7-2.1v8.1a4.95 4.95 0 1 1-4.15-4.88v2.13a2.85 2.85 0 1 0 3.05 2.75V3Z" fill="#FE2C55" opacity=".9"/><path d="M14.2 3h2.1c.33 1.9 1.36 3.05 3.1 3.62v2.16a7.4 7.4 0 0 1-3.1-1.83v8.1a4.9 4.9 0 1 1-4.15-4.88v2.13a2.85 2.85 0 1 0 2.05 2.75V3Z" fill="#fff"/>');
@@ -119,6 +120,7 @@
       let name = 'channels';
       if (text.includes('google')) name = 'googleAds';
       else if (text.includes('meta')) name = 'meta';
+      else if (text.includes('instagram')) name = 'instagram';
       else if (text.includes('analytics')) name = 'analytics';
       else if (text.includes('linkedin')) name = 'linkedin';
       else if (text.includes('tiktok')) name = 'tiktok';
