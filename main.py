@@ -397,6 +397,14 @@ def _meta_oauth_configured() -> bool:
     return all(_configured(name) for name in ("META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"))
 
 
+def _instagram_oauth_configured() -> bool:
+    return all(_configured(name) for name in ("META_APP_ID", "META_APP_SECRET", "INSTAGRAM_REDIRECT_URI"))
+
+
+def _shopify_oauth_configured() -> bool:
+    return all(_configured(name) for name in ("SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET", "SHOPIFY_REDIRECT_URI"))
+
+
 @app.middleware("http")
 async def production_security_headers(request, call_next):
     """Apply low-risk browser security defaults to every Vexmera response."""
@@ -443,6 +451,8 @@ def runtime_diagnostics() -> dict[str, object]:
         "smtp_configured": _smtp_configured(),
         "google_oauth_configured": _google_oauth_configured(),
         "meta_oauth_configured": _meta_oauth_configured(),
+        "instagram_oauth_configured": _instagram_oauth_configured(),
+        "shopify_oauth_configured": _shopify_oauth_configured(),
     }
 
 
