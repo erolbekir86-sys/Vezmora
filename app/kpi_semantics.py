@@ -5,6 +5,7 @@ from typing import Any, Callable
 from . import store as _store
 
 _GOOGLE_ANALYTICS_SOURCE = "google_analytics"
+_SHOPIFY_ORDERS_SOURCE = "shopify_orders"
 
 
 def _semantic_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -47,6 +48,28 @@ def install_kpi_semantics_guard() -> None:
         summary["sessions"] = sessions
         summary["clicks_scope"] = "paid_media_and_manual_excluding_google_analytics_sessions"
         summary["sessions_source"] = "google_analytics"
+
+        # Ad platforms can each report attributed conversion value for the same
+        # sale. Once Shopify is connected, use actual store order totals as the
+        # canonical workspace revenue/order count so the dashboard never sums
+        # overlapping Google/Meta attribution with commerce revenue.
+        shopify_rows = [
+            row for row in raw_rows
+            if str(row.get("source") or "") == _SHOPIFY_ORDERS_SOURCE
+        ]
+        if shopify_rows:
+            revenue = sum(float(row.get("revenue_sek") or 0) for row in shopify_rows)
+            orders = sum(int(row.get("conversions") or 0) for row in shopify_rows)
+            spend = float(summary.get("spend_sek") or 0)
+            summary["revenue_sek"] = revenue
+            summary["conversions"] = orders
+            summary["roas"] = (revenue / spend) if spend else 0
+            summary["revenue_source"] = _SHOPIFY_ORDERS_SOURCE
+            summary["conversions_source"] = _SHOPIFY_ORDERS_SOURCE
+            summary["revenue_scope"] = "actual_store_revenue_not_summed_with_ad_attribution"
+        else:
+            summary["revenue_source"] = "provider_attribution_and_manual"
+            summary["conversions_source"] = "provider_attribution_and_manual"
         return summary
 
     _store.list_kpis = list_kpis
