@@ -428,7 +428,7 @@ async def sync_instagram(workspace_id: int, days: int = 7) -> dict[str, object]:
     page_url = f"https://graph.facebook.com/{graph_version}/{ig_id}/media"
     params: dict[str, object] | None = {
         "access_token": access_token,
-        "fields": "id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count",
+        "fields": "media_type,media_product_type,timestamp,like_count,comments_count",
         "limit": 100,
     }
     async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
@@ -548,13 +548,13 @@ async def sync_shopify(workspace_id: int, days: int = 7) -> dict[str, object]:
                 bucket = daily.setdefault(created_date, {"orders": 0.0, "revenue": 0.0})
                 if not order.get("cancelledAt"):
                     bucket["orders"] += 1
-                rate = get_fx_rate(workspace_id, currency)
-                if rate is None:
-                    warning = f"Missing FX rate for Shopify {currency} → {str(get_workspace_settings(workspace_id).get('base_currency') or 'SEK').upper()}; revenue KPI was skipped for affected orders"
-                    if warning not in warnings:
-                        warnings.append(warning)
-                else:
-                    bucket["revenue"] += amount * rate
+                    rate = get_fx_rate(workspace_id, currency)
+                    if rate is None:
+                        warning = f"Missing FX rate for Shopify {currency} → {str(get_workspace_settings(workspace_id).get('base_currency') or 'SEK').upper()}; revenue KPI was skipped for affected orders"
+                        if warning not in warnings:
+                            warnings.append(warning)
+                    else:
+                        bucket["revenue"] += amount * rate
                 order_count += 1
             page_info = orders.get("pageInfo") or {}
             if not page_info.get("hasNextPage"):
