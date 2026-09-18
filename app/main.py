@@ -486,8 +486,13 @@ async def instagram_oauth_callback(code: str = Query(...), state: str = Query(..
 
 
 @app.get("/api/connectors/shopify/start")
-def shopify_start(shop: str = Query(..., min_length=1, max_length=255), workspace_id: int = Query(...), user: User = None) -> dict[str, str]:
-    _require_role(user, workspace_id, {"owner","admin"}); return {"authorization_url": shopify_authorization_url(workspace_id, int(user["id"]), shop)}
+def shopify_start(
+    workspace_id: int,
+    user: User,
+    shop: str = Query(..., min_length=1, max_length=255),
+) -> dict[str, str]:
+    _require_role(user, workspace_id, {"owner","admin"})
+    return {"authorization_url": shopify_authorization_url(workspace_id, int(user["id"]), shop)}
 
 
 @app.get("/api/connectors/shopify/callback")
