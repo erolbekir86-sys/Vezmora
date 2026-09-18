@@ -159,6 +159,24 @@ def test_account_deletion_removes_local_account_data_and_attempts_oauth_revocati
             secret_blob=connectors.encrypt_json({"access_token": "meta-token"}),
             metadata={},
         )
+        store.save_connector(
+            workspace_id=workspace_id,
+            provider="instagram",
+            status="connected",
+            external_id="instagram-account",
+            account_label="Instagram account",
+            secret_blob=connectors.encrypt_json({"access_token": "instagram-token"}),
+            metadata={},
+        )
+        store.save_connector(
+            workspace_id=workspace_id,
+            provider="shopify",
+            status="connected",
+            external_id="example.myshopify.com",
+            account_label="Shopify store",
+            secret_blob=connectors.encrypt_json({"access_token": "shopify-token"}),
+            metadata={},
+        )
         with store._connect() as con:
             con.execute(
                 """INSERT INTO workspace_invites
@@ -186,9 +204,9 @@ def test_account_deletion_removes_local_account_data_and_attempts_oauth_revocati
             "pending_invites": 1,
             "queued_email": 1,
         }
-        assert payload["provider_token_revocation"] == {"attempted": 2, "succeeded": 1}
+        assert payload["provider_token_revocation"] == {"attempted": 4, "succeeded": 1}
         assert payload["third_party_billing_records_may_be_retained"] is True
-        assert sorted(provider for provider, _ in revoke_calls) == ["google", "meta"]
+        assert sorted(provider for provider, _ in revoke_calls) == ["google", "instagram", "meta", "shopify"]
 
         assert client.get("/api/auth/me").status_code == 401
         with store._connect() as con:
