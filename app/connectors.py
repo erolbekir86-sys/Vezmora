@@ -39,7 +39,7 @@ GOOGLE_SCOPES = [
 META_SCOPES = ["ads_read"] + (["ads_management"] if os.getenv("VEZMORA_ENABLE_META_EXECUTION_SCOPE", "0").lower() in {"1","true","yes","on"} else [])
 INSTAGRAM_SCOPES = ["pages_show_list", "pages_read_engagement", "instagram_basic", "instagram_manage_insights"]
 SHOPIFY_SCOPES = ["read_orders"]
-_SHOPIFY_SHOP_RE = re.compile(r"^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$", re.IGNORECASE)
+_SHOPIFY_SHOP_RE = re.compile(r"^[a-z0-9][a-z0-9-]*\.myshopify\.com$", re.IGNORECASE)
 
 
 def _fernet() -> Fernet:
