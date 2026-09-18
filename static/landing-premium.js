@@ -59,6 +59,34 @@
   addScript(`/static/landing-workflow-premium.js?build=${encodeURIComponent(build)}`, 'data-vexmera-workflow-premium-script');
   addScript(`/static/landing-conversion.js?build=${encodeURIComponent(build)}`, 'data-vexmera-conversion-script');
 
+
+  const brandV = '<svg class="vexmera-v1" viewBox="0 0 48 48" aria-hidden="true"><path d="M7 9.5 20.7 38h6.6L41 9.5h-7.9L24 29.4 14.9 9.5H7Z" fill="currentColor"/><path d="m28.6 9.5-4.7 10.2 4 8.6L37 9.5h-8.4Z" fill="currentColor" opacity=".42"/></svg>';
+
+  function installBrandV1() {
+    const targets = [
+      ...document.querySelectorAll('.section-vexmera-mark'),
+      ...document.querySelectorAll('.brand-mark'),
+      ...document.querySelectorAll('#produkt .vexmera-core > span'),
+      ...document.querySelectorAll('#hur .connect-visual .v-node')
+    ];
+
+    targets.forEach((node) => {
+      node.classList.add('vexmera-v1-tile');
+      node.innerHTML = brandV;
+      if (!node.getAttribute('aria-label') && !node.hasAttribute('aria-hidden')) {
+        node.setAttribute('aria-label', 'Vexmera');
+      }
+    });
+
+    document.querySelectorAll('.mini-brand').forEach((node) => {
+      node.classList.add('vexmera-v1-mini');
+      node.innerHTML = brandV;
+      node.setAttribute('aria-label', 'Vexmera');
+    });
+
+    return targets.length > 0;
+  }
+
   const icons = {
     simple: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     fast: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -103,19 +131,6 @@
       box.innerHTML = ordered[index] || icons.next;
       box.setAttribute('aria-hidden', 'true');
     });
-  }
-
-  function replaceConnectHub() {
-    const hub = document.querySelector('#hur .connect-visual .v-node');
-    if (!hub) return false;
-
-    hub.classList.add('channel-hub');
-    hub.setAttribute(
-      'aria-label',
-      document.documentElement.lang === 'en' ? 'Connected channels' : 'Kopplade kanaler'
-    );
-    hub.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="7" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="17" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 11.1 15.5 7.9M8.4 12.9l7.1 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-    return true;
   }
 
   function enableAnnualPreview() {
@@ -175,7 +190,7 @@
   function runVisualPass() {
     normalizeValueIcons();
     normalizeOutcomeIcons();
-    replaceConnectHub();
+    installBrandV1();
     enableAnnualPreview();
     installFounderPhoto();
     document.documentElement.classList.add('vexmera-premium-ready');
