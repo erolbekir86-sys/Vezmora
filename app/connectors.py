@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
+import re
 import json
 import os
 import secrets
@@ -35,6 +37,9 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/adwords",
 ]
 META_SCOPES = ["ads_read"] + (["ads_management"] if os.getenv("VEZMORA_ENABLE_META_EXECUTION_SCOPE", "0").lower() in {"1","true","yes","on"} else [])
+INSTAGRAM_SCOPES = ["pages_show_list", "pages_read_engagement", "instagram_basic", "instagram_manage_insights"]
+SHOPIFY_SCOPES = ["read_orders", "read_products"]
+_SHOPIFY_SHOP_RE = re.compile(r"^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$", re.IGNORECASE)
 
 
 def _fernet() -> Fernet:
@@ -66,9 +71,21 @@ def connector_readiness() -> dict[str, dict[str, object]]:
         },
         "meta": {
             "label": "Meta Ads",
-            "configured": bool(os.getenv("META_APP_ID") and os.getenv("META_APP_SECRET") and os.getenv("META_REDIRECT_URI")),
+            "configured": bool((os.getenv("META_APP_ID") or "").strip() and (os.getenv("META_APP_SECRET") or "").strip() and (os.getenv("META_REDIRECT_URI") or "").strip()),
             "requirements": ["META_APP_ID", "META_APP_SECRET", "META_REDIRECT_URI"],
             "notes": "Ads insights by default. ads_management is requested only when VEZMORA_ENABLE_META_EXECUTION_SCOPE=true.",
+        },
+        "instagram": {
+            "label": "Instagram",
+            "configured": bool((os.getenv("META_APP_ID") or "").strip() and (os.getenv("META_APP_SECRET") or "").strip() and (os.getenv("INSTAGRAM_REDIRECT_URI") or "").strip()),
+            "requirements": ["META_APP_ID", "META_APP_SECRET", "INSTAGRAM_REDIRECT_URI"],
+            "notes": "Read-only organic profile, media and insights for Instagram Business/Creator accounts linked through Meta.",
+        },
+        "shopify": {
+            "label": "Shopify",
+            "configured": bool((os.getenv("SHOPIFY_CLIENT_ID") or "").strip() and (os.getenv("SHOPIFY_CLIENT_SECRET") or "").strip() and (os.getenv("SHOPIFY_REDIRECT_URI") or "").strip()),
+            "requirements": ["SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET", "SHOPIFY_REDIRECT_URI"],
+            "notes": "Read-only orders and products. Revenue is normalized into the workspace base currency; no store mutations are enabled.",
         },
     }
 
@@ -149,6 +166,436 @@ async def meta_callback(code: str, state: str) -> dict[str, object]:
         metadata={"connected_at": datetime.now(timezone.utc).isoformat(), "scope": ",".join(META_SCOPES)},
     )
     return {"ok": True, "provider": "meta", "workspace_id": state_row["workspace_id"]}
+
+
+def instagram_authorization_url(workspace_id: int, user_id: int) -> str:
+    app_id = (os.getenv("META_APP_ID") or "").strip()
+    redirect_uri = (os.getenv("INSTAGRAM_REDIRECT_URI") or "").strip()
+    if not app_id or not redirect_uri:
+        raise HTTPException(status_code=503, detail="Instagram OAuth is not configured")
+    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    state = secrets.token_urlsafe(28)
+    save_oauth_state(state, user_id, workspace_id, "instagram")
+    params = {
+        "client_id": app_id,
+        "redirect_uri": redirect_uri,
+        "state": state,
+        "scope": ",".join(INSTAGRAM_SCOPES),
+        "response_type": "code",
+    }
+    return f"https://www.facebook.com/{graph_version}/dialog/oauth?{urlencode(params)}"
+
+
+async def instagram_callback(code: str, state: str) -> dict[str, object]:
+    state_row = consume_oauth_state(state, "instagram")
+    if not state_row:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
+    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    params = {
+        "client_id": (os.getenv("META_APP_ID") or "").strip(),
+        "client_secret": (os.getenv("META_APP_SECRET") or "").strip(),
+        "redirect_uri": (os.getenv("INSTAGRAM_REDIRECT_URI") or "").strip(),
+        "code": code,
+    }
+    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+        response = await client.get(
+            f"https://graph.facebook.com/{graph_version}/oauth/access_token",
+            params=params,
+        )
+        if response.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Instagram token exchange failed")
+        user_token = response.json()
+        user_access_token = str(user_token.get("access_token") or "").strip()
+        if not user_access_token:
+            raise HTTPException(status_code=502, detail="Instagram token exchange returned no access token")
+        accounts = await client.get(
+            f"https://graph.facebook.com/{graph_version}/me/accounts",
+            params={
+                "access_token": user_access_token,
+                "fields": "id,name,access_token,instagram_business_account{id,username,name}",
+                "limit": 100,
+            },
+        )
+    if accounts.status_code >= 400:
+        raise HTTPException(status_code=502, detail="Instagram account discovery failed")
+    candidates = [
+        page for page in accounts.json().get("data", [])
+        if isinstance(page, dict) and isinstance(page.get("instagram_business_account"), dict)
+    ]
+    if not candidates:
+        raise HTTPException(
+            status_code=409,
+            detail="No Instagram Business or Creator account linked to a managed Facebook Page was found",
+        )
+    page = candidates[0]
+    ig = page["instagram_business_account"]
+    ig_id = str(ig.get("id") or "").strip()
+    page_token = str(page.get("access_token") or "").strip()
+    if not ig_id or not page_token:
+        raise HTTPException(status_code=502, detail="Instagram account discovery returned incomplete credentials")
+    username = str(ig.get("username") or ig.get("name") or page.get("name") or "Instagram account").strip()
+    token_payload = {
+        "access_token": page_token,
+        "user_access_token": user_access_token,
+        "page_access_token": page_token,
+    }
+    save_connector(
+        workspace_id=state_row["workspace_id"],
+        provider="instagram",
+        status="connected",
+        external_id=ig_id,
+        account_label=f"@{username}" if username and not username.startswith("@") else username,
+        secret_blob=encrypt_json(token_payload),
+        metadata={
+            "instagram_user_id": ig_id,
+            "page_id": str(page.get("id") or ""),
+            "page_name": str(page.get("name") or ""),
+            "username": username,
+            "scope": ",".join(INSTAGRAM_SCOPES),
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "read_only": True,
+        },
+    )
+    return {"ok": True, "provider": "instagram", "workspace_id": state_row["workspace_id"]}
+
+
+def _normalize_shopify_shop(value: str) -> str:
+    shop = str(value or "").strip().lower()
+    if shop.startswith("https://"):
+        shop = shop[8:]
+    elif shop.startswith("http://"):
+        shop = shop[7:]
+    shop = shop.split("/", 1)[0].strip(".")
+    if "." not in shop:
+        shop = f"{shop}.myshopify.com"
+    if not _SHOPIFY_SHOP_RE.fullmatch(shop):
+        raise HTTPException(status_code=400, detail="Enter a valid *.myshopify.com store domain")
+    return shop
+
+
+def shopify_authorization_url(workspace_id: int, user_id: int, shop: str) -> str:
+    client_id = (os.getenv("SHOPIFY_CLIENT_ID") or "").strip()
+    redirect_uri = (os.getenv("SHOPIFY_REDIRECT_URI") or "").strip()
+    if not client_id or not redirect_uri:
+        raise HTTPException(status_code=503, detail="Shopify OAuth is not configured")
+    shop_domain = _normalize_shopify_shop(shop)
+    state = secrets.token_urlsafe(28)
+    save_oauth_state(state, user_id, workspace_id, "shopify")
+    params = {
+        "client_id": client_id,
+        "scope": ",".join(SHOPIFY_SCOPES),
+        "redirect_uri": redirect_uri,
+        "state": state,
+    }
+    return f"https://{shop_domain}/admin/oauth/authorize?{urlencode(params)}"
+
+
+def _verify_shopify_hmac(query: dict[str, str], supplied_hmac: str) -> bool:
+    secret = (os.getenv("SHOPIFY_CLIENT_SECRET") or "").strip()
+    if not secret or not supplied_hmac:
+        return False
+    message = urlencode(sorted((str(k), str(v)) for k, v in query.items() if k not in {"hmac", "signature"}))
+    expected = hmac.new(secret.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, supplied_hmac)
+
+
+async def shopify_callback(
+    code: str,
+    state: str,
+    shop: str,
+    supplied_hmac: str,
+    query: dict[str, str],
+) -> dict[str, object]:
+    state_row = consume_oauth_state(state, "shopify")
+    if not state_row:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
+    shop_domain = _normalize_shopify_shop(shop)
+    if not _verify_shopify_hmac(query, supplied_hmac):
+        raise HTTPException(status_code=400, detail="Invalid Shopify callback signature")
+    payload = {
+        "client_id": (os.getenv("SHOPIFY_CLIENT_ID") or "").strip(),
+        "client_secret": (os.getenv("SHOPIFY_CLIENT_SECRET") or "").strip(),
+        "code": code,
+        "expiring": "1",
+    }
+    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+        response = await client.post(
+            f"https://{shop_domain}/admin/oauth/access_token",
+            data=payload,
+            headers={"Accept": "application/json"},
+        )
+    if response.status_code >= 400:
+        raise HTTPException(status_code=502, detail="Shopify token exchange failed")
+    token_data = response.json()
+    access_token = str(token_data.get("access_token") or "").strip()
+    if not access_token:
+        raise HTTPException(status_code=502, detail="Shopify token exchange returned no access token")
+    expires_in = int(token_data.get("expires_in") or 0)
+    if expires_in > 0:
+        token_data["expires_at"] = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
+    save_connector(
+        workspace_id=state_row["workspace_id"],
+        provider="shopify",
+        status="connected",
+        external_id=shop_domain,
+        account_label=shop_domain,
+        secret_blob=encrypt_json(token_data),
+        metadata={
+            "shop_domain": shop_domain,
+            "scope": str(token_data.get("scope") or ",".join(SHOPIFY_SCOPES)),
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "read_only": True,
+        },
+    )
+    return {"ok": True, "provider": "shopify", "workspace_id": state_row["workspace_id"]}
+
+
+async def _shopify_access_token(workspace_id: int, connector: dict) -> str:
+    if not connector.get("secret_blob"):
+        raise HTTPException(status_code=409, detail="Shopify is not connected")
+    token = decrypt_json(connector["secret_blob"])
+    access_token = str(token.get("access_token") or "").strip()
+    refresh_token = str(token.get("refresh_token") or "").strip()
+    metadata = connector.get("metadata") or {}
+    shop_domain = _normalize_shopify_shop(str(metadata.get("shop_domain") or connector.get("external_id") or ""))
+    expires_at_raw = str(token.get("expires_at") or "").strip()
+    needs_refresh = not access_token
+    if expires_at_raw:
+        try:
+            expires_at = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
+            needs_refresh = needs_refresh or expires_at <= datetime.now(timezone.utc) + timedelta(minutes=5)
+        except ValueError:
+            needs_refresh = True
+    if needs_refresh:
+        if not refresh_token:
+            raise HTTPException(status_code=409, detail="Shopify access expired; reconnect Shopify")
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.post(
+                f"https://{shop_domain}/admin/oauth/access_token",
+                data={
+                    "client_id": (os.getenv("SHOPIFY_CLIENT_ID") or "").strip(),
+                    "client_secret": (os.getenv("SHOPIFY_CLIENT_SECRET") or "").strip(),
+                    "grant_type": "refresh_token",
+                    "refresh_token": refresh_token,
+                },
+                headers={"Accept": "application/json"},
+            )
+        if response.status_code == 401:
+            raise HTTPException(status_code=409, detail="Shopify access expired; reconnect Shopify")
+        if response.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Shopify token refresh failed")
+        refreshed = response.json()
+        refreshed_access = str(refreshed.get("access_token") or "").strip()
+        if not refreshed_access:
+            raise HTTPException(status_code=502, detail="Shopify token refresh returned no access token")
+        expires_in = int(refreshed.get("expires_in") or 0)
+        if expires_in > 0:
+            refreshed["expires_at"] = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
+        save_connector(
+            workspace_id,
+            "shopify",
+            connector.get("status", "connected"),
+            connector.get("external_id"),
+            connector.get("account_label"),
+            encrypt_json(refreshed),
+            metadata,
+        )
+        access_token = refreshed_access
+    return access_token
+
+
+async def sync_instagram(workspace_id: int, days: int = 7) -> dict[str, object]:
+    connector = get_connector(workspace_id, "instagram", include_secret=True)
+    if not connector or connector.get("status") != "connected" or not connector.get("secret_blob"):
+        raise HTTPException(status_code=409, detail="Connect Instagram before syncing")
+    metadata = connector.get("metadata") or {}
+    ig_id = str(metadata.get("instagram_user_id") or connector.get("external_id") or "").strip()
+    if not ig_id:
+        raise HTTPException(status_code=409, detail="Instagram account ID is missing")
+    token = decrypt_json(connector["secret_blob"])
+    access_token = str(token.get("page_access_token") or token.get("access_token") or "").strip()
+    if not access_token:
+        raise HTTPException(status_code=409, detail="Instagram connector has no access token")
+    graph_version = (os.getenv("META_GRAPH_VERSION") or "v24.0").strip()
+    start_date, end_date = _date_range(days)
+    media_rows: list[dict[str, object]] = []
+    page_url = f"https://graph.facebook.com/{graph_version}/{ig_id}/media"
+    params: dict[str, object] | None = {
+        "access_token": access_token,
+        "fields": "id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count",
+        "limit": 100,
+    }
+    async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
+        profile = await client.get(
+            f"https://graph.facebook.com/{graph_version}/{ig_id}",
+            params={"access_token": access_token, "fields": "id,username,name,followers_count,media_count"},
+        )
+        if profile.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Instagram profile sync failed ({profile.status_code})")
+        profile_data = profile.json()
+        pages = 0
+        while page_url and pages < 5:
+            response = await client.get(page_url, params=params)
+            if response.status_code >= 400:
+                raise HTTPException(status_code=502, detail=f"Instagram media sync failed ({response.status_code})")
+            payload = response.json()
+            for row in payload.get("data", []):
+                timestamp = str(row.get("timestamp") or "")
+                media_date = timestamp[:10]
+                if media_date and start_date <= media_date <= end_date:
+                    media_rows.append(row)
+            next_url = str((payload.get("paging") or {}).get("next") or "").strip()
+            page_url = next_url or ""
+            params = None
+            pages += 1
+    likes = sum(int(row.get("like_count") or 0) for row in media_rows)
+    comments = sum(int(row.get("comments_count") or 0) for row in media_rows)
+    result = {
+        "media_rows": len(media_rows),
+        "followers": int(profile_data.get("followers_count") or 0),
+        "media_count": int(profile_data.get("media_count") or 0),
+        "likes": likes,
+        "comments": comments,
+        "username": str(profile_data.get("username") or metadata.get("username") or ""),
+        "date_range": {"start": start_date, "end": end_date},
+        "warnings": [],
+        "read_only": True,
+    }
+    update_connector_metadata(
+        workspace_id,
+        "instagram",
+        {
+            "username": result["username"],
+            "followers_count": result["followers"],
+            "media_count": result["media_count"],
+            "last_sync_at": datetime.now(timezone.utc).isoformat(),
+            "last_sync": result,
+        },
+    )
+    add_notification(workspace_id, "sync", "Instagram sync complete", f"Synced {len(media_rows)} recent media rows.", result)
+    return result
+
+
+async def sync_shopify(workspace_id: int, days: int = 7) -> dict[str, object]:
+    connector = get_connector(workspace_id, "shopify", include_secret=True)
+    if not connector or connector.get("status") != "connected" or not connector.get("secret_blob"):
+        raise HTTPException(status_code=409, detail="Connect Shopify before syncing")
+    metadata = connector.get("metadata") or {}
+    shop_domain = _normalize_shopify_shop(str(metadata.get("shop_domain") or connector.get("external_id") or ""))
+    access_token = await _shopify_access_token(workspace_id, connector)
+    api_version = (os.getenv("SHOPIFY_API_VERSION") or "2026-07").strip()
+    start_date, end_date = _date_range(min(days, 60))
+    warnings: list[str] = []
+    if days > 60:
+        warnings.append("Shopify standard read_orders access is limited to the most recent 60 days; this sync was capped to 60 days")
+    endpoint = f"https://{shop_domain}/admin/api/{api_version}/graphql.json"
+    headers = {
+        "X-Shopify-Access-Token": access_token,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    shop_query = "query VexmeraShop { shop { name currencyCode } }"
+    orders_query = """query VexmeraOrders($first: Int!, $after: String, $query: String!) {
+      orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) {
+        edges { cursor node { id name createdAt cancelledAt currentTotalPriceSet { shopMoney { amount currencyCode } } } }
+        pageInfo { hasNextPage endCursor }
+      }
+    }"""
+    async with httpx.AsyncClient(timeout=35, follow_redirects=False) as client:
+        shop_response = await client.post(endpoint, headers=headers, json={"query": shop_query})
+        if shop_response.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Shopify shop lookup failed ({shop_response.status_code})")
+        shop_payload = shop_response.json()
+        if shop_payload.get("errors"):
+            raise HTTPException(status_code=502, detail="Shopify shop lookup returned GraphQL errors")
+        shop_data = (shop_payload.get("data") or {}).get("shop") or {}
+        shop_currency = str(shop_data.get("currencyCode") or "SEK").upper()
+
+        daily: dict[str, dict[str, float]] = {}
+        after: str | None = None
+        order_count = 0
+        page_count = 0
+        while page_count < 20:
+            variables = {
+                "first": 100,
+                "after": after,
+                "query": f"created_at:>={start_date} created_at:<={end_date}T23:59:59Z",
+            }
+            response = await client.post(endpoint, headers=headers, json={"query": orders_query, "variables": variables})
+            if response.status_code >= 400:
+                raise HTTPException(status_code=502, detail=f"Shopify orders sync failed ({response.status_code})")
+            payload = response.json()
+            if payload.get("errors"):
+                raise HTTPException(status_code=502, detail="Shopify orders sync returned GraphQL errors")
+            orders = ((payload.get("data") or {}).get("orders") or {})
+            for edge in orders.get("edges", []):
+                order = edge.get("node") or {}
+                created_date = str(order.get("createdAt") or "")[:10]
+                if not created_date:
+                    continue
+                money = (((order.get("currentTotalPriceSet") or {}).get("shopMoney")) or {})
+                try:
+                    amount = float(money.get("amount") or 0)
+                except (TypeError, ValueError):
+                    amount = 0.0
+                currency = str(money.get("currencyCode") or shop_currency).upper()
+                bucket = daily.setdefault(created_date, {"orders": 0.0, "revenue": 0.0})
+                if not order.get("cancelledAt"):
+                    bucket["orders"] += 1
+                rate = get_fx_rate(workspace_id, currency)
+                if rate is None:
+                    warning = f"Missing FX rate for Shopify {currency} → {str(get_workspace_settings(workspace_id).get('base_currency') or 'SEK').upper()}; revenue KPI was skipped for affected orders"
+                    if warning not in warnings:
+                        warnings.append(warning)
+                else:
+                    bucket["revenue"] += amount * rate
+                order_count += 1
+            page_info = orders.get("pageInfo") or {}
+            if not page_info.get("hasNextPage"):
+                break
+            after = str(page_info.get("endCursor") or "").strip() or None
+            if not after:
+                break
+            page_count += 1
+
+    base_currency = str(get_workspace_settings(workspace_id).get("base_currency") or "SEK").upper()
+    for metric_date, bucket in daily.items():
+        upsert_kpi(
+            workspace_id,
+            {
+                "date": metric_date,
+                "impressions": 0,
+                "clicks": 0,
+                "leads": 0,
+                "conversions": int(bucket["orders"]),
+                "spend_sek": 0,
+                "revenue_sek": bucket["revenue"],
+                "source": "shopify_orders",
+                "currency": base_currency,
+            },
+        )
+    result = {
+        "order_rows": order_count,
+        "revenue_rows": len(daily),
+        "shop": str(shop_data.get("name") or shop_domain),
+        "currency": shop_currency,
+        "base_currency": base_currency,
+        "date_range": {"start": start_date, "end": end_date},
+        "warnings": warnings,
+        "read_only": True,
+    }
+    update_connector_metadata(
+        workspace_id,
+        "shopify",
+        {
+            "shop_name": result["shop"],
+            "shop_currency": shop_currency,
+            "last_sync_at": datetime.now(timezone.utc).isoformat(),
+            "last_sync": result,
+        },
+    )
+    add_notification(workspace_id, "sync", "Shopify sync complete", f"Synced {order_count} orders.", result)
+    return result
 
 
 def save_connector_settings(workspace_id: int, settings: dict[str, str | None]) -> None:
@@ -430,7 +877,7 @@ async def sync_meta(workspace_id: int, days: int = 7) -> dict[str, object]:
 
 async def sync_all(workspace_id: int, days: int = 7) -> dict[str, object]:
     results: dict[str, object] = {}
-    for provider, syncer in (("google", sync_google), ("meta", sync_meta)):
+    for provider, syncer in (("google", sync_google), ("meta", sync_meta), ("instagram", sync_instagram), ("shopify", sync_shopify)):
         try:
             results[provider] = await syncer(workspace_id, days)
         except HTTPException as exc:
