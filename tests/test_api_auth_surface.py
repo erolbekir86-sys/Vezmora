@@ -17,6 +17,8 @@ PUBLIC_API_PATHS = {
     "/api/auth/password-reset/confirm",
     "/api/connectors/google/callback",
     "/api/connectors/meta/callback",
+    "/api/connectors/instagram/callback",
+    "/api/connectors/shopify/callback",
     "/api/billing/webhook",
     "/api/internal/cron/maintenance",
 }
