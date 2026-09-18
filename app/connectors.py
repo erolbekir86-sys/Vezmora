@@ -267,6 +267,8 @@ def _normalize_shopify_shop(value: str) -> str:
         shop = shop[7:]
     shop = shop.split("/", 1)[0].strip(".")
     if "." not in shop:
+        if shop in {"localhost", "local"}:
+            raise HTTPException(status_code=400, detail="Enter a valid *.myshopify.com store domain")
         shop = f"{shop}.myshopify.com"
     if not _SHOPIFY_SHOP_RE.fullmatch(shop):
         raise HTTPException(status_code=400, detail="Enter a valid *.myshopify.com store domain")
