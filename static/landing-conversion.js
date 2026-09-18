@@ -13,7 +13,7 @@
 
   const copy = {
     sv: {
-      heroNote: 'Privat beta · Google Ads + Meta Ads + GA4 · Du behåller kontrollen',
+      heroNote: 'Privat beta · Google Ads + Meta Ads + GA4 + Instagram + Shopify · Du behåller kontrollen',
       proofKicker: 'ILLUSTRATIVT PRODUKTEXEMPEL',
       proofTitle: 'Från signal till beslut, utan ett kalkylark emellan.',
       proofBody: 'Vexmera är byggt för att göra analyskedjan kortare. Ett relevant mönster blir en förklaring, en prioritering och ett konkret nästa steg i samma vy.',
@@ -47,10 +47,10 @@
       beta2Title: 'Kontroll före automation',
       beta2Body: 'Du bestämmer när mänskligt godkännande krävs och hur långt automationen får gå.',
       beta3Title: 'Fokus på riktiga kanaler',
-      beta3Body: 'Google Ads, Meta Ads och GA4 är i fokus i den nuvarande betan. Fler integrationer byggs stegvis.'
+      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram och Shopify ingår i den nuvarande betan. LinkedIn och TikTok byggs stegvis.'
     },
     en: {
-      heroNote: 'Private beta · Google Ads + Meta Ads + GA4 · You stay in control',
+      heroNote: 'Private beta · Google Ads + Meta Ads + GA4 + Instagram + Shopify · You stay in control',
       proofKicker: 'ILLUSTRATIVE PRODUCT EXAMPLE',
       proofTitle: 'From signal to decision, without another spreadsheet in between.',
       proofBody: 'Vexmera is built to shorten the analysis chain. A relevant pattern becomes an explanation, a priority and a concrete next step in the same view.',
@@ -84,7 +84,7 @@
       beta2Title: 'Control before automation',
       beta2Body: 'You decide when human approval is required and how far automation is allowed to go.',
       beta3Title: 'Focused on real channels',
-      beta3Body: 'Google Ads, Meta Ads and GA4 are the current beta focus. More integrations are being added step by step.'
+      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram and Shopify are included in the current beta. LinkedIn and TikTok are being added step by step.'
     }
   };
 
