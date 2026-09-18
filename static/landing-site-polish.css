@@ -393,3 +393,109 @@ html body .final-inner .section-vexmera-mark.vexmera-v1-tile{
     height:44px!important;
   }
 }
+
+
+/* Durable V1 fallback: no external PNG/WebP dependency, overrides legacy image-quality rules. */
+:root{
+  --vexmera-v1-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M7 9.5 20.7 38h6.6L41 9.5h-7.9L24 29.4 14.9 9.5H7Z' fill='%23000'/%3E%3Cpath d='m28.6 9.5-4.7 10.2 4 8.6L37 9.5h-8.4Z' fill='%23000'/%3E%3C/svg%3E");
+}
+html body :is(
+  .section-vexmera-mark,
+  .brand-mark,
+  .hero-visual .mini-brand,
+  #produkt .vexmera-core>span,
+  #hur .connect-visual .v-node
+){
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  color:var(--vex-polish-gold)!important;
+  font-size:0!important;
+  background-image:none!important;
+  background:
+    radial-gradient(circle at 32% 22%,rgba(213,174,114,.14),transparent 46%),
+    linear-gradient(145deg,#202b38,#111821)!important;
+  border:1px solid rgba(213,174,114,.42)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 28px rgba(0,0,0,.20)!important;
+  overflow:hidden!important;
+}
+html body :is(
+  .section-vexmera-mark,
+  .brand-mark,
+  .hero-visual .mini-brand,
+  #produkt .vexmera-core>span,
+  #hur .connect-visual .v-node
+)::before{
+  content:""!important;
+  display:block!important;
+  width:70%!important;
+  height:70%!important;
+  background:#d5ae72!important;
+  -webkit-mask-image:var(--vexmera-v1-mask)!important;
+  mask-image:var(--vexmera-v1-mask)!important;
+  -webkit-mask-repeat:no-repeat!important;
+  mask-repeat:no-repeat!important;
+  -webkit-mask-position:center!important;
+  mask-position:center!important;
+  -webkit-mask-size:contain!important;
+  mask-size:contain!important;
+  filter:drop-shadow(0 2px 7px rgba(213,174,114,.16));
+  pointer-events:none!important;
+}
+html body :is(
+  .section-vexmera-mark,
+  .brand-mark,
+  .hero-visual .mini-brand,
+  #produkt .vexmera-core>span,
+  #hur .connect-visual .v-node
+)>svg{
+  display:none!important;
+}
+html body .section-vexmera-mark{
+  width:50px!important;
+  height:50px!important;
+  min-width:50px!important;
+  min-height:50px!important;
+  margin:0 auto 18px!important;
+  border-radius:14px!important;
+}
+html body #produkt .vexmera-core>span,
+html body #hur .connect-visual .v-node{
+  width:68px!important;
+  height:68px!important;
+  min-width:68px!important;
+  min-height:68px!important;
+  border-radius:17px!important;
+}
+html body .hero-visual .mini-brand{
+  width:36px!important;
+  height:36px!important;
+  border-radius:10px!important;
+}
+html body .brand-mark{
+  width:46px!important;
+  height:46px!important;
+  flex:0 0 46px!important;
+  border-radius:12px!important;
+}
+
+/* Explicit section placements requested for the public landing page. */
+html body #funktioner .section-heading>.section-vexmera-mark,
+html body .workflow-section .section-heading>.section-vexmera-mark,
+html body .integrations-section .section-heading>.section-vexmera-mark,
+html body .outcomes-section .section-heading>.section-vexmera-mark,
+html body .security-section .security-copy>.section-vexmera-mark,
+html body .final-inner>.section-vexmera-mark{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+@media(max-width:760px){
+  html body .section-vexmera-mark{
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+  }
+}
