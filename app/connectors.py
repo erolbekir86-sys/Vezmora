@@ -503,7 +503,7 @@ async def sync_shopify(workspace_id: int, days: int = 7) -> dict[str, object]:
     shop_query = "query VexmeraShop { shop { name currencyCode } }"
     orders_query = """query VexmeraOrders($first: Int!, $after: String, $query: String!) {
       orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) {
-        edges { cursor node { id name createdAt cancelledAt currentTotalPriceSet { shopMoney { amount currencyCode } } } }
+        edges { cursor node { createdAt cancelledAt currentTotalPriceSet { shopMoney { amount currencyCode } } } }
         pageInfo { hasNextPage endCursor }
       }
     }"""
