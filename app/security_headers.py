@@ -20,6 +20,10 @@ _OAUTH_CALLBACK_PATHS = frozenset(
         "/api/connectors/google/callback/",
         "/api/connectors/meta/callback",
         "/api/connectors/meta/callback/",
+        "/api/connectors/instagram/callback",
+        "/api/connectors/instagram/callback/",
+        "/api/connectors/shopify/callback",
+        "/api/connectors/shopify/callback/",
     }
 )
 

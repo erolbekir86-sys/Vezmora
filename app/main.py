@@ -30,12 +30,18 @@ from .connectors import (
     connector_readiness,
     google_authorization_url,
     google_callback,
+    instagram_authorization_url,
+    instagram_callback,
     meta_authorization_url,
     meta_callback,
+    shopify_authorization_url,
+    shopify_callback,
     save_connector_settings,
     sync_all,
     sync_google,
+    sync_instagram,
     sync_meta,
+    sync_shopify,
 )
 from .models import (
     AgentRequest,
@@ -443,6 +449,8 @@ async def connector_sync(provider: str, workspace_id: int, request: SyncRequest,
     _require_role(user, workspace_id, {"owner","admin","marketer"})
     if provider == "google": return await sync_google(workspace_id, request.days)
     if provider == "meta": return await sync_meta(workspace_id, request.days)
+    if provider == "instagram": return await sync_instagram(workspace_id, request.days)
+    if provider == "shopify": return await sync_shopify(workspace_id, request.days)
     if provider == "all": return await sync_all(workspace_id, request.days)
     raise HTTPException(status_code=404, detail="Unknown connector")
 
@@ -465,6 +473,38 @@ def meta_start(workspace_id: int, user: User) -> dict[str, str]:
 @app.get("/api/connectors/meta/callback")
 async def meta_oauth_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
     await meta_callback(code, state); return RedirectResponse(url="/?connected=meta")
+
+
+@app.get("/api/connectors/instagram/start")
+def instagram_start(workspace_id: int, user: User) -> dict[str, str]:
+    _require_role(user, workspace_id, {"owner","admin"}); return {"authorization_url": instagram_authorization_url(workspace_id, int(user["id"]))}
+
+
+@app.get("/api/connectors/instagram/callback")
+async def instagram_oauth_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+    await instagram_callback(code, state); return RedirectResponse(url="/?connected=instagram")
+
+
+@app.get("/api/connectors/shopify/start")
+def shopify_start(
+    workspace_id: int,
+    user: User,
+    shop: str = Query(..., min_length=1, max_length=255),
+) -> dict[str, str]:
+    _require_role(user, workspace_id, {"owner","admin"})
+    return {"authorization_url": shopify_authorization_url(workspace_id, int(user["id"]), shop)}
+
+
+@app.get("/api/connectors/shopify/callback")
+async def shopify_oauth_callback(
+    request: Request,
+    code: str = Query(...),
+    state: str = Query(...),
+    shop: str = Query(...),
+    hmac: str = Query(...),
+) -> RedirectResponse:
+    await shopify_callback(code, state, shop, hmac, dict(request.query_params))
+    return RedirectResponse(url="/?connected=shopify")
 
 
 @app.get("/api/notifications")

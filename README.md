@@ -47,7 +47,7 @@ Do not bypass that guard. See `STRIPE_SANDBOX_CATALOG.md`, `PILOT_RUNBOOK.md` an
 - Neon/Postgres in production
 - OpenAI-backed Core/Pulse/Launch workflows
 - Stripe Checkout, signed webhooks and Customer Portal
-- Google and Meta OAuth/data connectors
+- Google, Meta, Instagram and Shopify OAuth/data connectors (read-only Private Beta posture)
 - Vercel deployment
 - GitHub Actions CI
 

@@ -52,13 +52,18 @@ def core_today(workspace_id: int) -> dict[str, Any]:
             "cta": "Open Rivals",
             "view": "rivals",
         })
-    disconnected = [p for p in ("google", "meta") if not connectors.get(p) or connectors[p].get("status") != "connected"]
-    if disconnected:
+    supported_live_sources = ("google", "meta", "instagram", "shopify")
+    connected_live_sources = [
+        provider
+        for provider in supported_live_sources
+        if connectors.get(provider) and connectors[provider].get("status") == "connected"
+    ]
+    if not connected_live_sources:
         cards.append({
             "priority": "medium",
             "source": "data",
             "title": "Connect live marketing data",
-            "body": "Missing: " + ", ".join(p.title() for p in disconnected) + ". Vexmera will not invent live performance data.",
+            "body": "Connect at least one supported source so Vexmera can work from real performance or commerce data instead of demo context.",
             "cta": "Connect data",
             "view": "connect",
         })

@@ -14,6 +14,8 @@ _LEGACY_ONLY_PRICE_ENV = ("STRIPE_PRICE_STARTER", "STRIPE_PRICE_SCALE")
 _OAUTH_CALLBACK_PATHS = {
     "GOOGLE_REDIRECT_URI": "/api/connectors/google/callback",
     "META_REDIRECT_URI": "/api/connectors/meta/callback",
+    "INSTAGRAM_REDIRECT_URI": "/api/connectors/instagram/callback",
+    "SHOPIFY_REDIRECT_URI": "/api/connectors/shopify/callback",
 }
 
 

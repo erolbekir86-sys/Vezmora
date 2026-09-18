@@ -134,7 +134,7 @@
     }
     if (result.error) return `${label}: synken kunde inte slutföras.`;
 
-    const rowCandidates = [result.campaign_rows, result.analytics_rows, result.ads_rows]
+    const rowCandidates = [result.campaign_rows, result.analytics_rows, result.ads_rows, result.media_rows, result.order_rows, result.revenue_rows]
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value) && value >= 0);
     const rows = rowCandidates.reduce((total, value) => total + value, 0);
@@ -151,6 +151,8 @@
     return [
       providerSyncSummary('Google', payload.google),
       providerSyncSummary('Meta', payload.meta),
+      providerSyncSummary('Instagram', payload.instagram),
+      providerSyncSummary('Shopify', payload.shopify),
     ].join(' ');
   }
 
@@ -165,12 +167,14 @@
   function connectorProviderLabel(provider) {
     if (provider === 'google') return 'Google';
     if (provider === 'meta') return 'Meta';
+    if (provider === 'instagram') return 'Instagram';
+    if (provider === 'shopify') return 'Shopify';
     return 'Datakällan';
   }
 
   async function runIndividualConnectorSync(button) {
     const provider = String(button?.dataset?.sync || '').toLowerCase();
-    if (!button || !['google', 'meta'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
+    if (!button || !['google', 'meta', 'instagram', 'shopify'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
 
     button.disabled = true;
     const previousText = button.textContent;
@@ -196,7 +200,7 @@
   function bindIndividualConnectorSyncFeedback() {
     document.querySelectorAll('#connectorGrid [data-sync]').forEach((button) => {
       const provider = String(button.dataset.sync || '').toLowerCase();
-      if (!['google', 'meta'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
+      if (!['google', 'meta', 'instagram', 'shopify'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
       button.dataset.vexmeraSafeSync = 'true';
       button.onclick = () => runIndividualConnectorSync(button);
     });
@@ -263,7 +267,7 @@
     const note = document.createElement('p');
     note.className = 'fineprint';
     note.dataset.vexmeraOnboardingNextStep = 'true';
-    note.textContent = 'Nästa steg: koppla Google eller Meta under Anslutningar. Under privat beta läser Vexmera data och ger rekommendationer utan att ändra kampanjer, budgetar eller bud automatiskt.';
+    note.textContent = 'Nästa steg: koppla en datakälla under Anslutningar. Under privat beta läser Vexmera data och ger rekommendationer utan att ändra kampanjer, budgetar eller bud automatiskt.';
     step.appendChild(note);
   }
 

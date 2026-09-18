@@ -103,6 +103,7 @@
     ['google_ads', 'Google Ads'],
     ['meta_ads', 'Meta Ads'],
     ['google_analytics', 'Google Analytics'],
+    ['shopify_orders', 'Shopify'],
     ['sync_all', 'Synka alla'],
     ['detect_anomalies', 'Upptäck avvikelser'],
     ['No anomalies detected.', 'Inga avvikelser upptäckta.'],
@@ -208,7 +209,7 @@
       toast('Kunde inte hitta aktivt workspace.');
       return;
     }
-    const label = provider === 'google' ? 'Google' : 'Meta';
+    const label = provider === 'google' ? 'Google' : provider === 'meta' ? 'Meta' : provider === 'instagram' ? 'Instagram' : provider === 'shopify' ? 'Shopify' : 'Datakällan';
     const confirmed = window.confirm(
       `Koppla från ${label}? Vexmera tar bort sparade anslutningsuppgifter och stoppar framtida synkning. Redan synkad rapporthistorik behålls.`
     );
@@ -243,7 +244,7 @@
       const actions = card.querySelector('.card-actions');
       if (!sync || !actions || sync.disabled) return;
       const provider = String(sync.dataset.sync || '').toLowerCase();
-      if (!['google', 'meta'].includes(provider)) return;
+      if (!['google', 'meta', 'instagram', 'shopify'].includes(provider)) return;
       if (actions.querySelector(`[data-vex-disconnect="${provider}"]`)) return;
 
       const button = document.createElement('button');

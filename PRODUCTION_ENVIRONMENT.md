@@ -115,6 +115,8 @@ The production callback relationship must be exact:
 ```text
 VEZMORA_APP_URL=https://vexmera.com
 GOOGLE_REDIRECT_URI=https://vexmera.com/api/connectors/google/callback
+INSTAGRAM_REDIRECT_URI=https://vexmera.com/api/connectors/instagram/callback
+SHOPIFY_REDIRECT_URI=https://vexmera.com/api/connectors/shopify/callback
 ```
 
 The registered Google OAuth Web application must use that callback and correspond to the same Cloud project whose Google Ads API access was approved. Keep the client secret private in Vercel.
@@ -131,6 +133,30 @@ Basic Access is therefore **not a current five-company read-only pilot blocker**
 Do not place full customer IDs, manager IDs, OAuth client IDs, access tokens or request credentials in release evidence, logs, PRs or public documentation.
 
 The customer-facing Google Analytics tag is separate from connector APIs. In the authenticated application, analytics storage defaults to denied, the tag loads only after explicit opt-in, and Google Signals/ad-personalization remain disabled.
+
+## Instagram
+
+Instagram uses the Meta app but has its own Vexmera callback:
+
+```env
+INSTAGRAM_REDIRECT_URI=https://vexmera.com/api/connectors/instagram/callback
+```
+
+The exact redirect URI must also be registered in the Meta app. Private Beta requests only read-oriented professional-account permissions and no content-publishing permission.
+
+## Shopify
+
+Shopify standalone OAuth requires:
+
+```env
+SHOPIFY_CLIENT_ID=...
+SHOPIFY_CLIENT_SECRET=...
+SHOPIFY_REDIRECT_URI=https://vexmera.com/api/connectors/shopify/callback
+SHOPIFY_API_VERSION=2026-07
+```
+
+The exact redirect URI must be registered in the Shopify Dev Dashboard. Vexmera requests `read_orders` only, uses expiring offline access tokens with refresh-token rotation, and does not request write scopes.
+
 
 ## Meta Ads
 

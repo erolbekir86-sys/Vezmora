@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  const PROVIDERS = ['google', 'meta'];
+  const PROVIDERS = ['google', 'meta', 'instagram', 'shopify'];
   let workspaceRoles = null;
 
   function providerLabel(provider) {
-    return provider === 'google' ? 'Google' : provider === 'meta' ? 'Meta' : 'Datakällan';
+    return provider === 'google' ? 'Google' : provider === 'meta' ? 'Meta' : provider === 'instagram' ? 'Instagram' : provider === 'shopify' ? 'Shopify' : 'Datakällan';
   }
 
   function showMessage(message) {

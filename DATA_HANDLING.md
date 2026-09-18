@@ -4,11 +4,11 @@ This document describes the current implementation as of the private beta codeba
 
 ## Connected account data Vexmera stores
 
-For Google and Meta connectors, Vexmera stores a connector record scoped to the customer's workspace. The record contains provider, connection status, optional external/account labels, connector metadata, an encrypted secret blob, and timestamps.
+For Google, Meta, Instagram and Shopify connectors, Vexmera stores a connector record scoped to the customer's workspace. The record contains provider, connection status, optional external/account labels, connector metadata, an encrypted secret blob, and timestamps.
 
 The encrypted secret blob is used to store OAuth token material needed for connected API access. Normal connector reads do not include the secret blob; code paths must explicitly request `include_secret=True` when a backend operation needs credentials.
 
-Connector metadata may include identifiers and operational state such as Google Analytics property ID, Google Ads customer ID, Meta ad account ID, granted scope information, connection time, and last-sync metadata.
+Connector metadata may include identifiers and operational state such as Google Analytics property ID, Google Ads customer ID, Meta ad account ID, Instagram professional-account ID/username, Shopify shop domain, granted scope information, connection time, and last-sync metadata. Shopify order sync stores daily aggregate order count and revenue in the normalized KPI store; it does not persist customer names, email addresses, postal addresses, or raw order payloads. Instagram sync stores profile/media summary metadata and aggregate counts, not content publishing credentials or write permissions.
 
 ## Performance data Vexmera stores
 
@@ -86,7 +86,7 @@ The operation:
 2. requires the exact backend confirmation token `DELETE_SYNCED_HISTORY`;
 3. requires the customer-facing UI to request a separate typed confirmation before calling the endpoint;
 4. deletes all workspace rows from `campaign_metrics`;
-5. deletes normalized KPI rows only when `source` is `google_analytics`, `google_ads`, or `meta_ads`;
+5. deletes normalized KPI rows only when `source` is `google_analytics`, `google_ads`, `meta_ads`, or `shopify_orders`;
 6. deletes workspace anomaly records and anomaly notifications derived from synchronized reporting data;
 7. preserves KPI rows whose source is `manual`;
 8. does not alter or delete connector credentials;

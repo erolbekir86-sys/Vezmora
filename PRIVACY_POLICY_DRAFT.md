@@ -14,7 +14,7 @@ Before external use, insert and verify:
 ## 2. What Vexmera does
 Vexmera is an AI-powered marketing platform that helps businesses connect marketing/analytics data, understand performance and receive recommended next actions.
 
-During Private Beta, supported Google Ads and Meta Ads integrations are intended to be read-only. External campaign execution, Autopilot execution and Meta execution scope are disabled in production. Vexmera must not autonomously publish ads, change budgets, bids, targeting or campaign state during this beta posture.
+During Private Beta, supported Google Ads, Meta Ads, Instagram and Shopify integrations are intended to be read-only. External campaign execution, Autopilot execution and Meta execution scope are disabled in production. Vexmera must not autonomously publish ads, change budgets, bids, targeting or campaign state during this beta posture.
 
 ## 3. Personal data and business data Vexmera may process
 Depending on enabled features, Vexmera may process:
@@ -29,6 +29,8 @@ Depending on enabled features, Vexmera may process:
 - Google Analytics traffic/conversion metrics;
 - Google Ads account/campaign metadata and reporting metrics such as impressions, clicks, conversions, value and spend;
 - Meta Ads account/campaign reporting data;
+- Instagram professional-account profile and media performance metadata made available through authorized Meta APIs;
+- Shopify store-level order counts and revenue totals for the authorized reporting period; Vexmera's Shopify sync is designed to avoid persisting customer names, emails, postal addresses or raw order payloads;
 - provider account identifiers and encrypted OAuth credentials needed to perform authorized reads.
 
 OAuth secrets, API keys and provider tokens are not intended to appear in normal user-facing diagnostics.
@@ -60,10 +62,10 @@ Purposes may include:
 ## 5. Legal bases
 For EEA/UK users, applicable bases may include contract performance, legitimate interests, consent where required and legal obligation. Final publication must map each material activity to the exact legal basis after legal review.
 
-## 6. Google and Meta connections
+## 6. Connected provider accounts
 Connection occurs through provider authorization flows. Vexmera stores resulting credentials in encrypted form.
 
-Authorized workspace owners/admins can disconnect supported Google/Meta connections. The current implementation removes the locally stored connector credential and saved provider/account identifiers, stops future synchronization through that credential and performs best-effort upstream revocation where supported.
+Authorized workspace owners/admins can disconnect supported Google, Meta, Instagram and Shopify connections. The current implementation removes the locally stored connector credential and saved provider/account identifiers, stops future synchronization through that credential and performs best-effort upstream revocation where supported.
 
 Disconnecting does **not** automatically delete previously synchronized reporting history. A separate destructive synchronized-history deletion control exists so access credentials and historical reporting are not accidentally removed together.
 

@@ -107,7 +107,7 @@ def account_deletion_snapshot(user_id: int) -> dict[str, Any]:
         "notes": [
             "Owned workspaces are deleted with the account only when no other members remain.",
             "Membership in workspaces owned by someone else is removed; shared business records remain with those workspaces and user references are detached where supported.",
-            "OAuth token revocation is attempted for Google and Meta on solo-owned workspaces before local account data is deleted.",
+            "Provider token revocation is attempted where supported for connected providers on solo-owned workspaces before local account data is deleted. All local connector credentials are deleted with the workspace.",
             "Stripe or other processors may retain billing records when required for accounting, fraud prevention or legal obligations.",
         ],
     }
@@ -118,7 +118,7 @@ async def _revoke_owned_connector_tokens(owned_workspaces: list[dict[str, Any]])
     succeeded = 0
     for workspace in owned_workspaces:
         workspace_id = int(workspace["id"])
-        for provider in ("google", "meta"):
+        for provider in ("google", "meta", "instagram", "shopify"):
             connector = _store.get_connector(workspace_id, provider, include_secret=True)
             if not connector or not connector.get("secret_blob"):
                 continue

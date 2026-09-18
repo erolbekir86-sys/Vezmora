@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const PROVIDERS = ['google', 'meta'];
+  const PROVIDERS = ['google', 'meta', 'instagram', 'shopify'];
 
   function safeCount(value) {
     const parsed = Number(value);
