@@ -38,7 +38,7 @@ GOOGLE_SCOPES = [
 ]
 META_SCOPES = ["ads_read"] + (["ads_management"] if os.getenv("VEZMORA_ENABLE_META_EXECUTION_SCOPE", "0").lower() in {"1","true","yes","on"} else [])
 INSTAGRAM_SCOPES = ["pages_show_list", "pages_read_engagement", "instagram_basic", "instagram_manage_insights"]
-SHOPIFY_SCOPES = ["read_orders", "read_products"]
+SHOPIFY_SCOPES = ["read_orders"]
 _SHOPIFY_SHOP_RE = re.compile(r"^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$", re.IGNORECASE)
 
 
@@ -306,12 +306,12 @@ async def shopify_callback(
     supplied_hmac: str,
     query: dict[str, str],
 ) -> dict[str, object]:
-    state_row = consume_oauth_state(state, "shopify")
-    if not state_row:
-        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
     shop_domain = _normalize_shopify_shop(shop)
     if not _verify_shopify_hmac(query, supplied_hmac):
         raise HTTPException(status_code=400, detail="Invalid Shopify callback signature")
+    state_row = consume_oauth_state(state, "shopify")
+    if not state_row:
+        raise HTTPException(status_code=400, detail="Invalid or expired OAuth state")
     payload = {
         "client_id": (os.getenv("SHOPIFY_CLIENT_ID") or "").strip(),
         "client_secret": (os.getenv("SHOPIFY_CLIENT_SECRET") or "").strip(),
@@ -330,6 +330,12 @@ async def shopify_callback(
     access_token = str(token_data.get("access_token") or "").strip()
     if not access_token:
         raise HTTPException(status_code=502, detail="Shopify token exchange returned no access token")
+    granted_scopes = {
+        scope.strip() for scope in str(token_data.get("scope") or "").split(",") if scope.strip()
+    }
+    missing_scopes = [scope for scope in SHOPIFY_SCOPES if scope not in granted_scopes]
+    if missing_scopes:
+        raise HTTPException(status_code=409, detail="Shopify did not grant the required read-only order scope")
     expires_in = int(token_data.get("expires_in") or 0)
     if expires_in > 0:
         token_data["expires_at"] = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
