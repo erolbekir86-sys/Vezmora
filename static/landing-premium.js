@@ -55,6 +55,7 @@
   addStylesheet(`/static/landing-ai-action.css?build=${encodeURIComponent(build)}`, 'data-vexmera-ai-action');
   addStylesheet(`/static/landing-workflow-premium.css?build=${encodeURIComponent(build)}`, 'data-vexmera-workflow-premium');
   addStylesheet(`/static/landing-readability-final.css?build=${encodeURIComponent(build)}`, 'data-vexmera-readability-final');
+  addStylesheet(`/static/landing-site-polish.css?build=${encodeURIComponent(build)}`, 'data-vexmera-site-polish');
   addScript(`/static/landing-workflow-premium.js?build=${encodeURIComponent(build)}`, 'data-vexmera-workflow-premium-script');
   addScript(`/static/landing-conversion.js?build=${encodeURIComponent(build)}`, 'data-vexmera-conversion-script');
 
@@ -104,6 +105,36 @@
     });
   }
 
+  function replaceConnectHub() {
+    const hub = document.querySelector('#hur .connect-visual .v-node');
+    if (!hub) return false;
+
+    hub.classList.add('channel-hub');
+    hub.setAttribute(
+      'aria-label',
+      document.documentElement.lang === 'en' ? 'Connected channels' : 'Kopplade kanaler'
+    );
+    hub.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="7" r="2.5" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="17" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.4 11.1 15.5 7.9M8.4 12.9l7.1 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    return true;
+  }
+
+  function enableAnnualPreview() {
+    const yearly = document.querySelector('[data-billing="yearly"]');
+    if (!yearly) return false;
+
+    yearly.disabled = false;
+    yearly.removeAttribute('disabled');
+    yearly.removeAttribute('aria-disabled');
+    yearly.removeAttribute('title');
+
+    const sv = yearly.querySelector('.pricing-sv');
+    const en = yearly.querySelector('.pricing-en');
+    if (sv) sv.textContent = 'Spara 10 %';
+    if (en) en.textContent = 'Save 10%';
+
+    return true;
+  }
+
   function installFounderPhoto() {
     const current = document.querySelector('.founder-portrait');
     if (!current) return false;
@@ -144,6 +175,8 @@
   function runVisualPass() {
     normalizeValueIcons();
     normalizeOutcomeIcons();
+    replaceConnectHub();
+    enableAnnualPreview();
     installFounderPhoto();
     document.documentElement.classList.add('vexmera-premium-ready');
   }
