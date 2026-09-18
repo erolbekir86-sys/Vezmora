@@ -49,6 +49,16 @@ Legal review action: map the applicable Google Ads/Analytics terms and controlle
 Purpose: OAuth and read-only Meta Ads reporting during Private Beta.
 Likely data: OAuth identifiers/tokens, ad-account identifiers and campaign/reporting metrics.
 Current product controls: external Meta execution scope is disabled; disconnect removes the local credential and attempts provider-side revocation.
+
+### Instagram
+Purpose: OAuth and read-only reporting for professional Instagram Business/Creator accounts during Private Beta.
+Likely data: encrypted OAuth tokens, professional-account/page identifiers, username/profile counters and recent media metadata/performance summaries.
+Current product controls: Vexmera requests no Instagram publishing scope and performs no content mutations. Local disconnect does not revoke shared Meta permissions because doing so could unintentionally break a separate Meta Ads connection.
+
+### Shopify
+Purpose: OAuth and read-only commerce reporting during Private Beta.
+Likely data: encrypted access/refresh tokens, shop domain/name/currency, and daily aggregate order count/revenue for the authorized reporting period.
+Current product controls: only read_orders is requested; no write scopes are requested. Vexmera aggregates orders in memory and does not persist raw orders, customer names, email addresses or postal addresses.
 Legal review action: map the applicable Meta business/data terms and roles for the connected reporting flow.
 
 ## Internal data categories and flows
