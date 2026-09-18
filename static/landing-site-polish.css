@@ -320,3 +320,76 @@ html body :is(a,button,.button,.plan-card,.integration-card,.value-card):focus-v
     .button,button,a
   ){transition-duration:.001ms!important;transform:none!important}
 }
+
+
+/* V1 brand mark: one durable inline-SVG treatment everywhere. */
+html body .vexmera-v1-tile{
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  color:var(--vex-polish-gold)!important;
+  background:
+    radial-gradient(circle at 32% 22%,rgba(213,174,114,.14),transparent 46%),
+    linear-gradient(145deg,#202b38,#111821)!important;
+  border:1px solid rgba(213,174,114,.42)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 28px rgba(0,0,0,.20)!important;
+}
+html body .vexmera-v1-tile .vexmera-v1{
+  display:block!important;
+  width:68%!important;
+  height:68%!important;
+  color:var(--vex-polish-gold)!important;
+  filter:drop-shadow(0 2px 8px rgba(213,174,114,.14));
+}
+html body .section-vexmera-mark.vexmera-v1-tile{
+  width:50px!important;
+  height:50px!important;
+  margin:0 auto 18px!important;
+  border-radius:14px!important;
+  background:
+    radial-gradient(circle at 32% 22%,rgba(213,174,114,.14),transparent 46%),
+    linear-gradient(145deg,#202b38,#111821)!important;
+}
+html body .brand-mark.vexmera-v1-tile{
+  border-radius:12px!important;
+}
+html body #produkt .vexmera-core>span.vexmera-v1-tile{
+  width:68px!important;
+  height:68px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:17px!important;
+}
+html body #hur .connect-visual .v-node.vexmera-v1-tile{
+  width:68px!important;
+  height:68px!important;
+  flex:0 0 68px!important;
+  border-radius:17px!important;
+}
+html body #hur .connect-visual .v-node.vexmera-v1-tile .vexmera-v1{
+  width:72%!important;
+  height:72%!important;
+}
+html body .mini-brand.vexmera-v1-mini{
+  display:grid!important;
+  place-items:center!important;
+  color:var(--vex-polish-gold)!important;
+  background:linear-gradient(145deg,#202b38,#111821)!important;
+  border:1px solid rgba(213,174,114,.40)!important;
+}
+html body .mini-brand.vexmera-v1-mini .vexmera-v1{
+  width:74%!important;
+  height:74%!important;
+  display:block!important;
+}
+html body .final-inner .section-vexmera-mark.vexmera-v1-tile{
+  background:
+    radial-gradient(circle at 32% 22%,rgba(213,174,114,.16),transparent 46%),
+    linear-gradient(145deg,#202b38,#0f151d)!important;
+}
+@media(max-width:760px){
+  html body .section-vexmera-mark.vexmera-v1-tile{
+    width:44px!important;
+    height:44px!important;
+  }
+}
