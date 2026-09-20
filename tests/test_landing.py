@@ -12,6 +12,7 @@ def test_marketing_landing_is_shipped_as_public_static_asset():
         ux_script = client.get('/static/landing-ux.js')
         refine_script = client.get('/static/landing-refine.js')
         refine_css = client.get('/static/landing-refine.css')
+        founder = client.get('/static/vexmera-founder.jpg')
 
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/html')
@@ -19,6 +20,9 @@ def test_marketing_landing_is_shipped_as_public_static_asset():
     assert ux_script.status_code == 200
     assert refine_script.status_code == 200
     assert refine_css.status_code == 200
+    assert founder.status_code == 200
+    assert founder.content.startswith(b'\xff\xd8')
+    assert len(founder.content) > 100_000
     html = response.text
     assert 'Vexmera — AI Marketing Officer' in html
     assert 'Kontroll före automation' in html
@@ -118,7 +122,7 @@ def test_public_root_serves_marketing_site_and_points_ctas_to_app():
     assert '/static/landing-refine.css?build=' in response.text
     assert '/static/landing-refine.js?build=' in response.text
     assert '/static/landing-readable.css?build=' in response.text
-    assert '/static/vexmera-founder.jpg' not in response.text
+    assert '/static/vexmera-founder.jpg?build=' in response.text
     assert '/static/landing-section-art.js' not in response.text
     assert 'window.__VEXMERA_BUILD__=' in response.text
 

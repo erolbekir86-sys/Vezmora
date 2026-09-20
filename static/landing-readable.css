@@ -128,19 +128,50 @@ h1,h2,h3,h4,.eyebrow,.section-heading,.split-heading,
 .faq-list summary{font-size:18px!important;padding-block:26px!important}
 .footer-grid>div>strong,.footer-grid a,.footer-brand p,.footer-bottom{font-size:15px!important}
 
-/* The previous founder JPEG is corrupt. Keep the founder story complete and
-   intentional without a broken or low-resolution placeholder. */
-.founder-card{
-  display:block!important;
-  max-width:900px!important;
+/* Founder story: readable copy beside a crisp, user-provided portrait. */
+html body main .founder-card{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.08fr) minmax(330px,.82fr)!important;
+  align-items:stretch!important;
+  max-width:1120px!important;
   margin-inline:auto!important;
-  padding:clamp(34px,5vw,64px)!important;
+  padding:0!important;
+  overflow:hidden!important;
   border:1px solid var(--line)!important;
   border-radius:28px!important;
   background:var(--surface)!important;
 }
-.founder-copy{max-width:780px!important;margin-inline:auto!important}
-.founder-portrait,.founder-photo-fallback{display:none!important}
+html body main .founder-card .founder-copy{
+  order:1!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:clamp(38px,5vw,68px)!important;
+  align-self:center!important;
+  text-align:left!important;
+}
+html body main .founder-card .founder-copy h2,
+html body main .founder-card .founder-copy p,
+html body main .founder-card .founder-copy .eyebrow{text-align:left!important}
+html body main .founder-card .founder-copy .eyebrow{justify-content:flex-start!important}
+html body main img.founder-portrait{
+  order:2!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:100%!important;
+  max-width:none!important;
+  height:100%!important;
+  min-height:590px!important;
+  aspect-ratio:4/5!important;
+  object-fit:cover!important;
+  object-position:center 42%!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:var(--surface-soft)!important;
+}
+.founder-photo-fallback{display:none!important}
 
 @media(max-width:900px){
   :root{--read-body:17px;--read-small:14px}
@@ -155,7 +186,18 @@ h1,h2,h3,h4,.eyebrow,.section-heading,.split-heading,
   .dashboard-window{min-height:460px!important;grid-template-columns:82px minmax(0,1fr)!important}
   .dash-main{padding:18px 14px!important}
   .value-card h3,.outcome-grid article h3{font-size:28px!important}
-  .founder-card{padding:30px 24px!important}
+  html body main .founder-card{grid-template-columns:1fr!important;padding:0!important}
+  html body main .founder-card .founder-copy{padding:36px 28px!important;text-align:center!important}
+  html body main .founder-card .founder-copy h2,
+  html body main .founder-card .founder-copy p,
+  html body main .founder-card .founder-copy .eyebrow{text-align:center!important}
+  html body main .founder-card .founder-copy .eyebrow{justify-content:center!important}
+  html body main img.founder-portrait{
+    min-height:0!important;
+    height:auto!important;
+    aspect-ratio:4/5!important;
+    object-position:center 40%!important;
+  }
 }
 
 @media(max-width:600px){
