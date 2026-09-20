@@ -128,15 +128,16 @@ h1,h2,h3,h4,.eyebrow,.section-heading,.split-heading,
 .faq-list summary{font-size:18px!important;padding-block:26px!important}
 .footer-grid>div>strong,.footer-grid a,.footer-brand p,.footer-bottom{font-size:15px!important}
 
-/* Founder story: readable copy beside a crisp, user-provided portrait. */
+/* Founder story: restrained portrait with its quote and byline as a caption. */
 html body main .founder-card{
   display:grid!important;
-  grid-template-columns:minmax(0,1.08fr) minmax(330px,.82fr)!important;
-  align-items:stretch!important;
+  grid-template-columns:minmax(0,1fr) minmax(260px,340px)!important;
+  gap:clamp(42px,6vw,72px)!important;
+  align-items:center!important;
   max-width:1120px!important;
   margin-inline:auto!important;
-  padding:0!important;
-  overflow:hidden!important;
+  padding:clamp(42px,5vw,64px)!important;
+  overflow:visible!important;
   border:1px solid var(--line)!important;
   border-radius:28px!important;
   background:var(--surface)!important;
@@ -145,7 +146,7 @@ html body main .founder-card .founder-copy{
   order:1!important;
   max-width:none!important;
   margin:0!important;
-  padding:clamp(38px,5vw,68px)!important;
+  padding:0!important;
   align-self:center!important;
   text-align:left!important;
 }
@@ -153,23 +154,43 @@ html body main .founder-card .founder-copy h2,
 html body main .founder-card .founder-copy p,
 html body main .founder-card .founder-copy .eyebrow{text-align:left!important}
 html body main .founder-card .founder-copy .eyebrow{justify-content:flex-start!important}
-html body main img.founder-portrait{
+html body main .founder-card .founder-profile{
   order:2!important;
+  width:100%!important;
+  max-width:320px!important;
+  margin:0!important;
+  justify-self:center!important;
+  align-self:center!important;
+}
+html body main .founder-profile img.founder-portrait{
   display:block!important;
   visibility:visible!important;
   opacity:1!important;
   width:100%!important;
   max-width:none!important;
-  height:100%!important;
-  min-height:590px!important;
+  height:auto!important;
+  min-height:0!important;
   aspect-ratio:4/5!important;
   object-fit:cover!important;
   object-position:center 42%!important;
   margin:0!important;
-  border:0!important;
-  border-radius:0!important;
-  box-shadow:none!important;
+  border:1px solid color-mix(in srgb,var(--line) 85%,transparent)!important;
+  border-radius:18px!important;
+  box-shadow:0 14px 36px rgba(47,36,22,.10)!important;
   background:var(--surface-soft)!important;
+}
+html body main .founder-card .founder-profile .founder-quote{
+  max-width:none!important;
+  margin:18px 0 0!important;
+  padding:18px 0 0!important;
+  border-top:1px solid var(--line)!important;
+  font-size:16px!important;
+  line-height:1.55!important;
+  text-align:left!important;
+}
+html body main .founder-card .founder-profile .founder-meta{
+  margin-top:16px!important;
+  text-align:left!important;
 }
 .founder-photo-fallback{display:none!important}
 
@@ -186,13 +207,14 @@ html body main img.founder-portrait{
   .dashboard-window{min-height:460px!important;grid-template-columns:82px minmax(0,1fr)!important}
   .dash-main{padding:18px 14px!important}
   .value-card h3,.outcome-grid article h3{font-size:28px!important}
-  html body main .founder-card{grid-template-columns:1fr!important;padding:0!important}
-  html body main .founder-card .founder-copy{padding:36px 28px!important;text-align:center!important}
+  html body main .founder-card{grid-template-columns:1fr!important;gap:34px!important;padding:38px 28px!important}
+  html body main .founder-card .founder-copy{padding:0!important;text-align:center!important}
   html body main .founder-card .founder-copy h2,
   html body main .founder-card .founder-copy p,
   html body main .founder-card .founder-copy .eyebrow{text-align:center!important}
   html body main .founder-card .founder-copy .eyebrow{justify-content:center!important}
-  html body main img.founder-portrait{
+  html body main .founder-card .founder-profile{max-width:300px!important}
+  html body main .founder-profile img.founder-portrait{
     min-height:0!important;
     height:auto!important;
     aspect-ratio:4/5!important;
@@ -212,5 +234,8 @@ html body main img.founder-portrait{
   .metric-row strong{font-size:17px!important}
   .recommendation-card h3{font-size:15px!important}
   .integration-card strong{font-size:17px!important}
+  html body main .founder-card{padding:30px 22px!important}
+  html body main .founder-card .founder-profile{max-width:260px!important}
+  html body main .founder-card .founder-profile .founder-quote{font-size:15px!important}
   .footer-grid{grid-template-columns:1fr!important}
 }

@@ -23,6 +23,9 @@ def test_marketing_landing_is_shipped_as_public_static_asset():
     assert founder.status_code == 200
     assert founder.content.startswith(b'\xff\xd8')
     assert len(founder.content) > 100_000
+    assert 'class="founder-profile"' in script.text
+    assert script.text.index('class="founder-portrait"') < script.text.index('class="founder-quote"')
+    assert script.text.index('class="founder-quote"') < script.text.index('class="founder-meta"')
     html = response.text
     assert 'Vexmera — AI Marketing Officer' in html
     assert 'Kontroll före automation' in html
