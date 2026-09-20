@@ -148,6 +148,7 @@ def install_public_routing(app: FastAPI) -> None:
             '  </style>\n'
             '  <script>document.documentElement.classList.remove("vexmera-reveal-js");'
             f'window.__VEXMERA_BUILD__="{BUILD_ID}";</script>\n'
+            '  <link rel="preload" as="image" href="/static/vexmera-founder.jpg" fetchpriority="high" />\n'
             '  <link rel="stylesheet" href="/static/landing-ux.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-refine.css" />\n'
             '  <link rel="stylesheet" href="/static/landing-icon-premium.css" />\n'

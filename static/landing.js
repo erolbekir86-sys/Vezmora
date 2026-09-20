@@ -177,6 +177,7 @@
           <p class="founder-quote" data-i18n="founder.quote">“Målet är inte att ge företag ännu en dashboard. Målet är att göra vägen från signal till handling tydligare.”</p>
           <div class="founder-meta"><span class="founder-meta-mark">V</span><div><strong data-i18n="founder.name">Erol Bekir</strong><small data-i18n="founder.role">Grundare, Vexmera</small></div></div>
         </div>
+        <img class="founder-portrait" src="/static/vexmera-founder.jpg" alt="Erol Bekir, grundare av Vexmera" width="1122" height="1402" loading="lazy" decoding="async" />
       </div>`;
     pricing.parentNode.insertBefore(section,pricing);
   }
