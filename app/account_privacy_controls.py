@@ -118,7 +118,7 @@ async def _revoke_owned_connector_tokens(owned_workspaces: list[dict[str, Any]])
     succeeded = 0
     for workspace in owned_workspaces:
         workspace_id = int(workspace["id"])
-        for provider in ("google", "meta", "instagram", "shopify"):
+        for provider in ("google", "meta", "instagram", "shopify", "linkedin"):
             connector = _store.get_connector(workspace_id, provider, include_secret=True)
             if not connector or not connector.get("secret_blob"):
                 continue
