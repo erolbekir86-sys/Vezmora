@@ -153,6 +153,7 @@
       providerSyncSummary('Meta', payload.meta),
       providerSyncSummary('Instagram', payload.instagram),
       providerSyncSummary('Shopify', payload.shopify),
+      providerSyncSummary('LinkedIn', payload.linkedin),
     ].join(' ');
   }
 
@@ -169,12 +170,13 @@
     if (provider === 'meta') return 'Meta';
     if (provider === 'instagram') return 'Instagram';
     if (provider === 'shopify') return 'Shopify';
+    if (provider === 'linkedin') return 'LinkedIn';
     return 'Datakällan';
   }
 
   async function runIndividualConnectorSync(button) {
     const provider = String(button?.dataset?.sync || '').toLowerCase();
-    if (!button || !['google', 'meta', 'instagram', 'shopify'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
+    if (!button || !['google', 'meta', 'instagram', 'shopify', 'linkedin'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
 
     button.disabled = true;
     const previousText = button.textContent;
@@ -200,7 +202,7 @@
   function bindIndividualConnectorSyncFeedback() {
     document.querySelectorAll('#connectorGrid [data-sync]').forEach((button) => {
       const provider = String(button.dataset.sync || '').toLowerCase();
-      if (!['google', 'meta', 'instagram', 'shopify'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
+      if (!['google', 'meta', 'instagram', 'shopify', 'linkedin'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
       button.dataset.vexmeraSafeSync = 'true';
       button.onclick = () => runIndividualConnectorSync(button);
     });
