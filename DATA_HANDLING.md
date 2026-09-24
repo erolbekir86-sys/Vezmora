@@ -4,11 +4,11 @@ This document describes the current implementation as of the private beta codeba
 
 ## Connected account data Vexmera stores
 
-For Google, Meta, Instagram and Shopify connectors, Vexmera stores a connector record scoped to the customer's workspace. The record contains provider, connection status, optional external/account labels, connector metadata, an encrypted secret blob, and timestamps.
+For Google, Meta, Instagram, Shopify and LinkedIn connectors, Vexmera stores a connector record scoped to the customer's workspace. The record contains provider, connection status, optional external/account labels, connector metadata, an encrypted secret blob, and timestamps.
 
 The encrypted secret blob is used to store OAuth token material needed for connected API access. Normal connector reads do not include the secret blob; code paths must explicitly request `include_secret=True` when a backend operation needs credentials.
 
-Connector metadata may include identifiers and operational state such as Google Analytics property ID, Google Ads customer ID, Meta ad account ID, Instagram professional-account ID/username, Shopify shop domain, granted scope information, connection time, and last-sync metadata. Shopify order sync stores daily aggregate order count and revenue in the normalized KPI store; it does not persist customer names, email addresses, postal addresses, or raw order payloads. Instagram sync stores profile/media summary metadata and aggregate counts, not content publishing credentials or write permissions.
+Connector metadata may include identifiers and operational state such as Google Analytics property ID, Google Ads customer ID, Meta ad account ID, Instagram professional-account ID/username, Shopify shop domain, LinkedIn Ad Account ID, granted scope information, connection time, and last-sync metadata. Shopify order sync stores daily aggregate order count and revenue in the normalized KPI store; it does not persist customer names, email addresses, postal addresses, or raw order payloads. Instagram sync stores profile/media summary metadata and aggregate counts, not content publishing credentials or write permissions. LinkedIn sync stores advertising account metadata plus campaign-level reporting and aggregate KPI rows; it does not request advertising write permissions.
 
 ## Performance data Vexmera stores
 
