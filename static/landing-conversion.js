@@ -47,7 +47,7 @@
       beta2Title: 'Kontroll före automation',
       beta2Body: 'Du bestämmer när mänskligt godkännande krävs och hur långt automationen får gå.',
       beta3Title: 'Fokus på riktiga kanaler',
-      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram och Shopify ingår i den nuvarande betan. LinkedIn och TikTok byggs stegvis.'
+      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram och Shopify ingår i den nuvarande betan. LinkedIn Ads är integrerad men väntar på Advertising API-godkännande för live-synk. TikTok byggs stegvis.'
     },
     en: {
       heroNote: 'Private beta · Google Ads + Meta Ads + GA4 + Instagram + Shopify · You stay in control',
@@ -84,7 +84,7 @@
       beta2Title: 'Control before automation',
       beta2Body: 'You decide when human approval is required and how far automation is allowed to go.',
       beta3Title: 'Focused on real channels',
-      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram and Shopify are included in the current beta. LinkedIn and TikTok are being added step by step.'
+      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram and Shopify are included in the current beta. LinkedIn Ads is integrated but awaits Advertising API approval for live sync. TikTok is being added step by step.'
     }
   };
 
