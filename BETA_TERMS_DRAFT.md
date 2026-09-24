@@ -19,9 +19,11 @@ The pilot is intended for business customers, but final legal review must confir
 Vexmera is an AI-powered marketing platform designed to connect marketing/analytics data, explain performance and recommend next actions. Private Beta is pre-release software. Features may change, be incomplete or temporarily unavailable, and third-party APIs may restrict functionality.
 
 ## 3. Read-only advertising posture
-During Private Beta, supported Google Ads, Meta Ads, Instagram and Shopify integrations are read-only. Production currently reports external execution disabled, Autopilot execution disabled and Meta execution scope disabled.
+During Private Beta, supported Google Ads, Meta Ads, Instagram, Shopify and LinkedIn Ads integrations are read-only. Production currently reports external execution disabled, Autopilot execution disabled and Meta execution scope disabled.
 
 Vexmera must not autonomously publish ads, create or activate live campaigns, change budgets/bids/targeting, pause campaigns or otherwise mutate connected advertising accounts during this beta posture.
+
+LinkedIn live synchronization is additionally subject to LinkedIn Advertising API approval and the authenticated member's permissions for the selected ad account.
 
 Vexmera may prepare recommendations, analyses, drafts and approval items. Any later execution capability requires separate product, provider, security and customer-control review.
 
