@@ -16,7 +16,7 @@ def _stub_core_dependencies(monkeypatch, connectors):
     monkeypatch.setattr(core, "get_autopilot_settings", lambda workspace_id: {})
 
 
-@pytest.mark.parametrize("provider", ["google", "meta", "instagram", "shopify"])
+@pytest.mark.parametrize("provider", ["google", "meta", "instagram", "shopify", "linkedin"])
 def test_any_supported_connected_provider_counts_as_live_data(monkeypatch, provider):
     _stub_core_dependencies(monkeypatch, [{"provider": provider, "status": "connected"}])
 
