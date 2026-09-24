@@ -117,6 +117,7 @@ VEZMORA_APP_URL=https://vexmera.com
 GOOGLE_REDIRECT_URI=https://vexmera.com/api/connectors/google/callback
 INSTAGRAM_REDIRECT_URI=https://vexmera.com/api/connectors/instagram/callback
 SHOPIFY_REDIRECT_URI=https://vexmera.com/api/connectors/shopify/callback
+LINKEDIN_REDIRECT_URI=https://vexmera.com/api/connectors/linkedin/callback
 ```
 
 The registered Google OAuth Web application must use that callback and correspond to the same Cloud project whose Google Ads API access was approved. Keep the client secret private in Vercel.
@@ -157,6 +158,20 @@ SHOPIFY_API_VERSION=2026-07
 
 The exact redirect URI must be registered in the Shopify Dev Dashboard. Vexmera requests `read_orders` only, uses expiring offline access tokens with refresh-token rotation, and does not request write scopes.
 
+
+## LinkedIn Ads
+
+LinkedIn OAuth requires:
+
+- `LINKEDIN_CLIENT_ID`
+- `LINKEDIN_CLIENT_SECRET`
+- `LINKEDIN_REDIRECT_URI=https://vexmera.com/api/connectors/linkedin/callback`
+
+Optional:
+
+- `LINKEDIN_API_VERSION` — defaults to `202608` and must be a supported LinkedIn Marketing API version.
+
+Vexmera requests only `r_ads` and `r_ads_reporting` for the Private Beta connector. The LinkedIn developer application must be approved for Advertising API access, and the authenticated LinkedIn member must have permission to the selected ad account. Until that approval and production configuration exist, the product must present LinkedIn as unavailable for live sync rather than implying connected data.
 
 ## Meta Ads
 
