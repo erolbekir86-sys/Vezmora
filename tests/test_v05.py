@@ -20,13 +20,14 @@ def register(client: TestClient, email: str = "owner05@example.com") -> int:
 def test_multicurrency_campaigns_jobs_and_execution_gate(tmp_path, monkeypatch):
     monkeypatch.setattr(store, 'DB_PATH', tmp_path / 'v05.db')
     store.init_db()
+    today = date.today().isoformat()
     with TestClient(app) as client:
         workspace_id = register(client)
         assert client.put(f'/api/workspace/settings?workspace_id={workspace_id}', json={'base_currency': 'EUR'}).status_code == 200
         assert client.put(f'/api/fx-rates?workspace_id={workspace_id}', json={'quote_currency': 'USD', 'rate_to_base': 0.9}).status_code == 200
 
         kpi = client.post(f'/api/kpis?workspace_id={workspace_id}', json={
-            'date': '2026-08-24', 'currency': 'USD', 'impressions': 1000, 'clicks': 50,
+            'date': today, 'currency': 'USD', 'impressions': 1000, 'clicks': 50,
             'leads': 5, 'conversions': 2, 'spend_sek': 100, 'revenue_sek': 500, 'source': 'manual',
         })
         assert kpi.status_code == 200
@@ -37,7 +38,7 @@ def test_multicurrency_campaigns_jobs_and_execution_gate(tmp_path, monkeypatch):
 
         store.upsert_campaign_metric(workspace_id, {
             'provider': 'google_ads', 'external_campaign_id': '123', 'campaign_name': 'Search EU',
-            'date': '2026-08-24', 'impressions': 1000, 'clicks': 100, 'conversions': 10,
+            'date': today, 'impressions': 1000, 'clicks': 100, 'conversions': 10,
             'spend': 100, 'revenue': 400, 'currency': 'EUR',
         })
         campaigns = client.get(f'/api/campaigns?workspace_id={workspace_id}&days=30').json()
