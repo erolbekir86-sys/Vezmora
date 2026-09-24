@@ -52,7 +52,7 @@ def core_today(workspace_id: int) -> dict[str, Any]:
             "cta": "Open Rivals",
             "view": "rivals",
         })
-    supported_live_sources = ("google", "meta", "instagram", "shopify")
+    supported_live_sources = ("google", "meta", "instagram", "shopify", "linkedin")
     connected_live_sources = [
         provider
         for provider in supported_live_sources
