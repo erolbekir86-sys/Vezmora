@@ -19,6 +19,7 @@ PUBLIC_API_PATHS = {
     "/api/connectors/meta/callback",
     "/api/connectors/instagram/callback",
     "/api/connectors/shopify/callback",
+    "/api/connectors/linkedin/callback",
     "/api/billing/webhook",
     "/api/internal/cron/maintenance",
 }

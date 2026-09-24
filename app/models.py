@@ -143,8 +143,9 @@ class ConnectorSettings(BaseModel):
     analytics_property_id: str | None = Field(default=None, max_length=80)
     ads_customer_id: str | None = Field(default=None, max_length=80)
     meta_ad_account_id: str | None = Field(default=None, max_length=100)
+    linkedin_ad_account_id: str | None = Field(default=None, max_length=100)
 
-    @field_validator("analytics_property_id", "ads_customer_id", "meta_ad_account_id", mode="before")
+    @field_validator("analytics_property_id", "ads_customer_id", "meta_ad_account_id", "linkedin_ad_account_id", mode="before")
     @classmethod
     def normalize_provider_identifier(cls, value: Any) -> Any:
         return _strip_optional_identifier(value)

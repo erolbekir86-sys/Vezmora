@@ -17,6 +17,8 @@ _CALLBACK_PATHS = frozenset({
     "/api/connectors/instagram/callback/",
     "/api/connectors/shopify/callback",
     "/api/connectors/shopify/callback/",
+    "/api/connectors/linkedin/callback",
+    "/api/connectors/linkedin/callback/",
 })
 
 

@@ -32,6 +32,8 @@ from .connectors import (
     google_callback,
     instagram_authorization_url,
     instagram_callback,
+    linkedin_authorization_url,
+    linkedin_callback,
     meta_authorization_url,
     meta_callback,
     shopify_authorization_url,
@@ -40,6 +42,7 @@ from .connectors import (
     sync_all,
     sync_google,
     sync_instagram,
+    sync_linkedin,
     sync_meta,
     sync_shopify,
 )
@@ -451,6 +454,7 @@ async def connector_sync(provider: str, workspace_id: int, request: SyncRequest,
     if provider == "meta": return await sync_meta(workspace_id, request.days)
     if provider == "instagram": return await sync_instagram(workspace_id, request.days)
     if provider == "shopify": return await sync_shopify(workspace_id, request.days)
+    if provider == "linkedin": return await sync_linkedin(workspace_id, request.days)
     if provider == "all": return await sync_all(workspace_id, request.days)
     raise HTTPException(status_code=404, detail="Unknown connector")
 
@@ -505,6 +509,18 @@ async def shopify_oauth_callback(
 ) -> RedirectResponse:
     await shopify_callback(code, state, shop, hmac, dict(request.query_params))
     return RedirectResponse(url="/?connected=shopify")
+
+
+@app.get("/api/connectors/linkedin/start")
+def linkedin_start(workspace_id: int, user: User) -> dict[str, str]:
+    _require_role(user, workspace_id, {"owner","admin"})
+    return {"authorization_url": linkedin_authorization_url(workspace_id, int(user["id"]))}
+
+
+@app.get("/api/connectors/linkedin/callback")
+async def linkedin_oauth_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+    await linkedin_callback(code, state)
+    return RedirectResponse(url="/?connected=linkedin")
 
 
 @app.get("/api/notifications")

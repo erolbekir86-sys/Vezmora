@@ -18,8 +18,8 @@ from .auth import require_user
 from .main import app as _app  # noqa: E402
 
 User = Annotated[dict[str, Any], Depends(require_user)]
-_ALLOWED_PROVIDERS = {"google", "meta", "instagram", "shopify"}
-_SYNCED_KPI_SOURCES = ("google_analytics", "google_ads", "meta_ads", "shopify_orders")
+_ALLOWED_PROVIDERS = {"google", "meta", "instagram", "shopify", "linkedin"}
+_SYNCED_KPI_SOURCES = ("google_analytics", "google_ads", "meta_ads", "shopify_orders", "linkedin_ads")
 _DELETE_HISTORY_CONFIRMATION = "DELETE_SYNCED_HISTORY"
 
 
@@ -89,9 +89,10 @@ async def _revoke_provider_token(provider: str, secret_blob: str | None) -> tupl
                 )
             else:
                 # Instagram can share the same Meta authorization grant as Meta Ads,
-                # and Shopify revocation is tied to app uninstall/provider lifecycle.
-                # Disconnect these locally so one Vexmera connector never revokes a
-                # different connector's provider access as a side effect.
+                # Shopify revocation is tied to app uninstall/provider lifecycle, and
+                # LinkedIn does not expose a Vexmera-safe revocation path here.
+                # Disconnect these locally so one connector never revokes unrelated
+                # provider access as a side effect.
                 return False, False
         return True, response.status_code < 400
     except Exception:

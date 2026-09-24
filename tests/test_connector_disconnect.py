@@ -123,6 +123,12 @@ def test_synced_history_deletion_removes_provider_data_but_keeps_manual_kpis(tmp
                 (workspace_id,),
             )
             con.execute(
+                """INSERT INTO kpis
+                   (workspace_id, metric_date, impressions, clicks, leads, conversions, spend_sek, revenue_sek, source, currency)
+                   VALUES (?, '2026-09-02', 50, 8, 0, 2, 250, 600, 'linkedin_ads', 'SEK')""",
+                (workspace_id,),
+            )
+            con.execute(
                 """INSERT INTO campaign_metrics
                    (workspace_id, provider, external_campaign_id, campaign_name, metric_date, impressions, clicks, conversions, spend, revenue, currency)
                    VALUES (?, 'google_ads', 'campaign-1', 'Search', '2026-09-01', 100, 20, 3, 500, 1200, 'SEK')""",
@@ -149,7 +155,7 @@ def test_synced_history_deletion_removes_provider_data_but_keeps_manual_kpis(tmp
         assert payload["ok"] is True
         assert payload["deleted"] == {
             "campaign_metrics": 1,
-            "synced_kpis": 1,
+            "synced_kpis": 2,
             "anomalies": 1,
             "anomaly_notifications": 1,
         }
@@ -166,12 +172,16 @@ def test_synced_history_deletion_removes_provider_data_but_keeps_manual_kpis(tmp
             synced_count = con.execute(
                 "SELECT COUNT(*) FROM kpis WHERE workspace_id=? AND source='google_ads'", (workspace_id,)
             ).fetchone()[0]
+            linkedin_synced_count = con.execute(
+                "SELECT COUNT(*) FROM kpis WHERE workspace_id=? AND source='linkedin_ads'", (workspace_id,)
+            ).fetchone()[0]
             manual_count = con.execute(
                 "SELECT COUNT(*) FROM kpis WHERE workspace_id=? AND source='manual'", (workspace_id,)
             ).fetchone()[0]
         assert campaign_count == 0
         assert anomaly_count == 0
         assert synced_count == 0
+        assert linkedin_synced_count == 0
         assert manual_count == 1
 
 

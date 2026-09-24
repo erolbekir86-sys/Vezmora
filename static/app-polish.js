@@ -244,7 +244,7 @@
       const actions = card.querySelector('.card-actions');
       if (!sync || !actions || sync.disabled) return;
       const provider = String(sync.dataset.sync || '').toLowerCase();
-      if (!['google', 'meta', 'instagram', 'shopify'].includes(provider)) return;
+      if (!['google', 'meta', 'instagram', 'shopify', 'linkedin'].includes(provider)) return;
       if (actions.querySelector(`[data-vex-disconnect="${provider}"]`)) return;
 
       const button = document.createElement('button');
