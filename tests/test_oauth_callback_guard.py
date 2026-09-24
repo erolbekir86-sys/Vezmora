@@ -26,6 +26,10 @@ def _guarded_app() -> FastAPI:
     def meta_callback(code: str, state: str):
         return {"provider": "meta", "code": code, "state": state}
 
+    @app.get("/api/connectors/linkedin/callback")
+    def linkedin_callback(code: str, state: str):
+        return {"provider": "linkedin", "code": code, "state": state}
+
     @app.get("/health")
     def health():
         return {"ok": True}
@@ -34,16 +38,19 @@ def _guarded_app() -> FastAPI:
     return app
 
 
-def test_valid_google_and_meta_callbacks_pass_through():
+def test_valid_google_meta_and_linkedin_callbacks_pass_through():
     state = "Abc_123-safe-state"
     with TestClient(_guarded_app()) as client:
         google = client.get("/api/connectors/google/callback", params={"code": "normal-code", "state": state})
         meta = client.get("/api/connectors/meta/callback", params={"code": "normal-code", "state": state})
+        linkedin = client.get("/api/connectors/linkedin/callback", params={"code": "normal-code", "state": state})
 
     assert google.status_code == 200
     assert google.json()["provider"] == "google"
     assert meta.status_code == 200
     assert meta.json()["provider"] == "meta"
+    assert linkedin.status_code == 200
+    assert linkedin.json()["provider"] == "linkedin"
 
 
 def test_oversized_state_is_rejected_before_callback_handler():
@@ -59,7 +66,7 @@ def test_oversized_state_is_rejected_before_callback_handler():
 
 
 def test_malformed_state_is_rejected_for_both_providers():
-    for path in ("/api/connectors/google/callback", "/api/connectors/meta/callback"):
+    for path in ("/api/connectors/google/callback", "/api/connectors/meta/callback", "/api/connectors/linkedin/callback"):
         with TestClient(_guarded_app()) as client:
             response = client.get(path, params={"code": "normal-code", "state": "bad state å"})
         assert response.status_code == 400
