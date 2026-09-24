@@ -14,7 +14,7 @@ Before external use, insert and verify:
 ## 2. What Vexmera does
 Vexmera is an AI-powered marketing platform that helps businesses connect marketing/analytics data, understand performance and receive recommended next actions.
 
-During Private Beta, supported Google Ads, Meta Ads, Instagram and Shopify integrations are intended to be read-only. External campaign execution, Autopilot execution and Meta execution scope are disabled in production. Vexmera must not autonomously publish ads, change budgets, bids, targeting or campaign state during this beta posture.
+During Private Beta, supported Google Ads, Meta Ads, Instagram, Shopify and LinkedIn Ads integrations are intended to be read-only. External campaign execution, Autopilot execution and Meta execution scope are disabled in production. Vexmera must not autonomously publish ads, change budgets, bids, targeting or campaign state during this beta posture.
 
 ## 3. Personal data and business data Vexmera may process
 Depending on enabled features, Vexmera may process:
@@ -63,9 +63,11 @@ Purposes may include:
 For EEA/UK users, applicable bases may include contract performance, legitimate interests, consent where required and legal obligation. Final publication must map each material activity to the exact legal basis after legal review.
 
 ## 6. Connected provider accounts
+
+LinkedIn Ads uses member-authorized OAuth with read-only `r_ads` and `r_ads_reporting` permissions. Live synchronization depends on LinkedIn Advertising API approval for the Vexmera developer application and the user's ad-account role.
 Connection occurs through provider authorization flows. Vexmera stores resulting credentials in encrypted form.
 
-Authorized workspace owners/admins can disconnect supported Google, Meta, Instagram and Shopify connections. The current implementation removes the locally stored connector credential and saved provider/account identifiers, stops future synchronization through that credential and performs best-effort upstream revocation where supported.
+Authorized workspace owners/admins can disconnect supported Google, Meta, Instagram, Shopify and LinkedIn connections. The current implementation removes the locally stored connector credential and saved provider/account identifiers, stops future synchronization through that credential and performs best-effort upstream revocation where supported.
 
 Disconnecting does **not** automatically delete previously synchronized reporting history. A separate destructive synchronized-history deletion control exists so access credentials and historical reporting are not accidentally removed together.
 
@@ -100,7 +102,7 @@ Engineering has prepared `RETENTION_POLICY_PROPOSAL.md` with proposed periods fo
 Those proposed periods are **not yet public commitments**. Before publication, engineering must verify/implement scheduled deletion for every category given a concrete period, and owner/legal review must confirm any statutory accounting/tax requirements.
 
 ## 11. Service providers and subprocessors
-The production stack currently includes Vercel (hosting/runtime), Neon (database), OpenAI API (AI processing), Stripe (billing) and Resend (transactional email). Google and Meta are connected external platforms for authorized reporting/OAuth flows.
+The production stack currently includes Vercel (hosting/runtime), Neon (database), OpenAI API (AI processing), Stripe (billing) and Resend (transactional email). Google, Meta, Instagram, Shopify and LinkedIn are connected external platforms for authorized reporting/OAuth flows where the relevant provider access is enabled.
 
 A technical inventory is maintained in `SUBPROCESSOR_DATA_INVENTORY.md`. Vercel, OpenAI, Stripe and Resend publish current data-processing/subprocessor materials; Neon account-specific DPA/region/subprocessor details still require final account-level verification before public legal wording is finalized.
 
