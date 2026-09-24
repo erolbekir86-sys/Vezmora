@@ -1,6 +1,6 @@
 # Vexmera processor and data-handling inventory
 
-Last reviewed: 2026-09-15
+Last reviewed: 2026-09-24
 
 Status: technical/factual inventory for legal review. This is not itself the final public subprocessor list.
 
@@ -59,7 +59,13 @@ Current product controls: Vexmera requests no Instagram publishing scope and per
 Purpose: OAuth and read-only commerce reporting during Private Beta.
 Likely data: encrypted access/refresh tokens, shop domain/name/currency, and daily aggregate order count/revenue for the authorized reporting period.
 Current product controls: only read_orders is requested; no write scopes are requested. Vexmera aggregates orders in memory and does not persist raw orders, customer names, email addresses or postal addresses.
-Legal review action: map the applicable Meta business/data terms and roles for the connected reporting flow.
+Legal review action: map the applicable Shopify terms and roles for the connected reporting flow.
+
+### LinkedIn
+Purpose: member-authorized OAuth and read-only LinkedIn Ads reporting during Private Beta once Advertising API access is approved.
+Likely data: encrypted OAuth token material, LinkedIn Ad Account ID/name/currency, campaign identifiers and advertising performance metrics.
+Current product controls: Vexmera requests only r_ads and r_ads_reporting, performs no LinkedIn advertising mutations, and keeps live sync unavailable until provider approval/configuration exists. Local disconnect removes the Vexmera credential.
+Legal review action: map LinkedIn Advertising API terms, applicable controller/processor roles and any provider-side retention before final public/DPA wording.
 
 ## Internal data categories and flows
 
@@ -80,5 +86,5 @@ Before publishing a final subprocessor list or DPA:
 3. confirm provider-native retention that Vexmera cannot directly control;
 4. subscribe to subprocessor-change notices where available;
 5. determine when Vexmera acts as controller versus processor for business-customer data;
-6. keep Google and Meta role descriptions flow-specific;
+6. keep Google, Meta and LinkedIn role descriptions flow-specific;
 7. avoid promising deletion from third-party statutory/security records that Vexmera cannot guarantee.
