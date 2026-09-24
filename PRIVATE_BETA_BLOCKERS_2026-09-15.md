@@ -1,4 +1,4 @@
-# Vexmera Private Beta blockers — current through 2026-09-17
+# Vexmera Private Beta blockers — current through 2026-09-24
 
 This is the canonical current blocker list. Older checklists should defer to this file when they conflict.
 
@@ -6,7 +6,8 @@ This is the canonical current blocker list. Older checklists should defer to thi
 
 - Private Beta execution posture: external execution disabled, Autopilot execution disabled, Meta execution scope disabled.
 - Production transport/readiness endpoint reports safe execution and safe production transport.
-- Production deployment containing PR #264 is READY on `vexmera.com`.
+- Production release `0546b63a7f229b0b42726442c83a4bd88ebe4e79` is READY on `vexmera.com`.
+- LinkedIn Ads read-only integration is deployed; it requests only `r_ads` and `r_ads_reporting`, while live sync remains gated by LinkedIn Advertising API approval/configuration.
 - Google Ads read-only production sync has returned real campaign rows.
 - Meta read-only sync correctly distinguishes legitimate zero-row data from auth/provider failure.
 - Current Stripe test catalog is Start 995 SEK, Growth 1,495 SEK and Pro 2,995 SEK monthly with pricing version `2026-09-start-growth-pro`.
@@ -24,6 +25,7 @@ This is the canonical current blocker list. Older checklists should defer to thi
 - PR #266 is merged to `main`, and production deployment `dpl_3jcimr33BamsNTJFvvpvUQJFYXtD` for commit `32821b9f830b624a5453b745b750f900d12ca22f` is READY.
 - Privacy/Terms technical drafts are aligned with the current implementation.
 - Engineering retention proposal and processor/data-flow inventory are documented.
+- Direct Stripe sandbox re-verification on 2026-09-24 confirms the active Start/Growth/Pro prices, current pricing-version metadata, active default Billing Portal configuration, completed Checkout evidence, test customers and test subscriptions.
 
 ## Technical blockers for a five-company read-only Private Beta
 

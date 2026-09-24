@@ -82,14 +82,17 @@
 - [x] Gate final catalog success on the explicit `2026-09-start-growth-pro` pricing-version marker
 - [x] Confirm the previously connected Stripe test account had no webhook endpoint at the time of the historical audit
 - [x] Independently verify current **Start / Growth / Pro** test-mode Prices at 995 / 1,495 / 2,995 SEK monthly with current pricing-version metadata
-- [ ] Confirm Vercel `STRIPE_PRICE_START`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_PRO` point to those independently verified test Prices
-- [ ] Confirm the Vercel `STRIPE_SECRET_KEY` belongs to the same Stripe test account as all three current Price IDs
-- [ ] Run `python scripts/verify_stripe_catalog.py` in the configured deployment environment and require `catalog_ok=true`
-- [ ] Confirm `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` is set only after current catalog verification passes
+- [x] Confirm deployed Checkout readiness uses the independently verified Start/Growth/Pro sandbox catalog and exact-ID fail-closed gate
+- [x] Confirm sandbox Checkout/subscription evidence is produced in the same connected Vexmera Stripe test account as the current Price catalog
+- [x] Re-verify the active sandbox catalog directly against Stripe on 2026-09-24; all three prices are active, monthly SEK and carry the current pricing-version metadata
+- [ ] Re-run `scripts/verify_stripe_catalog.py` only if the production Stripe environment or catalog changes
+- [x] Confirm current catalog and deployed Checkout readiness use pricing version `2026-09-start-growth-pro`
 - [x] Create/reconcile the active test webhook endpoint at `<VEZMORA_APP_URL>/api/billing/webhook`
-- [ ] Create or intentionally configure a **test-mode Billing Portal configuration** before Customer Portal E2E
-- [ ] Confirm operator/local Stripe readiness via `scripts/preflight.py` after reconciliation; do not expect the minimal public `/health/beta-readiness` endpoint to expose Stripe configuration
-- [ ] Run a fresh end-to-end sandbox Checkout + remaining private-beta trial + signed webhook + Customer Portal test
+- [x] Create and verify an active default **test-mode Billing Portal configuration**
+- [x] Confirm public production readiness remains safe after Stripe reconciliation; `/health/beta-readiness` reports safe execution/transport
+- [ ] Re-run operator/local Stripe preflight if Stripe environment values change
+- [x] Verify sandbox Checkout + private-beta trial + signed webhook/database projection with dedicated synthetic workspaces
+- [ ] Complete the final external Stripe-hosted Customer Portal browser round-trip before enabling paid self-service
 - [ ] Make a separate VAT/tax decision before any live-mode paid launch
 
 ## Google
@@ -182,6 +185,6 @@
 - [x] Reconfirm production runtime/log observability through the connected Vercel project
 - [x] Confirm the canonical production domain responds over HTTPS and the application uses it as the public app origin
 - [x] Confirm current release candidate is merged, deployed and serving the intended revision with safe execution/transport signals
-- [ ] Perform final authenticated browser QA on the deployed Command Center, including a real mobile viewport pass
+- [x] Perform authenticated production desktop QA and permanent 390×844 mobile Chromium QA
 - [ ] Finalize Privacy Policy and Beta Terms with legal entity/contact details, longer-lived retention decisions and legal review before external pilot onboarding
 - [ ] Run five-company pilot
