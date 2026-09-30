@@ -228,6 +228,7 @@ After any deployment change inspect:
 
 - `/health/runtime`
 - `/health/beta-readiness`
+- `/health/connectors` — boolean-only runtime configuration status for Google, Meta, Instagram, Shopify and LinkedIn; never exposes credentials or account data.
 
 Production `/health/runtime` is intentionally minimal and should expose only liveness/deployment identity fields needed to prove which build is serving traffic. It must not expose database, OpenAI, Stripe, SMTP, OAuth or secret-configuration booleans.
 
