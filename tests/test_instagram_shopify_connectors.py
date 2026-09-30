@@ -29,6 +29,7 @@ def test_instagram_and_shopify_readiness_fail_closed(monkeypatch):
 def test_instagram_oauth_requests_read_only_professional_account_scopes(monkeypatch):
     captured = {}
     monkeypatch.setenv("META_APP_ID", "123456")
+    monkeypatch.setenv("META_APP_SECRET", "test-meta-secret")
     monkeypatch.setenv("INSTAGRAM_REDIRECT_URI", "https://app.example.test/api/connectors/instagram/callback")
     monkeypatch.setattr(
         connectors,
@@ -75,6 +76,7 @@ def test_shopify_shop_normalization_rejects_untrusted_hosts(value):
 def test_shopify_oauth_is_read_only_and_stores_state(monkeypatch):
     captured = {}
     monkeypatch.setenv("SHOPIFY_CLIENT_ID", "client-id")
+    monkeypatch.setenv("SHOPIFY_CLIENT_SECRET", "test-shopify-client-secret")
     monkeypatch.setenv("SHOPIFY_REDIRECT_URI", "https://app.example.test/api/connectors/shopify/callback")
     monkeypatch.setattr(
         connectors,
