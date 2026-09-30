@@ -173,6 +173,17 @@ Optional:
 
 Vexmera requests only `r_ads` and `r_ads_reporting` for the Private Beta connector. The LinkedIn developer application must be approved for Advertising API access, and the authenticated LinkedIn member must have permission to the selected ad account. Until that approval and production configuration exist, the product must present LinkedIn as unavailable for live sync rather than implying connected data.
 
+Set `LINKEDIN_ADS_API_APPROVED=true` only after LinkedIn has approved the Vexmera developer app for the required Advertising API product. This flag is a product-readiness assertion, not a substitute for LinkedIn approval.
+
+For Instagram external pilot accounts, set `INSTAGRAM_APP_REVIEW_APPROVED=true` only after the Meta app has the required reviewed/advanced permissions for non-role Business/Creator accounts. Keep it false while access is limited to app roles/testers.
+
+Production redirect URIs must exactly match the canonical `VEZMORA_APP_URL` origin plus the connector callback path:
+- Instagram: `/api/connectors/instagram/callback`
+- Shopify: `/api/connectors/shopify/callback`
+- LinkedIn: `/api/connectors/linkedin/callback`
+
+The authenticated Connections view reports credential, redirect and provider-approval readiness without exposing secret values.
+
 ## Meta Ads
 
 OAuth connection requires:
