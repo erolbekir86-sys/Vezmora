@@ -60,10 +60,15 @@ def connector_readiness_hardened() -> dict[str, dict[str, object]]:
         result[provider]["credentials_configured"] = credentials_ok
         result[provider]["redirect_ok"] = redirect_ok
         result[provider]["read_only"] = True
-        if provider == "linkedin":
+        if provider == "instagram":
             result[provider]["external_approval_required"] = True
+            result[provider]["external_approval_confirmed"] = (os.getenv("INSTAGRAM_APP_REVIEW_APPROVED") or "").strip().lower() in {"1", "true", "yes", "on"}
+        elif provider == "linkedin":
+            result[provider]["external_approval_required"] = True
+            result[provider]["external_approval_confirmed"] = (os.getenv("LINKEDIN_ADS_API_APPROVED") or "").strip().lower() in {"1", "true", "yes", "on"}
         else:
             result[provider]["external_approval_required"] = False
+            result[provider]["external_approval_confirmed"] = True
     return result
 
 
