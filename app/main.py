@@ -207,6 +207,24 @@ def health() -> dict[str, object]:
     }
 
 
+@app.get("/health/connectors")
+def connector_health() -> dict[str, object]:
+    """Expose boolean-only connector runtime readiness without secrets or account data."""
+    readiness = connector_readiness()
+    providers: dict[str, dict[str, object]] = {}
+    for provider in ("google", "meta", "instagram", "shopify", "linkedin"):
+        details = readiness.get(provider) or {}
+        providers[provider] = {
+            "label": str(details.get("label") or provider),
+            "runtime_configured": bool(details.get("configured")),
+        }
+    return {
+        "ok": True,
+        "phase": "private_beta",
+        "providers": providers,
+    }
+
+
 User = Annotated[dict[str, Any], Depends(require_user)]
 
 
