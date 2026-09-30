@@ -18,7 +18,7 @@ def test_dashboard_empty_state_tells_pilot_user_what_to_do_next() -> None:
 
 def test_connector_empty_state_is_actionable_without_exposing_secrets() -> None:
     source = _source()
-    assert "Needs setup" in source
+    assert "Konfiguration saknas" in source
     assert "Ready to connect" in source
     assert "Missing:" in source
     assert "OAuth credentials detected." in source
