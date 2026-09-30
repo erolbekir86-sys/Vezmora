@@ -20,8 +20,8 @@ def test_connector_empty_state_is_actionable_without_exposing_secrets() -> None:
     source = _source()
     assert "Konfiguration saknas" in source
     assert "Redo att ansluta" in source
-    assert "Missing:" in source
-    assert "OAuth credentials detected." in source
+    assert "OAuth-nycklar saknas i produktionsmiljön." in source
+    assert "OAuth-konfigurationen är redo." in source
 
     forbidden = (
         "GOOGLE_ADS_DEVELOPER_TOKEN",
