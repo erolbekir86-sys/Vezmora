@@ -4,12 +4,12 @@ Last reviewed: 2026-10-13
 
 This is the canonical non-secret operational snapshot for the five-company read-only Private Beta.
 
-## Current release baseline
+## Release baseline checked before the 2026-10-13 update
 
-- Production `main`: `cb73e29c49831da0fa4a0fa04ad3dcd690c5769b`
+- Production `main` at the start of the review: `cb73e29c49831da0fa4a0fa04ad3dcd690c5769b`
 - Production domain: `https://vexmera.com`
 - Vercel production deployment for the release is `READY`.
-- `/health/runtime` reports the same deployment revision (checked 2026-10-13).
+- `/health/runtime` reported that baseline revision at the initial check. The follow-up release deployed as `4e37beed2090974bf98033dbf27fb7fe22e32043` and passed the same revision-pinned runtime check.
 - `/health/beta-readiness` reports `private_beta_execution_safe=true` and `production_transport_safe=true`.
 - External marketing execution, Autopilot execution and Meta execution scope remain disabled.
 - Vercel grouped runtime errors returned no errors for the seven-day window checked 2026-10-13.
