@@ -1,18 +1,27 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-09-24
+Last reviewed: 2026-10-13
 
 This is the canonical non-secret operational snapshot for the five-company read-only Private Beta.
 
 ## Current release baseline
 
-- Production `main`: `0546b63a7f229b0b42726442c83a4bd88ebe4e79`
+- Production `main`: `cb73e29c49831da0fa4a0fa04ad3dcd690c5769b`
 - Production domain: `https://vexmera.com`
 - Vercel production deployment for the release is `READY`.
-- `/health/runtime` reports the same deployment revision.
+- `/health/runtime` reports the same deployment revision (checked 2026-10-13).
 - `/health/beta-readiness` reports `private_beta_execution_safe=true` and `production_transport_safe=true`.
 - External marketing execution, Autopilot execution and Meta execution scope remain disabled.
-- Post-deploy runtime inspection found no active runtime-error group in the checked window.
+- Vercel grouped runtime errors returned no errors for the seven-day window checked 2026-10-13.
+
+## 2026-10-13 beta rerun
+
+- Public runtime checks against `https://vexmera.com` passed with the exact production revision above. External execution, Autopilot execution, Meta execution scope and developer token display all reported disabled.
+- Public home, Privacy and Terms passed the GET-only discoverability check. This confirms availability and links, not legal approval of their content.
+- Vercel production environment key inventory has `INSTAGRAM_REDIRECT_URI`; it has no `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_REDIRECT_URI`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` or `LINKEDIN_REDIRECT_URI`. Values were not read. Those two OAuth connections are therefore not ready for live pilot businesses.
+- The Instagram redirect alone does not establish Meta app publication, permissions/app review or successful external account authorization. Verify that with a real permitted pilot account before promising Instagram data.
+- The runtime preflight is now executable with `python -m scripts.public_runtime_preflight --base-url https://vexmera.com --expected-revision <production-sha>` and returns a non-zero exit status on a failed check.
+- Current automated targeted beta checks passed locally. A fresh authenticated external-business walkthrough and real provider checks were not completed in this rerun.
 
 ## Verified healthy
 
@@ -47,9 +56,7 @@ The only remaining Portal item is a manual external browser round-trip from Vexm
 
 ## Technical blockers for five-company read-only Private Beta
 
-**None.**
-
-The product can be used by invited pilot companies in the defined read-only posture.
+No new code-level blocker was identified by the public runtime checks. Onboard only invited businesses whose requested read-only connectors can be verified individually. Shopify and LinkedIn cannot complete OAuth in the current production environment; Instagram external access remains unverified. The machine checks alone do not authorize onboarding.
 
 ## Remaining owner/legal gates
 
@@ -75,4 +82,4 @@ These cannot be inferred or invented by engineering:
 
 ## Current recommendation
 
-Proceed with invited B2B pilot companies now in read-only mode. Keep live billing and external campaign mutation disabled until the remaining owner/legal gates are completed.
+Run an invited, free/read-only pilot only after legal/contact details are approved and each company's onboarding and intended connector are verified. Keep live billing and external campaign mutation disabled. Use `FIVE_COMPANY_PILOT_RUNBOOK.md` for per-company sign-off.
