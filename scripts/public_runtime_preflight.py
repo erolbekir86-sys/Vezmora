@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from typing import Any
 
@@ -129,3 +130,18 @@ def build_public_runtime_preflight(
             "provider and secret-presence diagnostics are intentionally not exposed publicly."
         ),
     }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Vexmera public read-only runtime preflight")
+    parser.add_argument("--base-url", default="https://vexmera.com")
+    parser.add_argument("--expected-revision", help="Exact expected production commit SHA")
+    args = parser.parse_args(argv)
+
+    result = build_public_runtime_preflight(args.base_url, args.expected_revision)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0 if result["ok"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -5,6 +5,25 @@ import json
 from scripts import public_runtime_preflight
 
 
+def test_runtime_preflight_cli_reports_blockers_and_exits_nonzero(monkeypatch, capsys):
+    monkeypatch.setattr(
+        public_runtime_preflight,
+        "build_public_runtime_preflight",
+        lambda base_url, expected_revision: {
+            "ok": False,
+            "blockers": ["deployment_revision_mismatch"],
+            "base_url": base_url,
+            "expected_revision": expected_revision,
+        },
+    )
+    assert public_runtime_preflight.main([
+        "--base-url", "https://vexmera.com", "--expected-revision", "expected-sha"
+    ]) == 1
+    result = json.loads(capsys.readouterr().out)
+    assert result["blockers"] == ["deployment_revision_mismatch"]
+    assert result["expected_revision"] == "expected-sha"
+
+
 def _safe_runtime_payload() -> dict[str, object]:
     return {
         "ok": True,
