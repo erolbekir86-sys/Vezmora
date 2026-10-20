@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import json
+import sqlite3
 import shutil
 import socket
 import subprocess
@@ -228,6 +230,46 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
                 menu.click()
             page.locator('.nav[data-view="team"]').click()
             page.locator("#team").wait_for(state="visible")
+            # Capacity controls work through the real UI and persist after reload.
+            page.locator("#monthlyRunLimit").fill("0")
+            page.locator("#saveUsageLimit").click()
+            page.locator("#usageSaveState").filter(has_text="Månadsgränsen är sparad").wait_for()
+            assert "pausade" in page.locator("#usageState").inner_text()
+            _assert_no_page_overflow(page)
+
+            # Seed a completed model result without calling any external model.
+            # The UI must queue this saved snapshot, not the subsequently edited form.
+            with sqlite3.connect(tmp_path / "mobile-browser.db") as con:
+                run_id = con.execute(
+                    "INSERT INTO runs(workspace_id,kind,company_name,language,input_json,output_text) VALUES(?,'campaign','Mobile QA','sv',?,?) RETURNING id",
+                    (workspace_id, json.dumps({"campaign_name": "Saved QA campaign", "channel": "meta", "budget_sek": 1500, "objective": "sales"}), "## Saved campaign\n\nReview this campaign before publication. " + "Long-content-" * 30),
+                ).fetchone()[0]
+            page.reload(wait_until="networkidle")
+            page.evaluate("document.getElementById('campaignName').value='Edited after generation'")
+            page.locator(f'[data-queue-run="{run_id}"]').click()
+            page.locator("#approvalReview").wait_for(state="visible")
+            page.locator("#reviewTitle").filter(has_text="Saved QA campaign").wait_for()
+            assert "publicerar ingenting" in page.locator("#reviewContent").inner_text()
+            assert "Edited after generation" not in page.locator("#reviewContent").inner_text()
+            assert page.locator("#reviewExecute").count() == 0
+            _assert_no_page_overflow(page)
+            page.locator("#reviewNote").fill("Budget and content checked in mobile QA")
+            page.locator('[data-review-decision="approve"]').click()
+            page.locator(".review-timeline").filter(has_text="Budget and content checked").wait_for()
+            _assert_no_page_overflow(page)
+
+            # Re-opening the saved run returns the same approval and decision.
+            page.reload(wait_until="networkidle")
+            page.locator(f'[data-queue-run="{run_id}"]').click()
+            page.locator(".review-timeline").filter(has_text="Budget and content checked").wait_for()
+            assert page.locator('[data-review-decision="approve"]').count() == 0
+            with sqlite3.connect(tmp_path / "mobile-browser.db") as con:
+                assert con.execute("SELECT COUNT(*) FROM approvals WHERE workspace_id=?", (workspace_id,)).fetchone()[0] == 1
+            if not nav.is_visible():
+                menu.click()
+            page.locator('.nav[data-view="team"]').click()
+            page.locator("#usageState").filter(has_text="pausade").wait_for()
+
             delete_prepare = page.locator("#accountDeletePrepare")
             delete_prepare.wait_for(state="visible")
             delete_prepare.click()

@@ -20,6 +20,8 @@ from .auth import end_session, hash_password, require_user, start_session, verif
 from .briefs import brief_memory, create_metric_proposals
 from .analytics import detect_anomalies
 from .billing import billing_status, enforce_limit
+from .usage_controls import run_metered, set_monthly_limit, usage_overview
+from .campaign_workflow import queue_campaign_run, approval_review
 from .execution import execution_enabled, execute_approved_action, preview_external
 from .autopilot import autopilot_runtime_enabled, evaluate_autopilot_policy, run_autopilot_once
 from .core import core_today
@@ -47,6 +49,7 @@ from .connectors import (
     sync_shopify,
 )
 from .models import (
+    UsageControlSettings,
     AgentRequest,
     AgentResponse,
     ApprovalCreate,
@@ -345,10 +348,11 @@ async def strategy(workspace_id: int, request: StrategyRequest, user: User) -> A
     _require_role(user, workspace_id, {"owner","admin","marketer"}); _require_key(); enforce_limit(workspace_id, "ai_runs")
     company = _company_for(workspace_id, request.company); request.company = company
     try:
-        output = await generate_strategy(request, _memory(workspace_id))
+        output = await run_metered(workspace_id, "strategy", lambda: generate_strategy(request, _memory(workspace_id)))
         save_run("strategy", company.name, company.language, request.model_dump(mode="json"), output, workspace_id, int(user["id"]))
-        record_usage(workspace_id, "ai_runs", 1, {"kind":"strategy"})
         return AgentResponse(output=output, model=MODEL)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vexmera strategy run failed: {type(exc).__name__}") from exc
 
@@ -358,10 +362,11 @@ async def campaign(workspace_id: int, request: CampaignRequest, user: User) -> A
     _require_role(user, workspace_id, {"owner","admin","marketer"}); _require_key(); enforce_limit(workspace_id, "ai_runs")
     company = _company_for(workspace_id, request.company); request.company = company
     try:
-        output = await generate_campaign(request, _memory(workspace_id))
-        save_run("campaign", company.name, company.language, request.model_dump(mode="json"), output, workspace_id, int(user["id"]))
-        record_usage(workspace_id, "ai_runs", 1, {"kind":"campaign"})
-        return AgentResponse(output=output, model=MODEL)
+        output = await run_metered(workspace_id, "campaign", lambda: generate_campaign(request, _memory(workspace_id)))
+        run_id = save_run("campaign", company.name, company.language, request.model_dump(mode="json"), output, workspace_id, int(user["id"]))
+        return AgentResponse(output=output, model=MODEL, run_id=run_id)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vexmera campaign run failed: {type(exc).__name__}") from exc
 
@@ -371,10 +376,11 @@ async def agent(workspace_id: int, request: AgentRequest, user: User) -> AgentRe
     _require_role(user, workspace_id, {"owner","admin","marketer"}); _require_key(); enforce_limit(workspace_id, "ai_runs")
     company = _company_for(workspace_id, request.company); request.company = company
     try:
-        output = await run_agent(request, _memory(workspace_id))
+        output = await run_metered(workspace_id, "agent", lambda: run_agent(request, _memory(workspace_id)))
         save_run("agent", company.name, company.language, request.model_dump(mode="json"), output, workspace_id, int(user["id"]))
-        record_usage(workspace_id, "ai_runs", 1, {"kind":"agent"})
         return AgentResponse(output=output, model=MODEL)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vexmera agent run failed: {type(exc).__name__}") from exc
 
@@ -601,12 +607,13 @@ async def daily_brief(workspace_id: int, user: User) -> AgentResponse:
     _require_role(user, workspace_id, {"owner","admin","marketer"}); _require_key(); enforce_limit(workspace_id, "ai_runs")
     company = _company_for(workspace_id, None)
     try:
-        output = await generate_daily_brief(company, brief_memory(workspace_id))
+        output = await run_metered(workspace_id, "brief", lambda: generate_daily_brief(company, brief_memory(workspace_id)))
         save_run("brief", company.name, company.language, {"manual": True}, output, workspace_id, int(user["id"]))
-        record_usage(workspace_id, "ai_runs", 1, {"kind":"brief"})
         proposal_ids = create_metric_proposals(workspace_id, int(user["id"]))
         add_notification(workspace_id, "brief", "Executive brief ready", f"Brief created. {len(proposal_ids)} approval proposal(s) added.")
         return AgentResponse(output=output, model=MODEL)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Vexmera brief failed: {type(exc).__name__}") from exc
 
@@ -724,6 +731,48 @@ def team_join(request: TeamJoinRequest, user: User) -> dict[str, Any]:
 def billing_get(workspace_id: int, user: User) -> dict[str, Any]:
     _workspace(user, workspace_id)
     return billing_status(workspace_id)
+
+
+@app.get("/api/usage")
+def usage_get(workspace_id: int, user: User) -> dict[str, Any]:
+    _workspace(user, workspace_id)
+    result = usage_overview(workspace_id)
+    result["can_manage"] = get_workspace_role(int(user["id"]), workspace_id) in {"owner", "admin"}
+    return result
+
+
+@app.put("/api/usage/controls")
+def usage_controls_put(workspace_id: int, request: UsageControlSettings, user: User) -> dict[str, Any]:
+    _require_role(user, workspace_id, {"owner", "admin"})
+    set_monthly_limit(workspace_id, request.monthly_run_limit)
+    return usage_overview(workspace_id)
+
+
+@app.post("/api/runs/{run_id}/queue")
+def campaign_run_queue(run_id: int, workspace_id: int, user: User) -> dict[str, Any]:
+    _require_role(user, workspace_id, {"owner", "admin", "marketer"})
+    return queue_campaign_run(workspace_id, run_id, int(user["id"]))
+
+
+@app.get("/api/approvals/{approval_id}/review")
+def approval_review_get(approval_id: int, workspace_id: int, user: User) -> dict[str, Any]:
+    _workspace(user, workspace_id)
+    from .execution import SUPPORTED_ACTIONS, validate_action
+    result = approval_review(workspace_id, approval_id)
+    approval = result["approval"]
+    supported = approval["action_type"] in SUPPORTED_ACTIONS
+    # Production beta lock is stronger than the environment feature flag.
+    enabled = execution_enabled() and not bool(os.getenv("VERCEL"))
+    result.update({"supported": supported, "external_execution_enabled": enabled,
+                   "can_review": get_workspace_role(int(user["id"]), workspace_id) in {"owner", "admin"}})
+    result["changes"] = {}
+    if supported:
+        try:
+            result["changes"] = validate_action(approval)["changes"]
+        except (HTTPException, TypeError, ValueError) as exc:
+            result["validation_error"] = str(exc.detail) if isinstance(exc, HTTPException) else "Ogiltigt åtgärdsunderlag"
+            result["external_execution_enabled"] = False
+    return result
 
 
 @app.get("/api/executions")

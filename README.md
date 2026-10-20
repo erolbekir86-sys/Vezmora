@@ -40,6 +40,35 @@ New Checkout sessions remain intentionally fail-closed until the configured Stri
 
 Do not bypass that guard. See `STRIPE_SANDBOX_CATALOG.md`, `PILOT_RUNBOOK.md` and `PRODUCTION_ENVIRONMENT.md` before changing billing configuration.
 
+## Controlled campaign review and AI capacity
+
+Launch responses include the persisted `run_id`. `POST /api/runs/{run_id}/queue`
+creates a draft from that saved campaign snapshot, retaining the source run,
+channel, objective and proposed budget. Submitting the same run again returns the
+same approval, including concurrent submissions. A later form edit cannot change
+an already generated proposal. Saved campaigns can be sent to Queue after reload.
+
+Queue provides a full review view and a timeline of creation, reviewer, decision
+note and execution status. A campaign-draft approval is an internal decision;
+it does not publish a campaign. Beta publication is performed in the provider's
+own tool, and Insights displays synced channel results without claiming that a
+specific approval caused them. Provider rollback is not offered by this change.
+
+The Team page displays AI run usage and lets owners/admins set a shared monthly
+run limit, including zero to pause new work. Manual Core/Pulse/Launch/Brief calls,
+worker AI jobs and scheduled briefs reserve from the same workspace quota before
+model access. The effective limit never exceeds the plan capacity. The period
+resets at the UTC calendar-month boundary; in-flight runs can finish after a
+limit is lowered. Known generation failures release their reservation. A process
+interruption conservatively retains its reservation for the rest of the month.
+Reservations and limit edits serialize on the workspace settings row (SQLite
+transaction / PostgreSQL row lock).
+
+These are **run capacity units**, not token prices, measured provider costs or
+ad spend. No automatic overage, credit purchase, Stripe price change, production
+execution unlock or new OAuth scope is introduced. Usage history exposes task
+type/source and timestamps, never prompts or model outputs.
+
 ## Tech stack
 
 - FastAPI / Python 3.12+

@@ -456,6 +456,7 @@ def init_db() -> None:
         )
         ws_columns = {row["name"] for row in con.execute("PRAGMA table_info(workspace_settings)").fetchall()}
         additions = {
+            "ai_monthly_run_limit": "INTEGER",
             "autopilot_mode": "TEXT NOT NULL DEFAULT 'suggest'",
             "autopilot_daily_spend_cap": "REAL NOT NULL DEFAULT 0",
             "autopilot_max_budget_change_pct": "REAL NOT NULL DEFAULT 15",

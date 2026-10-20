@@ -114,6 +114,7 @@ class AgentRequest(BaseModel):
 class AgentResponse(BaseModel):
     output: str
     model: str
+    run_id: int | None = None
 
 
 class KPIEntry(BaseModel):
@@ -285,3 +286,7 @@ class CoreActionCreate(BaseModel):
     @classmethod
     def validate_payload_size(cls, value: dict[str, Any]) -> dict[str, Any]:
         return _bounded_opaque_payload(value)
+
+
+class UsageControlSettings(BaseModel):
+    monthly_run_limit: int | None = Field(default=None, ge=0, le=10_000_000, strict=True)
