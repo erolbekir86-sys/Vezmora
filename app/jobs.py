@@ -7,7 +7,8 @@ from typing import Any
 from .analytics import detect_anomalies
 from .connectors import sync_all, sync_google, sync_meta
 from .monitor import scan_all_competitors
-from .store import claim_job, fail_job, finish_job, get_company_profile, get_onboarding_profile, record_usage, save_run, add_notification
+from .store import claim_job, fail_job, finish_job, get_company_profile, get_onboarding_profile, save_run, add_notification
+from .usage_controls import run_metered
 from .agent import generate_daily_brief, generate_strategy
 from .briefs import brief_memory
 from .models import CompanyProfile, StrategyRequest
@@ -45,9 +46,8 @@ async def execute_job(job: dict[str, Any]) -> dict[str, Any]:
             horizon_days=int(payload.get("horizon_days") or 30),
             notes="Private Beta onboarding plan. Prioritize the fastest measurable route to the stated growth target.",
         )
-        output = await generate_strategy(request, brief_memory(workspace_id))
+        output = await run_metered(workspace_id, "initial_strategy", lambda: generate_strategy(request, brief_memory(workspace_id)), source="worker")
         run_id = save_run("strategy", company.name, company.language, {"job_id": job["id"], "source": "onboarding"}, output, workspace_id, None)
-        record_usage(workspace_id, "ai_runs", 1, {"kind": "initial_strategy"})
         add_notification(workspace_id, "core", "Your first 30-day plan is ready", "Open Pulse to review the onboarding strategy.", {"run_id": run_id})
         return {"run_id": run_id}
     if kind == "daily_brief":
@@ -55,7 +55,7 @@ async def execute_job(job: dict[str, Any]) -> dict[str, Any]:
         if not company_data:
             raise RuntimeError("Company profile is required for a daily brief")
         company = CompanyProfile.model_validate(company_data)
-        output = await generate_daily_brief(company, brief_memory(workspace_id))
+        output = await run_metered(workspace_id, "brief", lambda: generate_daily_brief(company, brief_memory(workspace_id)), source="worker")
         run_id = save_run("brief", company.name, company.language, {"job_id": job["id"]}, output, workspace_id, None)
         return {"run_id": run_id}
     raise RuntimeError(f"Unknown job kind: {kind}")

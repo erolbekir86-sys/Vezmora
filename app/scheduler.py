@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from .usage_controls import run_metered
 from .agent import generate_daily_brief
 from .briefs import brief_memory, create_metric_proposals
 from .models import CompanyProfile
@@ -46,7 +47,7 @@ async def run_due_automation_once() -> dict[str, int]:
             company = CompanyProfile.model_validate(company_data)
             workspace_id = int(settings["workspace_id"])
             try:
-                output = await generate_daily_brief(company, brief_memory(workspace_id))
+                output = await run_metered(workspace_id, "brief", lambda: generate_daily_brief(company, brief_memory(workspace_id)), source="scheduler")
                 save_run("brief", company.name, company.language, {"scheduled": True}, output, workspace_id, None)
                 created = create_metric_proposals(workspace_id, None)
                 add_notification(workspace_id, "brief", "Morning brief ready", f"Vexmera created today's brief. {len(created)} approval proposal(s) added.")
