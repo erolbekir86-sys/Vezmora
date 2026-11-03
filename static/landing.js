@@ -176,7 +176,7 @@
           <p class="founder-lead" data-i18n="founder.lead">Vexmera föddes ur ett enkelt problem: företag har tillgång till mer marknadsföringsdata än någonsin, men det är fortfarande svårt att veta vad som faktiskt förtjänar uppmärksamhet härnäst.</p>
         </div>
         <div class="founder-profile">
-          <img class="founder-portrait" src="/static/vexmera-founder.jpg" alt="Erol Bekir, grundare av Vexmera" width="1122" height="1402" loading="lazy" decoding="async" />
+          <img class="founder-portrait" src="/static/vexmera-founder.jpg" alt="Erol Bekir, grundare av Vexmera" width="1127" height="1212" loading="lazy" decoding="async" />
           <p class="founder-quote" data-i18n="founder.quote">“Målet är inte att ge företag ännu en dashboard. Målet är att göra vägen från signal till handling tydligare.”</p>
           <div class="founder-meta"><span class="founder-meta-mark">V</span><div><strong data-i18n="founder.name">Erol Bekir</strong><small data-i18n="founder.role">Grundare, Vexmera</small></div></div>
         </div>
