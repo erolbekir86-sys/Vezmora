@@ -133,19 +133,19 @@
     });
   }
 
-  function enableAnnualPreview() {
+  function lockAnnualBilling() {
     const yearly = document.querySelector('[data-billing="yearly"]');
     if (!yearly) return false;
 
-    yearly.disabled = false;
-    yearly.removeAttribute('disabled');
-    yearly.removeAttribute('aria-disabled');
-    yearly.removeAttribute('title');
+    yearly.disabled = true;
+    yearly.setAttribute('disabled', '');
+    yearly.setAttribute('aria-disabled', 'true');
+    yearly.setAttribute('title', 'Årsbetalning öppnas efter privat beta');
 
     const sv = yearly.querySelector('.pricing-sv');
     const en = yearly.querySelector('.pricing-en');
-    if (sv) sv.textContent = 'Spara 10 %';
-    if (en) en.textContent = 'Save 10%';
+    if (sv) sv.textContent = 'Efter privat beta';
+    if (en) en.textContent = 'After private beta';
 
     return true;
   }
@@ -191,7 +191,7 @@
     normalizeValueIcons();
     normalizeOutcomeIcons();
     installBrandV1();
-    enableAnnualPreview();
+    lockAnnualBilling();
     installFounderPhoto();
     document.documentElement.classList.add('vexmera-premium-ready');
   }

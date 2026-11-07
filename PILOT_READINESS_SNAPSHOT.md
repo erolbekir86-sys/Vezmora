@@ -1,8 +1,22 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-10-13
+Last reviewed: 2026-11-07
 
 This is the canonical non-secret operational snapshot for the five-company read-only Private Beta.
+
+## 2026-11-07 review
+
+- Production baseline: `68b3f15ed7387a265c17afffcd86ad070d209737`, founder-portrait PR #285. Vercel deployment `dpl_FESmUdszNABkfcCUF1vsAGGBtbcx` is `READY` and mainline CI succeeded.
+- Revision-pinned public runtime preflight against `https://vexmera.com` passed. Production reports the exact baseline above; execution, Autopilot execution, Meta execution scope and token display are disabled.
+- Public home, Privacy and Terms passed the GET-only discoverability preflight. This verifies availability and links, not legal approval.
+- Vercel runtime error clusters returned no errors for the seven-day window checked on 2026-11-07. This does not establish that every provider path was exercised.
+- The production environment key inventory still lacks `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, `SHOPIFY_REDIRECT_URI`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` and `LINKEDIN_REDIRECT_URI`. `INSTAGRAM_REDIRECT_URI` exists. Secret values were not read; no provider approval is inferred from key presence.
+- The production public homepage and invite-only login page were checked in the browser. The homepage's visual enhancement incorrectly re-enabled annual billing, despite the monthly-only checkout model. This review fixes the enhancement and the click handler.
+- Company-profile writes now capture workspace/form values at edit time and serialize requests. Switching company waits for the last save and reloads the active view in a fresh document. Failed saves block the switch and preserve the latest edit for retry; restored workspace selections are validated against authenticated memberships.
+- The app's first health render now understands the minimal public health response. Instagram media and Shopify order/revenue telemetry now count toward persisted sync status.
+- `uv.lock` records the newly resolved dependency graph, Python 3.12 is pinned, and CI installs with `uv sync --locked --extra dev` using uv 0.13.5. Vercel consumes the committed Python lockfile. Dependency compatibility, the local non-browser suite, Python compilation and all frontend JavaScript syntax checks are required before release; GitHub CI also runs the existing authenticated 390×844 browser gate.
+- Post-release production revision verification is required for this review's commit. Do not confuse the baseline checks above with evidence for the new release.
+- No fresh authenticated external-company/provider/Stripe walkthrough was completed in this review. Existing dated provider and sandbox evidence below remains historical.
 
 ## Release baseline checked before the 2026-10-13 update
 

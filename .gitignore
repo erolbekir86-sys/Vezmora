@@ -6,3 +6,4 @@ __pycache__/
 !.env.example
 .vezmora.db
 .pytest_cache/
+*.egg-info/

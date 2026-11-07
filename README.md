@@ -69,6 +69,10 @@ ad spend. No automatic overage, credit purchase, Stripe price change, production
 execution unlock or new OAuth scope is introduced. Usage history exposes task
 type/source and timestamps, never prompts or model outputs.
 
+## Workspace switching
+
+Company-profile autosaves capture the workspace and form values at edit time and serialize writes. Switching company waits for the latest profile save, then reloads the current view in a fresh document so previous-company forms, delayed responses and action handlers cannot carry over. A failed save keeps the current company selected and the edit available for retry. Only workspaces returned by the authenticated membership endpoint can be selected; the last selection is remembered per browser tab.
+
 ## Tech stack
 
 - FastAPI / Python 3.12+
@@ -83,10 +87,9 @@ type/source and timestamps, never prompts or model outputs.
 ## Local development
 
 ```bash
-python -m venv .venv
+python -m pip install uv==0.13.5
+uv sync --locked --extra dev
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -e ".[dev]"
 cp .env.example .env
 uvicorn app.main:app --reload
 ```
@@ -112,6 +115,8 @@ Validate every shipped frontend JavaScript file, matching CI:
 ```bash
 find static -type f -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
 ```
+
+The committed `uv.lock` pins the runtime and development dependency graph used by Vercel and CI. Use `uv sync --locked --extra dev` to reproduce it. Update dependencies intentionally with `uv lock --upgrade`, then rerun validation before committing the new lockfile. Python 3.12 is pinned in `.python-version`.
 
 The test suite also verifies server-rendered frontend shells, runtime-loaded assets and local `/static/...` references so missing or empty frontend files fail before deployment.
 

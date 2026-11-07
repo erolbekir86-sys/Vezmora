@@ -39,7 +39,13 @@ $('showLogin').onclick=()=>setAuthTab('login');$('showRegister').onclick=()=>{if
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('loginEmail').value,password:$('loginPassword').value})});location.reload();}catch(err){$('authError').textContent=err.message;}});
 $('registerForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({email:$('registerEmail').value,password:$('registerPassword').value,workspace_name:$('registerWorkspace').value,beta_invite:betaInviteToken||null})});history.replaceState({},'',location.pathname);location.reload();}catch(err){$('authError').textContent=err.message;}});
 syncPrivateBetaRegistration();
-$('logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'});}catch(_){}currentWorkspaceId=null;showAuth();};
+$('logout').onclick=async()=>{
+  $('appShell').inert=true;
+  // A failed profile save must never prevent the user from ending a session.
+  try{await flushProfile();}catch(_){}
+  try{await api('/api/auth/logout',{method:'POST'});pendingProfile=null;location.reload();}
+  catch(err){$('appShell').inert=false;alert(err.message);}
+};
 navs.forEach(btn=>btn.addEventListener('click',()=>activateView(btn.dataset.view)));
 document.querySelectorAll('[data-action-view]').forEach(btn=>btn.addEventListener('click',()=>activateView(btn.dataset.actionView)));
 function activateView(id){if(id==='onboarding'){openOnboarding();return;}navs.forEach(x=>x.classList.toggle('active',x.dataset.view===id));views.forEach(x=>x.classList.toggle('active',x.id===id));const meta=pageMeta[id]||[id,''];$('pageTitle').textContent=meta[0];$('pageLead').textContent=meta[1];$('aiOutputSection').classList.toggle('hidden',!['agent','strategy','campaign'].includes(id));if(id==='dashboard'){loadDashboard();loadCoreToday();}if(id==='rivals')loadCompetitors();if(id==='connect')loadConnectors();if(id==='queue')loadApprovals();if(id==='autopilot')loadAutopilot();if(id==='brief')loadBrief();if(id==='insights')loadInsights();if(id==='team'){loadTeam();loadUsageControls();}}
@@ -81,7 +87,33 @@ async function queueSavedCampaign(runId){
 }
 
 
-let profileTimer=null;async function saveProfile(){if(!currentWorkspaceId)return;clearTimeout(profileTimer);$('profileState').textContent='Sparar…';profileTimer=setTimeout(async()=>{try{await api(ws('/api/company'),{method:'PUT',body:JSON.stringify(company())});$('profileState').textContent='Sparad i Vexmera-workspacet.';}catch(err){$('profileState').textContent=`Kunde inte spara: ${err.message}`;}},450);}['name','industry','market','website','audience','offer','voice','language'].forEach(id=>{$(id).addEventListener('input',saveProfile);$(id).addEventListener('change',saveProfile);});
+let profileTimer=null, pendingProfile=null, profileSave=Promise.resolve(), profileRevision=0;
+async function flushProfile(){
+  clearTimeout(profileTimer);profileTimer=null;
+  const pending=pendingProfile;pendingProfile=null;
+  if(!pending)return profileSave;
+  // Capture both values when edited and serialize writes. A delayed save must
+  // never read another company's form or overtake a more recent edit.
+  profileSave=profileSave.catch(()=>{}).then(async()=>{
+    try{
+      await api(`/api/company?workspace_id=${pending.workspace}`,{method:'PUT',body:JSON.stringify(pending.payload)});
+      if(pending.workspace===currentWorkspaceId&&pending.revision===profileRevision)$('profileState').textContent='Sparad i Vexmera-workspacet.';
+    }catch(err){
+      if(pending.revision===profileRevision)pendingProfile=pending;
+      if(pending.workspace===currentWorkspaceId)$('profileState').textContent=`Kunde inte spara: ${err.message}`;
+      throw err;
+    }
+  });
+  return profileSave;
+}
+function saveProfile(){
+  if(!currentWorkspaceId)return;
+  clearTimeout(profileTimer);
+  pendingProfile={workspace:currentWorkspaceId,payload:company(),revision:++profileRevision};
+  $('profileState').textContent='Sparar…';
+  profileTimer=setTimeout(()=>{flushProfile().catch(()=>{});},450);
+}
+['name','industry','market','website','audience','offer','voice','language'].forEach(id=>{$(id).addEventListener('input',saveProfile);$(id).addEventListener('change',saveProfile);});
 async function loadProfile(){try{const d=await api(ws('/api/company'));if(!d)return;const map={name:'name',industry:'industry',market:'market',website:'website',audience:'audience',offer:'offer',brand_voice:'voice',language:'language'};Object.entries(map).forEach(([k,id])=>{if(d[k]!=null)$(id).value=d[k];});}catch(_){}}
 async function loadRuns(){if(!currentWorkspaceId)return;try{const d=await api(ws('/api/runs?limit=6'));if(!d.length){$('runs').innerHTML='<p class="muted">Dina AI-körningar visas här.</p>';return;}const labels={agent:'Core',strategy:'Pulse',campaign:'Launch',brief:'Brief'};$('runs').innerHTML=d.map(i=>`<article class="run-card"><div><span class="run-kind">${labels[i.kind]||escapeHtml(i.kind)}</span><strong>${escapeHtml(i.company_name)}</strong>${i.kind==='campaign'?`<button class="ghost" data-queue-run="${i.id}">Granska kampanj i Queue</button>`:''}</div><time>${escapeHtml(i.created_at)}</time></article>`).join('');document.querySelectorAll('[data-queue-run]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await queueSavedCampaign(b.dataset.queueRun);}catch(err){alert(err.message);}finally{b.disabled=false;}});}catch(_){}}
 $('refreshRuns').onclick=loadRuns;
@@ -180,8 +212,35 @@ $('generateBrief').onclick=async e=>{const b=e.currentTarget;b.disabled=true;$('
 $('saveBriefSettings').onclick=async()=>{try{await api(ws('/api/briefs/settings'),{method:'PUT',body:JSON.stringify({enabled:$('briefEnabled').checked,hour:Number($('briefHour').value),timezone:$('briefTimezone').value.trim()})});alert('Brief schema sparat.');loadBrief();}catch(err){alert(err.message);}};
 
 async function refreshCounts(){try{const s=await api(ws('/api/dashboard'));$('notificationCount').textContent=s.unread_notifications;$('metricApprovals').textContent=s.pending_approvals;$('metricAlerts').textContent=s.unread_notifications;}catch(_){}}
-$('workspaceSelect').addEventListener('change',async()=>{currentWorkspaceId=Number($('workspaceSelect').value);reviewSequence++;$('approvalReview').classList.add('hidden');$('reviewContent').textContent='';latestCampaignRunId=null;$('sendApproval').classList.add('hidden');const activeView=document.querySelector('.view.active')?.id;if(activeView==='team')loadUsageControls();if(activeView==='queue')loadApprovals();await Promise.all([loadProfile(),loadDashboard(),loadRuns(),loadCoreToday()]);await checkOnboarding();});
-async function loadSystemStatus(){try{const d=await api('/health');$('status').textContent=d.api_key_configured?`System online · v${d.version} · ${d.model}`:`UI online · API-nyckel saknas i runtime`;$('status').style.color=d.api_key_configured?'var(--ok)':'var(--danger)';}catch(_){}}
+$('workspaceSelect').addEventListener('change',async()=>{
+  const target=Number($('workspaceSelect').value);
+  if(!target||target===currentWorkspaceId)return;
+  $('appShell').inert=true;
+  try{
+    await flushProfile();
+    const url=new URL(location.href);
+    ['reset','invite','beta_invite','connected','billing','plan'].forEach(key=>url.searchParams.delete(key));
+    url.searchParams.set('workspace',String(target));
+    const activeView=document.querySelector('.view.active')?.id;
+    if(activeView&&pageMeta[activeView])url.searchParams.set('view',activeView);
+    // A fresh document prevents late requests, cached forms and action handlers
+    // from a previous workspace appearing under the newly selected company.
+    location.assign(url.pathname+url.search+url.hash);
+  }catch(err){
+    $('workspaceSelect').value=String(currentWorkspaceId);
+    $('appShell').inert=false;
+    alert(`Företagsbytet avbröts. ${err.message}`);
+  }
+});
+function initialWorkspace(workspaces,params){
+  let remembered=null;
+  try{remembered=sessionStorage.getItem('vexmera.workspace');}catch(_){}
+  const requested=Number(params.get('workspace')??remembered);
+  const selected=Number(workspaces.find(w=>Number(w.id)===requested)?.id??workspaces[0].id);
+  try{sessionStorage.setItem('vexmera.workspace',String(selected));}catch(_){}
+  return selected;
+}
+async function loadSystemStatus(){try{const d=await api('/health');$('status').textContent=d?.ok===true?`System online${d.version?` · v${d.version}`:''}`:'Systemstatus kunde inte verifieras.';$('status').style.color=d?.ok===true?'var(--ok)':'var(--danger)';}catch(_){$('status').textContent='Systemstatus kunde inte verifieras.';$('status').style.color='var(--danger)';}}
 async function loadInsights(){try{const [campaigns,anomalies,jobs]=await Promise.all([api(ws('/api/campaigns?days=30')),api(ws('/api/anomalies?limit=30')),api(ws('/api/jobs?limit=30'))]);$('campaignInsights').innerHTML=campaigns.length?`<table><thead><tr><th>Platform</th><th>Campaign</th><th>Spend</th><th>Revenue</th><th>ROAS</th><th>CTR</th><th>Action</th></tr></thead><tbody>${campaigns.map(c=>`<tr><td>${escapeHtml(c.provider)}</td><td>${escapeHtml(c.campaign_name)}</td><td>${money(c.spend,c.currency)}</td><td>${money(c.revenue,c.currency)}</td><td>${Number(c.roas).toFixed(2)}x</td><td>${Number(c.ctr).toFixed(2)}%</td><td><button class="ghost" data-pause-provider="${escapeHtml(c.provider)}" data-pause-id="${escapeHtml(c.external_campaign_id)}" data-pause-name="${escapeHtml(c.campaign_name)}">Request pause</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">No campaign-level rows yet. Sync Google or Meta.</p>';document.querySelectorAll('[data-pause-id]').forEach(b=>b.onclick=()=>requestPause(b.dataset.pauseProvider,b.dataset.pauseId,b.dataset.pauseName));$('anomalyList').innerHTML=anomalies.length?anomalies.map(a=>`<article class="notification-card"><div><strong>${escapeHtml(a.title)}</strong><p>${escapeHtml(a.body)}</p></div><span class="risk ${escapeHtml(a.severity)}">${escapeHtml(a.severity)}</span></article>`).join(''):'<p class="muted">No anomalies detected.</p>';$('jobList').innerHTML=jobs.length?jobs.map(j=>`<article class="notification-card"><div><strong>${escapeHtml(j.kind)}</strong><p>${escapeHtml(j.status)} · attempts ${j.attempts}</p></div><time>${escapeHtml(j.created_at)}</time></article>`).join(''):'<p class="muted">No worker jobs yet.</p>';}catch(err){console.error(err);}}
 
 async function requestPause(provider,campaignId,campaignName){const actionType=provider==='google_ads'?'google.pause_campaign':provider==='meta_ads'?'meta.pause_campaign':null;if(!actionType){alert('Execution adapter is not available for this provider.');return;}try{await api(ws('/api/approvals'),{method:'POST',body:JSON.stringify({action_type:actionType,title:`Pause ${campaignName}`,description:`Pause campaign ${campaignName} after human review.`,provider:provider.startsWith('google')?'google':'meta',risk_level:'high',payload:{campaign_id:campaignId}})});activateView('queue');await refreshCounts();}catch(err){alert(err.message);}}
@@ -221,5 +280,5 @@ document.querySelectorAll('.plan-button').forEach(b=>b.onclick=()=>startCheckout
 $('manageBilling').onclick=async()=>{try{const d=await api(ws('/api/billing/portal'),{method:'POST'});if(d.url)location.href=d.url;}catch(err){alert(err.message);}};
 $('sendFeedback').onclick=async()=>{try{await api(ws('/api/beta/feedback'),{method:'POST',body:JSON.stringify({score:Number($('feedbackScore').value),category:$('feedbackCategory').value,message:$('feedbackMessage').value})});$('feedbackMessage').value='';$('feedbackState').textContent='Tack — feedbacken är sparad i beta-workspacet.';}catch(err){$('feedbackState').textContent=err.message;}};
 
-async function bootstrap(){const params=new URLSearchParams(location.search);try{let d=await api('/api/auth/me');currentUser=d.user;if(params.get('invite')){try{await api('/api/team/join',{method:'POST',body:JSON.stringify({token:params.get('invite')})});params.delete('invite');history.replaceState({},'',`${location.pathname}${params.toString()?`?${params}`:''}`);d=await api('/api/auth/me');}catch(err){alert(err.message);}}if(!d.workspaces.length)throw new Error('No workspace available');$('workspaceSelect').innerHTML=d.workspaces.map(w=>`<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');currentWorkspaceId=Number(d.workspaces[0].id);showApp();await Promise.all([loadProfile(),loadDashboard(),loadRuns(),loadSystemStatus(),loadCoreToday()]);if(params.get('connected')){activateView('connect');params.delete('connected');history.replaceState({},'',`${location.pathname}${params.toString()?`?${params}`:''}`);loadConnectors();}else if(params.get('view')&&pageMeta[params.get('view')]){activateView(params.get('view'));}await checkOnboarding();}catch(err){if(err.status===401)showAuth();else{$('authError').textContent=err.message;showAuth();}}}
+async function bootstrap(){const params=new URLSearchParams(location.search);try{let d=await api('/api/auth/me');currentUser=d.user;if(params.get('invite')){try{await api('/api/team/join',{method:'POST',body:JSON.stringify({token:params.get('invite')})});params.delete('invite');history.replaceState({},'',`${location.pathname}${params.toString()?`?${params}`:''}`);d=await api('/api/auth/me');}catch(err){alert(err.message);}}if(!d.workspaces.length)throw new Error('No workspace available');$('workspaceSelect').innerHTML=d.workspaces.map(w=>`<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');currentWorkspaceId=initialWorkspace(d.workspaces,params);$('workspaceSelect').value=String(currentWorkspaceId);showApp();await Promise.all([loadProfile(),loadDashboard(),loadRuns(),loadSystemStatus(),loadCoreToday()]);if(params.get('connected')){activateView('connect');params.delete('connected');history.replaceState({},'',`${location.pathname}${params.toString()?`?${params}`:''}`);loadConnectors();}else if(params.get('view')&&pageMeta[params.get('view')]){activateView(params.get('view'));}await checkOnboarding();}catch(err){if(err.status===401)showAuth();else{$('authError').textContent=err.message;showAuth();}}}
 $('kpiDate').value=new Date().toISOString().slice(0,10);handleResetParam();bootstrap();

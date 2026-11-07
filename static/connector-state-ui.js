@@ -25,12 +25,9 @@
     if (!lastSync || typeof lastSync !== 'object' || Array.isArray(lastSync)) return 'unsynced';
     if (isFailedSync(lastSync)) return 'error';
 
-    const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows'];
+    const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows'];
     const hasRowTelemetry = rowKeys.some((key) => Object.prototype.hasOwnProperty.call(lastSync, key));
-    const rows =
-      safeCount(lastSync.campaign_rows) +
-      safeCount(lastSync.ads_rows) +
-      safeCount(lastSync.analytics_rows);
+    const rows = rowKeys.reduce((total, key) => total + safeCount(lastSync[key]), 0);
     const warnings = warningTexts(lastSync);
     const hasWarning = warnings.length > 0;
     const explicitEmpty = warnings.some((text) => text.includes('no campaign data found'));
