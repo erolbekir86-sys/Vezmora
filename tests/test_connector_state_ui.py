@@ -47,7 +47,7 @@ def test_blocking_provider_warnings_cannot_render_as_healthy_empty_state():
 
 
 def test_empty_state_requires_explicit_empty_signal_or_row_telemetry():
-    assert "const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows']" in STATE_UI
+    assert "const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows']" in STATE_UI
     assert "Object.prototype.hasOwnProperty.call(lastSync, key)" in STATE_UI
     assert "if (explicitEmpty) return 'empty'" in STATE_UI
     assert "if (hasRowTelemetry && rows === 0) return 'empty'" in STATE_UI
@@ -86,3 +86,26 @@ def test_connector_state_ui_has_no_provider_or_billing_mutations():
     )
     for marker in forbidden:
         assert marker not in STATE_UI
+
+
+def test_provider_row_telemetry_is_classified_by_executing_shipped_javascript():
+    import json
+    import subprocess
+
+    # Evaluate the actual pure classifier without its DOM installation code.
+    classifier = STATE_UI.split('  function stateCopy', 1)[0]
+    classifier += 'globalThis.classify = classifyLastSync;})();'
+    cases = [
+        ({'media_rows': 7}, 'data'),
+        ({'order_rows': 2, 'revenue_rows': 1}, 'data'),
+        ({'media_rows': 0}, 'empty'),
+        ({'order_rows': 0, 'revenue_rows': 0}, 'empty'),
+        ({'media_rows': 1, 'warnings': ['Some rows were skipped']}, 'data-warning'),
+        ({'order_rows': 0, 'warnings': ['Shopify sync failed']}, 'error'),
+        ({'media_rows': 4, 'error': 'provider failure'}, 'error'),
+        ({}, 'unsynced'),
+    ]
+    script = classifier + '\nconst assert = require("node:assert/strict");\n'
+    script += f'for (const [payload,expected] of {json.dumps(cases)}) assert.equal(classify(payload),expected);'
+    result = subprocess.run(['node', '-e', script], cwd=ROOT, capture_output=True, text=True, timeout=15)
+    assert result.returncode == 0, result.stdout + result.stderr

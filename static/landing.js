@@ -297,6 +297,7 @@
 
   document.querySelectorAll('[data-billing]').forEach((button) => {
     button.addEventListener('click',() => {
+      if (button.disabled || button.dataset.billing !== 'monthly') return;
       billingMode = button.dataset.billing;
       document.querySelectorAll('[data-billing]').forEach((item) => item.classList.toggle('active',item === button));
       updateBillingLabels();

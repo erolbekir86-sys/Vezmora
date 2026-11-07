@@ -1,5 +1,18 @@
 # Vexmera 0.6.1 Private Beta - Deployment Release
 
+## Maintenance review 2026-11-07
+
+- Profile autosaves capture their company and field values before debouncing, serialize writes, and retain the latest failed edit for retry.
+- Company switching saves the current profile before opening a fresh view for the selected authorized workspace. Failed saves cancel the switch. The last workspace is remembered per tab, including OAuth return navigation.
+- Logout reloads only after the server confirms success, clearing the previous company's in-memory views.
+- Initial system status handles minimal production health without claiming an API key is missing.
+- Instagram media and Shopify order/revenue rows are recognized as synchronized data.
+- Annual pricing stays unavailable throughout private beta, including after premium visual enhancements and synthetic click events. Monthly Start / Growth / Pro prices remain 995 / 1,495 / 2,995 SEK excluding VAT.
+- Python dependencies are resolved in `uv.lock`; CI validates and installs the same graph with pinned uv 0.13.5 and checks every shipped JavaScript file.
+- Current deployment evidence and remaining external gates are recorded in `PILOT_READINESS_SNAPSHOT.md`.
+
+## Existing release capabilities
+
 Built on Vexmera 0.6 with the beta product features intact, plus:
 
 - Vercel FastAPI entrypoint and `vercel.json`
@@ -64,12 +77,12 @@ Built on Vexmera 0.6 with the beta product features intact, plus:
 - External marketing execution and Autopilot execution remain disabled by default and require separate explicit production review before any future enablement.
 - Google Ads **Explorer Access** was approved for the Cloud project owning the Vexmera OAuth client on 2026-09-12. A real production read-only sync has returned campaign-level rows without provider warnings. Basic Access is a future quota/functionality upgrade, not a current five-company read-only pilot blocker.
 - Meta read-only access has been verified against a connected account, including a legitimate zero-row empty-data result that is kept distinct from provider/authentication failure.
-- Direct Vercel production project/runtime inspection is available again. The current PR #228 release was merged after green CI, deployed to production, reached `READY`, and serves the merged `main` revision with safe private-beta execution/transport flags and no active runtime-error group in the post-deploy check window.
+- Direct Vercel production project/runtime inspection is available again. The 2026-11-07 baseline is `68b3f15`, deployed `READY`, with passing revision-pinned public safety checks and no runtime error clusters in the seven-day window inspected.
 - Production FastAPI documentation routes are hidden and return 404.
-- Stripe transport, request-body and webhook hardening are code/CI verified, and the current Start / Growth / Pro test catalog plus test webhook endpoint have been independently observed. Fresh Checkout/trial/webhook/Customer Portal E2E is still required before billing is treated as pilot-ready.
-- The connected Stripe sandbox had no Billing Portal configuration at the latest check. Portal cancellation, plan-change and payment-method policy remains an owner/business decision.
+- Stripe transport, request-body and webhook hardening are code/CI verified, and the current Start / Growth / Pro test catalog plus test webhook endpoint have been independently observed. Historical sandbox Checkout/webhook evidence is recorded in the readiness snapshot. An external Customer Portal browser round-trip remains required before paid self-service.
+- An active default test-mode Billing Portal configuration was verified on 2026-09-24. Its existence is historical evidence; this maintenance review did not change or freshly test its policy.
 - Stripe live mode is **not** enabled by these release notes. Test-mode evidence must not be treated as live billing approval.
-- VAT/tax handling, final legal terms, authenticated desktop/mobile browser QA and the five-company pilot remain launch work.
+- VAT/tax handling, final legal terms and per-company pilot walkthroughs remain launch work. Existing synthetic authenticated desktop and mobile browser coverage does not replace a real external-company walkthrough.
 - Published marketing/legal contact details are not yet normalized to one verified support/privacy channel. Do not invent a domain alias or legal entity detail merely to close the checklist.
 
 ## Current release verification posture
@@ -85,12 +98,12 @@ A green CI run alone does not substitute for deployment or pilot/manual evidence
 Current verified evidence now closes several former manual gates:
 
 - production runtime observability is available;
-- the current PR #228 release-candidate merge and production deployment are complete;
+- the 2026-11-07 production baseline and public runtime checks are verified;
 - Google Explorer production access is confirmed;
 - real Google Ads and GA read-only data has been observed;
 - Meta legitimate empty-data behavior has been observed;
 - the current Stripe test catalog and webhook endpoint have been observed.
 
-Remaining high-value gates are Stripe test Billing Portal plus full E2E, authenticated desktop/mobile QA, and verified legal entity/contact/retention/subprocessor decisions.
+Remaining high-value gates are the Stripe Customer Portal external browser round-trip before paid self-service, fresh per-company authenticated/provider checks, and verified legal entity/contact/retention/subprocessor decisions. Shopify and LinkedIn also require production OAuth configuration; Instagram external authorization remains unverified.
 
 Secrets and credentials are never intentionally committed to the repository. External OpenAI/Google/Meta/SMTP/Stripe services still require correct configuration in the active deployment, and every new pilot customer's provider/account authorization remains separate evidence.
