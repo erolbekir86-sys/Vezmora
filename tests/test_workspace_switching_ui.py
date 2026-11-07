@@ -126,3 +126,17 @@ def test_minimal_health_is_not_mistaken_for_missing_api_key_and_logout_is_truthf
     context.fetch=async()=>response();await element('logout').onclick();
     assert.deepEqual(navigations,['reload']);
     """)
+
+
+def test_failed_profile_save_does_not_prevent_session_logout():
+    _node(r"""
+    const calls=[];
+    context.fetch=async(path)=>{
+      calls.push(path);
+      return path === '/api/auth/logout' ? response() : response({detail:'invalid profile'},false);
+    };
+    run("currentWorkspaceId=1; $('name').value=''; saveProfile();");
+    await element('logout').onclick();
+    assert.deepEqual(calls,['/api/company?workspace_id=1','/api/auth/logout']);
+    assert.deepEqual(navigations,['reload']);
+    """)

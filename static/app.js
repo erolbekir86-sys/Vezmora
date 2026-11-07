@@ -39,7 +39,13 @@ $('showLogin').onclick=()=>setAuthTab('login');$('showRegister').onclick=()=>{if
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('loginEmail').value,password:$('loginPassword').value})});location.reload();}catch(err){$('authError').textContent=err.message;}});
 $('registerForm').addEventListener('submit',async e=>{e.preventDefault();try{await api('/api/auth/register',{method:'POST',body:JSON.stringify({email:$('registerEmail').value,password:$('registerPassword').value,workspace_name:$('registerWorkspace').value,beta_invite:betaInviteToken||null})});history.replaceState({},'',location.pathname);location.reload();}catch(err){$('authError').textContent=err.message;}});
 syncPrivateBetaRegistration();
-$('logout').onclick=async()=>{try{await flushProfile();await api('/api/auth/logout',{method:'POST'});location.reload();}catch(err){alert(err.message);}};
+$('logout').onclick=async()=>{
+  $('appShell').inert=true;
+  // A failed profile save must never prevent the user from ending a session.
+  try{await flushProfile();}catch(_){}
+  try{await api('/api/auth/logout',{method:'POST'});pendingProfile=null;location.reload();}
+  catch(err){$('appShell').inert=false;alert(err.message);}
+};
 navs.forEach(btn=>btn.addEventListener('click',()=>activateView(btn.dataset.view)));
 document.querySelectorAll('[data-action-view]').forEach(btn=>btn.addEventListener('click',()=>activateView(btn.dataset.actionView)));
 function activateView(id){if(id==='onboarding'){openOnboarding();return;}navs.forEach(x=>x.classList.toggle('active',x.dataset.view===id));views.forEach(x=>x.classList.toggle('active',x.id===id));const meta=pageMeta[id]||[id,''];$('pageTitle').textContent=meta[0];$('pageLead').textContent=meta[1];$('aiOutputSection').classList.toggle('hidden',!['agent','strategy','campaign'].includes(id));if(id==='dashboard'){loadDashboard();loadCoreToday();}if(id==='rivals')loadCompetitors();if(id==='connect')loadConnectors();if(id==='queue')loadApprovals();if(id==='autopilot')loadAutopilot();if(id==='brief')loadBrief();if(id==='insights')loadInsights();if(id==='team'){loadTeam();loadUsageControls();}}
