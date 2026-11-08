@@ -22,6 +22,18 @@ Interpretation:
 
 Common public runtime blockers include `runtime_unreachable`, `runtime_not_vercel`, `runtime_not_production`, `deployment_revision_unknown` and any failed Private Beta execution lock. Configuration blockers are reported separately. Treat each blocker as a stop condition until the underlying issue is understood and fixed. Never copy secret values into pilot evidence while investigating.
 
+## Verify the deployed files and unauthenticated boundary
+
+After identifying the approved full production SHA, run:
+
+```bash
+python -m scripts.public_deployment_preflight --base-url https://vexmera.com --expected-revision <full-production-sha>
+```
+
+This GET-only check requires the runtime revision to match, verifies protected reads reject an anonymous request, checks production docs/missing-page behavior and follows a bounded graph of same-origin static files, including loader dependencies. It never uses account credentials or follows redirects. It complements the authenticated 390×844 CI browser test; it does not replace the production account walkthrough, real provider sync or legal review.
+
+Use `docs/PILOT_TEST_PLAN_2026-11-08.md` for the proposed sequence, measurable goals and evidence capture. A completed plan is not a passed pilot.
+
 ## Manual gates that still matter
 
 Before company 1, confirm the current runbook evidence for:
