@@ -1,8 +1,20 @@
 # Vexmera private beta readiness snapshot
 
-Last reviewed: 2026-11-07
+Last reviewed: 2026-11-08
 
 This is the canonical non-secret operational snapshot for the five-company read-only Private Beta.
+
+## 2026-11-08 verification
+
+- Production revision `89d4cb4f6acf75c91b04cea2277ac5918dae579c` was verified against Vercel production deployment `dpl_23Pj44uKM5rVGp2xZEaogFrmCCYE` and the exact revision reported by `/health/runtime`. This is dated evidence, not a permanent claim about the latest release.
+- Revision-pinned public runtime preflight and public legal-page discoverability checks passed. These prove deployment identity, execution/transport safety and public page availability, not live provider access or legal approval.
+- GitHub Actions run `42398112770` for this exact revision completed successfully: 771 tests passed. Its required 390×844 authenticated Chromium check is automated, synthetic/local evidence; it is not a fresh production customer walkthrough.
+- A public read-only production smoke check passed 12 route/authorization/error expectations and fetched 26 referenced static assets successfully. Protected reads returned 401 without a session, and production docs/missing-page checks returned 404.
+- Authenticated production navigation and fresh provider sync remain unverified in this review. Do not mark those gates passed based on earlier dated reports or synthetic CI.
+- Shopify and LinkedIn production OAuth key sets remain absent in the non-decrypted key inventory; Instagram key presence alone does not prove external access. No credential values were retrieved.
+- The marketing footer contact is aligned with the already-published Privacy/Terms contact in this change. Legal links now have real fallback destinations and the Cookies link uses the existing consent-settings handler. Ownership/monitoring of the contact address remains an owner confirmation.
+- Use `docs/PILOT_TEST_PLAN_2026-11-08.md` for the prepared pilot plan. Operator decisions, legal facts and actual company participation still require current evidence.
+- Billing is conditional in the company matrix for a free/read-only pilot. Application billing guards are unchanged, and a matching sandbox catalog, reviewed portal configuration and complete return trip remain required before paid self-service.
 
 ## 2026-11-07 review
 

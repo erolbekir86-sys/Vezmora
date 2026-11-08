@@ -1,6 +1,6 @@
 # Vexmera owner final input
 
-Last updated: 2026-09-15
+Last updated: 2026-11-08
 
 Fill only the fields below. Everything else in the legal/privacy preparation is already separated into verified technical facts or explicit legal-review items.
 
@@ -9,7 +9,7 @@ Fill only the fields below. Everything else in the legal/privacy preparation is 
 - Legal business/entity name: [TO BE FILLED]
 - Swedish organisation/registration number, if applicable: [TO BE FILLED]
 - Registered/postal address: [TO BE FILLED]
-- Official privacy/support email on `@vexmera.com`: [TO BE FILLED]
+- Verified public privacy/support email: [CONFIRM]. `/privacy` and `/terms` currently publish `vexmera.platform@gmail.com`; confirm ownership, monitoring and whether to keep it. A new domain alias must not be invented or assumed to work.
 - Intended pilot customer type: B2B only / other: [TO BE FILLED]
 
 ## Required business/legal decisions

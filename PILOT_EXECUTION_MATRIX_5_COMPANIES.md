@@ -9,11 +9,11 @@ Use this as the single execution sheet for the first five Private Beta companies
 - Autopilot external execution remains disabled.
 - Stripe remains test-mode unless a separate owner-approved live-billing launch is completed.
 - Authenticated desktop/mobile smoke test completed.
-- Customer Portal round-trip completed in sandbox.
+- If the pilot exercises billing: complete the Customer Portal round-trip in the matching sandbox before that flow is enabled. For an explicitly free/read-only pilot, record billing as N/A; this does not override application billing gates or approve paid self-service.
 - Legal operator/contact/VAT decisions filled in and public Privacy/Terms reviewed.
 
 ## Per-company matrix
-| Company | Owner/contact confirmed | Workspace created | Onboarding | Google read-only | Meta read-only | Dashboard data | Core/Pulse | Empty/error states | Billing sandbox | Feedback captured | PASS/STOP |
+| Company | Owner/contact confirmed | Workspace created | Onboarding | Google read-only | Meta read-only | Dashboard data | Core/Pulse | Empty/error states | Billing sandbox (or N/A) | Feedback captured | PASS/STOP |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Pilot 1 | ☐ | ☐ | ☐ | ☐/N/A | ☐/N/A | ☐ | ☐ | ☐ | ☐ | ☐ | |
 | Pilot 2 | ☐ | ☐ | ☐ | ☐/N/A | ☐/N/A | ☐ | ☐ | ☐ | ☐ | ☐ | |
