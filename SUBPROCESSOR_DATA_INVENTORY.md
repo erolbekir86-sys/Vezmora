@@ -1,6 +1,6 @@
 # Vexmera processor and data-handling inventory
 
-Last reviewed: 2026-09-24
+Last reviewed: 2026-11-08 (TikTok preparation added; existing contractual review remains outstanding)
 
 Status: technical/factual inventory for legal review. This is not itself the final public subprocessor list.
 
@@ -38,6 +38,12 @@ Current legal evidence: Resend publishes a DPA and a current subprocessor list. 
 Launch action: confirm the production Vexmera account is covered by the current DPA and document any provider-native message/log retention that affects public policy wording.
 
 ## Connected platforms that may be independent controllers and/or processors depending on use
+
+### TikTok Ads, prepared but not live-verified
+Purpose: optional read-only Marketing API reporting preview. App credentials, reporting-only approval and live account verification remain outstanding.
+Likely data if activated: encrypted access token and authorized advertiser IDs, selected advertiser ID, sync period and summarized impressions/clicks/spend by currency. No audience-level personal records or raw report rows are persisted by this adapter.
+Current product controls: no publishing or campaign mutations; preview totals are separate from workspace KPI/campaign tables; local disconnect removes credentials. TikTok-side authorization is removed separately in the provider's settings.
+Launch action: review the applicable TikTok business/API terms, processing roles, retention and transfer arrangements before activation for an external company. This inventory does not assert that a contract, DPA or provider review is complete.
 
 ### Google
 Purpose: OAuth authentication to permitted Google services, Google Analytics reads and Google Ads read-only reporting during Private Beta; optional Google Analytics on the Vexmera application only after consent.

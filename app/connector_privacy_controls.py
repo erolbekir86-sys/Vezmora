@@ -18,7 +18,7 @@ from .auth import require_user
 from .main import app as _app  # noqa: E402
 
 User = Annotated[dict[str, Any], Depends(require_user)]
-_ALLOWED_PROVIDERS = {"google", "meta", "instagram", "shopify", "linkedin"}
+_ALLOWED_PROVIDERS = {"google", "meta", "instagram", "shopify", "linkedin", "tiktok"}
 _SYNCED_KPI_SOURCES = ("google_analytics", "google_ads", "meta_ads", "shopify_orders", "linkedin_ads")
 _DELETE_HISTORY_CONFIRMATION = "DELETE_SYNCED_HISTORY"
 

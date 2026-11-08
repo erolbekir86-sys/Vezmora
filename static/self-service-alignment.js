@@ -133,8 +133,9 @@
       return `${label}: synkresultatet kunde inte verifieras.`;
     }
     if (result.error) return `${label}: synken kunde inte slutföras.`;
+    if (result.preview_only) return `${label}: ${Number(result.report_rows) || 0} rapportrader mottagna som förhandsvisning. Ingår inte i sammanställda KPI:er eller ROAS.`;
 
-    const rowCandidates = [result.campaign_rows, result.analytics_rows, result.ads_rows, result.media_rows, result.order_rows, result.revenue_rows]
+    const rowCandidates = [result.campaign_rows, result.analytics_rows, result.ads_rows, result.media_rows, result.order_rows, result.revenue_rows, result.report_rows]
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value) && value >= 0);
     const rows = rowCandidates.reduce((total, value) => total + value, 0);
@@ -154,6 +155,7 @@
       providerSyncSummary('Instagram', payload.instagram),
       providerSyncSummary('Shopify', payload.shopify),
       providerSyncSummary('LinkedIn', payload.linkedin),
+      providerSyncSummary('TikTok Ads', payload.tiktok),
     ].join(' ');
   }
 
@@ -171,12 +173,13 @@
     if (provider === 'instagram') return 'Instagram';
     if (provider === 'shopify') return 'Shopify';
     if (provider === 'linkedin') return 'LinkedIn';
+    if (provider === 'tiktok') return 'TikTok Ads';
     return 'Datakällan';
   }
 
   async function runIndividualConnectorSync(button) {
     const provider = String(button?.dataset?.sync || '').toLowerCase();
-    if (!button || !['google', 'meta', 'instagram', 'shopify', 'linkedin'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
+    if (!button || !['google', 'meta', 'instagram', 'shopify', 'linkedin', 'tiktok'].includes(provider) || typeof api !== 'function' || typeof ws !== 'function') return;
 
     button.disabled = true;
     const previousText = button.textContent;
@@ -202,7 +205,7 @@
   function bindIndividualConnectorSyncFeedback() {
     document.querySelectorAll('#connectorGrid [data-sync]').forEach((button) => {
       const provider = String(button.dataset.sync || '').toLowerCase();
-      if (!['google', 'meta', 'instagram', 'shopify', 'linkedin'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
+      if (!['google', 'meta', 'instagram', 'shopify', 'linkedin', 'tiktok'].includes(provider) || button.dataset.vexmeraSafeSync === 'true') return;
       button.dataset.vexmeraSafeSync = 'true';
       button.onclick = () => runIndividualConnectorSync(button);
     });

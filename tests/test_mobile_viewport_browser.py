@@ -224,6 +224,11 @@ def test_authenticated_mobile_viewport_390x844(tmp_path: Path) -> None:
                 button = page.locator(f'.nav[data-view="{view}"]')
                 button.click()
                 page.locator(f"#{view}").wait_for(state="visible")
+                if view == "connect":
+                    tiktok = page.locator('[data-connect="tiktok"]')
+                    tiktok.wait_for(state="visible")
+                    assert tiktok.is_disabled(), "Unconfigured TikTok must not offer a live connection"
+                    assert page.locator("#tiktokAdvertiserId").is_visible()
                 _assert_no_page_overflow(page)
 
             if not nav.is_visible():
