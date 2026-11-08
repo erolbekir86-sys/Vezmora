@@ -52,6 +52,7 @@ def connector_readiness_hardened() -> dict[str, dict[str, object]]:
         "instagram": (("META_APP_ID", "META_APP_SECRET"), "INSTAGRAM_REDIRECT_URI", "/api/connectors/instagram/callback"),
         "shopify": (("SHOPIFY_CLIENT_ID", "SHOPIFY_CLIENT_SECRET"), "SHOPIFY_REDIRECT_URI", "/api/connectors/shopify/callback"),
         "linkedin": (("LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET"), "LINKEDIN_REDIRECT_URI", "/api/connectors/linkedin/callback"),
+        "tiktok": (("TIKTOK_APP_ID", "TIKTOK_APP_SECRET", "TIKTOK_AUTHORIZATION_URL"), "TIKTOK_REDIRECT_URI", "/api/connectors/tiktok/callback"),
     }
     for provider, (credential_names, redirect_name, redirect_path) in definitions.items():
         credentials_ok = all(_configured(name) for name in credential_names)
@@ -66,6 +67,9 @@ def connector_readiness_hardened() -> dict[str, dict[str, object]]:
         elif provider == "linkedin":
             result[provider]["external_approval_required"] = True
             result[provider]["external_approval_confirmed"] = (os.getenv("LINKEDIN_ADS_API_APPROVED") or "").strip().lower() in {"1", "true", "yes", "on"}
+        elif provider == "tiktok":
+            result[provider]["external_approval_required"] = True
+            result[provider]["external_approval_confirmed"] = (os.getenv("TIKTOK_ADS_API_APPROVED") or "").strip().lower() in {"1", "true", "yes", "on"}
         else:
             result[provider]["external_approval_required"] = False
             result[provider]["external_approval_confirmed"] = True

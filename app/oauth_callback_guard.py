@@ -19,6 +19,8 @@ _CALLBACK_PATHS = frozenset({
     "/api/connectors/shopify/callback/",
     "/api/connectors/linkedin/callback",
     "/api/connectors/linkedin/callback/",
+    "/api/connectors/tiktok/callback",
+    "/api/connectors/tiktok/callback/",
 })
 
 
@@ -27,7 +29,10 @@ def _invalid_callback_input(request: Request) -> str | None:
         return None
 
     state = request.query_params.get("state")
-    code = request.query_params.get("code")
+    code_key = "auth_code" if request.url.path.rstrip("/") == "/api/connectors/tiktok/callback" else "code"
+    code = request.query_params.get(code_key)
+    if len(request.query_params.getlist("state")) > 1 or len(request.query_params.getlist(code_key)) > 1:
+        return "Duplicate OAuth callback parameters"
 
     # Missing required query parameters remain FastAPI's responsibility so the
     # existing 422 contract is preserved. This guard only bounds supplied input.

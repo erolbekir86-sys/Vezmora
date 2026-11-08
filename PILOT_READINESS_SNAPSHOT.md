@@ -6,6 +6,15 @@ This is the canonical non-secret operational snapshot for the five-company read-
 
 ## 2026-11-08 verification
 
+### Social integration follow-up
+
+- The owner confirmed that no pilot company exists yet. Recruitment and pilot execution remain separate tasks; no pilot evidence has been fabricated.
+- Instagram credentials are present in the non-decrypted production inventory. LinkedIn client credentials are absent. Neither channel has a newly verified customer authorization in this review.
+- LinkedIn authorization now preserves the previously selected ad-account ID. Instagram rejects ambiguous account discovery and refuses to save an incomplete paginated report.
+- A gated TikTok Ads authorization and v2.0 reporting-preview adapter is prepared. It requires the actual app credentials, advertiser authorization URL and confirmed reporting-only approval. No organic TikTok or publishing capability is claimed. Reports stay outside workspace KPI/ROAS aggregates pending live reconciliation.
+- The canonical TikTok callback has been provisioned without creating credentials or asserting provider approval. See `docs/SOCIAL_CONNECTOR_SETUP_2026-11-08.md` for all three channels' remaining owner/provider steps and the exact evidence needed.
+- Overall pilot decision remains **NO-GO** pending legal/business facts, authenticated production QA, the chosen channel's live read-only verification and recruitment of a consenting first company. The first pilot does not need every optional channel.
+
 - Production revision `89d4cb4f6acf75c91b04cea2277ac5918dae579c` was verified against Vercel production deployment `dpl_23Pj44uKM5rVGp2xZEaogFrmCCYE` and the exact revision reported by `/health/runtime`. This is dated evidence, not a permanent claim about the latest release.
 - Revision-pinned public runtime preflight and public legal-page discoverability checks passed. These prove deployment identity, execution/transport safety and public page availability, not live provider access or legal approval.
 - GitHub Actions run `42398112770` for this exact revision completed successfully: 771 tests passed. Its required 390×844 authenticated Chromium check is automated, synthetic/local evidence; it is not a fresh production customer walkthrough.

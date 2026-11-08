@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const PROVIDERS = ['google', 'meta', 'instagram', 'shopify', 'linkedin'];
+  const PROVIDERS = ['google', 'meta', 'instagram', 'shopify', 'linkedin', 'tiktok'];
 
   function safeCount(value) {
     const parsed = Number(value);
@@ -25,7 +25,7 @@
     if (!lastSync || typeof lastSync !== 'object' || Array.isArray(lastSync)) return 'unsynced';
     if (isFailedSync(lastSync)) return 'error';
 
-    const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows'];
+    const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows', 'report_rows'];
     const hasRowTelemetry = rowKeys.some((key) => Object.prototype.hasOwnProperty.call(lastSync, key));
     const rows = rowKeys.reduce((total, key) => total + safeCount(lastSync[key]), 0);
     const warnings = warningTexts(lastSync);
@@ -41,6 +41,7 @@
     );
 
     if (blockingWarning && rows === 0) return 'error';
+    if (lastSync.preview_only && rows > 0) return 'preview';
     if (rows > 0 && hasWarning) return 'data-warning';
     if (rows > 0) return 'data';
     if (explicitEmpty) return 'empty';
@@ -50,6 +51,7 @@
 
   function stateCopy(state) {
     const states = {
+      preview: {label: 'Rapportförhandsvisning', detail: 'Rapporten visas separat. Den ingår ännu inte i sammanställda KPI:er eller ROAS.', className: 'vex-state-warning'},
       unsynced: {
         label: 'Ansluten · inte synkad',
         detail: 'Kör Synka för att hämta den första read-only-datan.',

@@ -7,6 +7,9 @@ SENSITIVE_ENV_NAMES = (
     "GOOGLE_ADS_DEVELOPER_TOKEN",
     "GOOGLE_CLIENT_SECRET",
     "META_APP_SECRET",
+    "LINKEDIN_CLIENT_SECRET",
+    "SHOPIFY_CLIENT_SECRET",
+    "TIKTOK_APP_SECRET",
     "OPENAI_API_KEY",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_SECRET",
@@ -23,7 +26,7 @@ SENSITIVE_ENV_NAMES = (
 
 _SENSITIVE_FIELD_NAMES = (
     r"developer[-_ ]?token|access[-_ ]?token|refresh[-_ ]?token|client[-_ ]?secret|"
-    r"api[-_ ]?key|webhook[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
+    r"api[-_ ]?key|webhook[-_ ]?secret|app[-_ ]?secret|password|auth[-_ ]?token|session[-_ ]?token|"
     r"reset[-_ ]?token|invite[-_ ]?token|oauth[-_ ]?state|cookie|set[-_ ]?cookie|"
     r"vezmora[-_ ]?session"
 )
@@ -49,7 +52,7 @@ _SENSITIVE_INLINE_PATTERNS = (
     # parameters carry one-time or billing-return capabilities and must receive
     # the same treatment.
     re.compile(
-        r"(?i)([?&](?:code|state|access_token|refresh_token|client_secret|reset|invite|session_id)=)[^&#\s]+"
+        r"(?i)([?&](?:code|auth_code|state|access_token|refresh_token|client_secret|reset|invite|session_id)=)[^&#\s]+"
     ),
     # JSON and Python-dict style diagnostics are common provider-error shapes.
     # Keep the key/quote formatting while replacing only the sensitive value.

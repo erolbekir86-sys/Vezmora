@@ -86,7 +86,7 @@ def test_disconnect_is_idempotent_and_unknown_provider_is_rejected(tmp_path, mon
         assert response.json()["connection_existed"] is False
         assert response.json()["credentials_removed"] is True
 
-        unknown = client.post(f"/api/connectors/tiktok/disconnect?workspace_id={workspace_id}")
+        unknown = client.post(f"/api/connectors/unknown-provider/disconnect?workspace_id={workspace_id}")
         assert unknown.status_code == 404
 
 

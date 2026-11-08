@@ -96,6 +96,12 @@ def connector_readiness() -> dict[str, dict[str, object]]:
             "requirements": ["LINKEDIN_CLIENT_ID", "LINKEDIN_CLIENT_SECRET", "LINKEDIN_REDIRECT_URI", "LinkedIn Advertising API approval"],
             "notes": "Read-only advertising analytics using r_ads and r_ads_reporting. LinkedIn must approve Advertising API access before live customer sync can work.",
         },
+        "tiktok": {
+            "label": "TikTok Ads · rapportförhandsvisning",
+            "configured": False,
+            "requirements": ["TIKTOK_APP_ID", "TIKTOK_APP_SECRET", "TIKTOK_AUTHORIZATION_URL", "TIKTOK_REDIRECT_URI", "TikTok reporting-only app approval"],
+            "notes": "Skrivskyddad förhandsvisning av annonsrapport, separat från sammanställda KPI:er och ROAS tills datan har jämförts med TikTok Ads Manager. Organisk TikTok och publicering ingår inte.",
+        },
     }
 
 
@@ -236,6 +242,8 @@ async def instagram_callback(code: str, state: str) -> dict[str, object]:
             status_code=409,
             detail="No Instagram Business or Creator account linked to a managed Facebook Page was found",
         )
+    if len(candidates) > 1 or (accounts.json().get("paging") or {}).get("next"):
+        raise HTTPException(status_code=409, detail="Multiple managed accounts found. Limit the Meta authorization to the intended Instagram account and reconnect")
     page = candidates[0]
     ig = page["instagram_business_account"]
     ig_id = str(ig.get("id") or "").strip()
@@ -464,6 +472,10 @@ async def linkedin_callback(code: str, state: str) -> dict[str, object]:
     expires_in = int(token_data.get("expires_in") or 0)
     if expires_in > 0:
         token_data["expires_at"] = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
+    # Account settings can be entered before OAuth. Do not erase them when the
+    # grant is saved or when the owner reconnects an expired authorization.
+    previous = get_connector(state_row["workspace_id"], "linkedin") or {}
+    account_id = str((previous.get("metadata") or {}).get("ad_account_id") or "").strip()
     save_connector(
         workspace_id=state_row["workspace_id"],
         provider="linkedin",
@@ -472,6 +484,7 @@ async def linkedin_callback(code: str, state: str) -> dict[str, object]:
         account_label="LinkedIn Ads",
         secret_blob=encrypt_json(token_data),
         metadata={
+            "ad_account_id": account_id,
             "scope": " ".join(LINKEDIN_SCOPES),
             "connected_at": datetime.now(timezone.utc).isoformat(),
             "read_only": True,
@@ -699,6 +712,8 @@ async def sync_instagram(workspace_id: int, days: int = 7) -> dict[str, object]:
     ig_id = str(metadata.get("instagram_user_id") or connector.get("external_id") or "").strip()
     if not ig_id:
         raise HTTPException(status_code=409, detail="Instagram account ID is missing")
+    if not re.fullmatch(r"[0-9]+", ig_id):
+        raise HTTPException(status_code=409, detail="Instagram account ID is invalid; reconnect Instagram")
     token = decrypt_json(connector["secret_blob"])
     access_token = str(token.get("page_access_token") or token.get("access_token") or "").strip()
     if not access_token:
@@ -707,7 +722,7 @@ async def sync_instagram(workspace_id: int, days: int = 7) -> dict[str, object]:
     start_date, end_date = _date_range(days)
     media_rows: list[dict[str, object]] = []
     page_url = f"https://graph.facebook.com/{graph_version}/{ig_id}/media"
-    params: dict[str, object] | None = {
+    params: dict[str, object] = {
         "access_token": access_token,
         "fields": "media_type,media_product_type,timestamp,like_count,comments_count",
         "limit": 100,
@@ -731,10 +746,18 @@ async def sync_instagram(workspace_id: int, days: int = 7) -> dict[str, object]:
                 media_date = timestamp[:10]
                 if media_date and start_date <= media_date <= end_date:
                     media_rows.append(row)
-            next_url = str((payload.get("paging") or {}).get("next") or "").strip()
-            page_url = next_url or ""
-            params = None
+            paging = payload.get("paging") or {}
+            has_next = bool(paging.get("next"))
+            # Rebuild every request on the fixed Graph origin. Never follow a
+            # provider-supplied URL carrying the page access token.
+            cursor = str((paging.get("cursors") or {}).get("after") or "")
+            if has_next and (not cursor or len(cursor) > 4096):
+                raise HTTPException(status_code=502, detail="Instagram returned incomplete pagination; no new report was saved")
+            params["after"] = cursor
+            page_url = page_url if has_next else ""
             pages += 1
+        if page_url:
+            raise HTTPException(status_code=409, detail="Instagram media page limit reached; no new report was saved")
     likes = sum(int(row.get("like_count") or 0) for row in media_rows)
     comments = sum(int(row.get("comments_count") or 0) for row in media_rows)
     result = {
@@ -895,6 +918,8 @@ def save_connector_settings(workspace_id: int, settings: dict[str, str | None]) 
         update_connector_metadata(workspace_id, "meta", meta_updates)
     if linkedin_updates:
         update_connector_metadata(workspace_id, "linkedin", linkedin_updates)
+    if settings.get("tiktok_advertiser_id"):
+        update_connector_metadata(workspace_id, "tiktok", {"advertiser_id": settings["tiktok_advertiser_id"]})
 
 
 async def _refresh_google_access_token(workspace_id: int, connector: dict) -> tuple[str, dict]:
@@ -1166,8 +1191,9 @@ async def sync_meta(workspace_id: int, days: int = 7) -> dict[str, object]:
 
 
 async def sync_all(workspace_id: int, days: int = 7) -> dict[str, object]:
+    from .tiktok_connector import sync_tiktok
     results: dict[str, object] = {}
-    for provider, syncer in (("google", sync_google), ("meta", sync_meta), ("instagram", sync_instagram), ("shopify", sync_shopify), ("linkedin", sync_linkedin)):
+    for provider, syncer in (("google", sync_google), ("meta", sync_meta), ("instagram", sync_instagram), ("shopify", sync_shopify), ("linkedin", sync_linkedin), ("tiktok", sync_tiktok)):
         try:
             results[provider] = await syncer(workspace_id, days)
         except HTTPException as exc:

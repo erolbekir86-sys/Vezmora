@@ -78,6 +78,7 @@ from .models import (
     PasswordResetConfirm,
     PasswordResetRequest,
 )
+from .tiktok_connector import tiktok_authorization_url, tiktok_callback, sync_tiktok
 from .monitor import scan_all_competitors, scan_competitor
 from .stripe_billing import apply_webhook, create_checkout, create_portal, parse_webhook, stripe_configured
 from .scheduler import scheduler_enabled, scheduler_loop, run_due_automation_once
@@ -215,7 +216,7 @@ def connector_health() -> dict[str, object]:
     """Expose boolean-only connector runtime readiness without secrets or account data."""
     readiness = connector_readiness()
     providers: dict[str, dict[str, object]] = {}
-    for provider in ("google", "meta", "instagram", "shopify", "linkedin"):
+    for provider in ("google", "meta", "instagram", "shopify", "linkedin", "tiktok"):
         details = readiness.get(provider) or {}
         providers[provider] = {
             "label": str(details.get("label") or provider),
@@ -479,6 +480,7 @@ async def connector_sync(provider: str, workspace_id: int, request: SyncRequest,
     if provider == "instagram": return await sync_instagram(workspace_id, request.days)
     if provider == "shopify": return await sync_shopify(workspace_id, request.days)
     if provider == "linkedin": return await sync_linkedin(workspace_id, request.days)
+    if provider == "tiktok": return await sync_tiktok(workspace_id, request.days)
     if provider == "all": return await sync_all(workspace_id, request.days)
     raise HTTPException(status_code=404, detail="Unknown connector")
 
@@ -545,6 +547,18 @@ def linkedin_start(workspace_id: int, user: User) -> dict[str, str]:
 async def linkedin_oauth_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
     await linkedin_callback(code, state)
     return RedirectResponse(url="/?connected=linkedin")
+
+
+@app.get("/api/connectors/tiktok/start")
+def tiktok_start(workspace_id: int, user: User) -> dict[str, str]:
+    _require_role(user, workspace_id, {"owner", "admin"})
+    return {"authorization_url": tiktok_authorization_url(workspace_id, int(user["id"]))}
+
+
+@app.get("/api/connectors/tiktok/callback")
+async def tiktok_oauth_callback(auth_code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+    await tiktok_callback(auth_code, state)
+    return RedirectResponse(url="/app?connected=tiktok")
 
 
 @app.get("/api/notifications")

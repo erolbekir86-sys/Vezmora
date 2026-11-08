@@ -20,6 +20,7 @@ PUBLIC_API_PATHS = {
     "/api/connectors/instagram/callback",
     "/api/connectors/shopify/callback",
     "/api/connectors/linkedin/callback",
+    "/api/connectors/tiktok/callback",  # One-time workspace-bound OAuth state, not a session bypass.
     "/api/billing/webhook",
     "/api/internal/cron/maintenance",
 }

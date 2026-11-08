@@ -47,7 +47,7 @@ def test_blocking_provider_warnings_cannot_render_as_healthy_empty_state():
 
 
 def test_empty_state_requires_explicit_empty_signal_or_row_telemetry():
-    assert "const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows']" in STATE_UI
+    assert "const rowKeys = ['campaign_rows', 'ads_rows', 'analytics_rows', 'media_rows', 'order_rows', 'revenue_rows', 'report_rows']" in STATE_UI
     assert "Object.prototype.hasOwnProperty.call(lastSync, key)" in STATE_UI
     assert "if (explicitEmpty) return 'empty'" in STATE_UI
     assert "if (hasRowTelemetry && rows === 0) return 'empty'" in STATE_UI
@@ -97,6 +97,8 @@ def test_provider_row_telemetry_is_classified_by_executing_shipped_javascript():
     classifier += 'globalThis.classify = classifyLastSync;})();'
     cases = [
         ({'media_rows': 7}, 'data'),
+        ({'report_rows': 4, 'preview_only': True}, 'preview'),
+        ({'report_rows': 0, 'preview_only': True}, 'empty'),
         ({'order_rows': 2, 'revenue_rows': 1}, 'data'),
         ({'media_rows': 0}, 'empty'),
         ({'order_rows': 0, 'revenue_rows': 0}, 'empty'),
