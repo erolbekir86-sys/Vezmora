@@ -15,7 +15,7 @@ def test_production_runbook_keeps_public_runtime_minimal() -> None:
     section = text.split("## Safe runtime diagnostics", 1)[1].split("## Privacy controls", 1)[0]
 
     assert "intentionally minimal" in section
-    assert "scripts/preflight.py" in section
+    assert "python -m scripts.preflight" in section
     for forbidden in (
         "`database_connection_ok`",
         "`openai_connection_ok`",
@@ -35,7 +35,7 @@ def test_meta_runbook_does_not_depend_on_public_oauth_configuration_flags() -> N
     assert "bounded Insights pagination" in text
     assert "bounded retry" in text
     assert "provider/API failure" in text
-    assert "scripts/preflight.py" in text
+    assert "python -m scripts.preflight" in text
 
 
 def test_launch_plan_does_not_freeze_a_static_main_sha_as_release_truth() -> None:

@@ -77,7 +77,7 @@ def test_marketing_integrations_use_brand_icons_and_outcomes_have_no_empty_icon_
         assert f'icons.{icon_name} = BRAND(' in icon_script
     assert '.integration-card .vex-brand-icon' in conversion_css
     assert 'Instagram' in landing_html
-    assert '<strong>Shopify</strong><small data-i18n="integrations.connected">Privat beta</small>' in landing_html
+    assert '<strong>Shopify</strong><small data-i18n="integrations.shopify">Förbereds · anslutning saknas</small>' in landing_html
     assert '<strong>LinkedIn Ads</strong><small data-i18n="integrations.pending">Privat beta · API-godkännande krävs</small>' in landing_html
     assert '<strong>LinkedIn</strong><small data-i18n="integrations.soon">Kommer snart</small>' not in landing_html
     assert 'html body .outcomes-section .outcome-grid article::before' in conversion_css

@@ -62,7 +62,7 @@ Do not mix Stripe test-mode IDs/keys with live-mode IDs/keys. Never reuse the hi
 Before opening private-beta Checkout, run in the configured deployment environment:
 
 ```bash
-python scripts/verify_stripe_catalog.py
+python -m scripts.verify_stripe_catalog
 ```
 
 The read-only verifier requires:
@@ -216,13 +216,13 @@ Vexmera may prepare recommendations and Queue items for human review while these
 Run in the same environment serving Vexmera:
 
 ```bash
-python scripts/preflight.py
+python -m scripts.preflight
 ```
 
 Machine-readable form:
 
 ```bash
-python scripts/preflight.py --json
+python -m scripts.preflight --json
 ```
 
 The preflight reports configuration names, booleans and missing-variable names rather than secret values. During private beta it must fail closed when a core requirement is missing, an execution flag is unexpectedly enabled or production transport is unsafe.
@@ -230,7 +230,7 @@ The preflight reports configuration names, booleans and missing-variable names r
 For the Stripe catalog use:
 
 ```bash
-python scripts/verify_stripe_catalog.py
+python -m scripts.verify_stripe_catalog
 ```
 
 ## Safe runtime diagnostics
@@ -245,7 +245,7 @@ Production `/health/runtime` is intentionally minimal and should expose only liv
 
 Production `/health/beta-readiness` exposes only the small private-beta safety surface needed to verify that external execution is still locked and transport is safe.
 
-For configuration evidence that must remain non-secret, run `scripts/preflight.py` in the configured deployment environment. Public health endpoints are deliberately not a replacement for operator preflight.
+For configuration evidence that must remain non-secret, run `python -m scripts.preflight` in the configured deployment environment. Public health endpoints are deliberately not a replacement for operator preflight.
 
 Latest direct runtime inspection verified production observability and the intended production revision for the current baseline. Re-run these checks after the next merged release.
 

@@ -13,7 +13,7 @@
 
   const copy = {
     sv: {
-      heroNote: 'Privat beta · Google Ads + Meta Ads + GA4 + Instagram + Shopify · Du behåller kontrollen',
+      heroNote: 'Privat beta · Google Ads + Meta Ads + GA4 + Instagram · Du behåller kontrollen',
       proofKicker: 'ILLUSTRATIVT PRODUKTEXEMPEL',
       proofTitle: 'Från signal till beslut, utan ett kalkylark emellan.',
       proofBody: 'Vexmera är byggt för att göra analyskedjan kortare. Ett relevant mönster blir en förklaring, en prioritering och ett konkret nästa steg i samma vy.',
@@ -45,12 +45,12 @@
       beta1Title: 'Tydligt märkt demodata',
       beta1Body: 'Illustrativa siffror presenteras som demo, inte som verkliga kundresultat.',
       beta2Title: 'Kontroll före automation',
-      beta2Body: 'Du bestämmer när mänskligt godkännande krävs och hur långt automationen får gå.',
+      beta2Body: 'Förslag granskas av en människa. Extern kampanjpublicering och autonomt utförande är avstängda i privat beta.',
       beta3Title: 'Fokus på riktiga kanaler',
-      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram och Shopify ingår i den nuvarande betan. LinkedIn Ads är integrerad men väntar på Advertising API-godkännande för live-synk. TikTok Ads förbereds för skrivskyddad rapportförhandsvisning. Appgodkännande och liveverifiering återstår.'
+      beta3Body: 'Google Ads, Meta Ads, GA4 och Instagram erbjuds i privat beta med individuell verifiering. Shopify förbereds och saknar ännu produktionskonfiguration. LinkedIn Ads är integrerad men väntar på Advertising API-godkännande för live-synk. TikTok Ads förbereds för skrivskyddad rapportförhandsvisning. Appgodkännande och liveverifiering återstår.'
     },
     en: {
-      heroNote: 'Private beta · Google Ads + Meta Ads + GA4 + Instagram + Shopify · You stay in control',
+      heroNote: 'Private beta · Google Ads + Meta Ads + GA4 + Instagram · You stay in control',
       proofKicker: 'ILLUSTRATIVE PRODUCT EXAMPLE',
       proofTitle: 'From signal to decision, without another spreadsheet in between.',
       proofBody: 'Vexmera is built to shorten the analysis chain. A relevant pattern becomes an explanation, a priority and a concrete next step in the same view.',
@@ -82,9 +82,9 @@
       beta1Title: 'Clearly labeled demo data',
       beta1Body: 'Illustrative figures are presented as demo data, not as real customer results.',
       beta2Title: 'Control before automation',
-      beta2Body: 'You decide when human approval is required and how far automation is allowed to go.',
+      beta2Body: 'A person reviews proposals. External campaign publishing and autonomous execution are disabled in private beta.',
       beta3Title: 'Focused on real channels',
-      beta3Body: 'Google Ads, Meta Ads, GA4, Instagram and Shopify are included in the current beta. LinkedIn Ads is integrated but awaits Advertising API approval for live sync. TikTok Ads is being prepared for a read-only reporting preview. App approval and live verification remain outstanding.'
+      beta3Body: 'Google Ads, Meta Ads, GA4 and Instagram are offered in private beta with per-account verification. Shopify is in preparation and is not yet configured in production. LinkedIn Ads is integrated but awaits Advertising API approval for live sync. TikTok Ads is being prepared for a read-only reporting preview. App approval and live verification remain outstanding.'
     }
   };
 

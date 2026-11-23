@@ -123,13 +123,13 @@ The test suite also verifies server-rendered frontend shells, runtime-loaded ass
 Run deployment preflight:
 
 ```bash
-python scripts/preflight.py
+python -m scripts.preflight
 ```
 
 Run the canonical read-only Stripe sandbox catalog verifier in the configured environment:
 
 ```bash
-python scripts/verify_stripe_catalog.py
+python -m scripts.verify_stripe_catalog
 ```
 
 The Stripe verifier checks only the current **Start / Growth / Pro** test catalog. It retrieves the three configured Price objects, validates sandbox mode, active status, SEK monthly recurrence, exact amounts and the current pricing-version marker, and never prints the Stripe secret, Price IDs or raw Stripe errors. A non-zero result means Checkout must remain blocked.
