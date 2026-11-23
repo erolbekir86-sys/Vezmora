@@ -70,7 +70,7 @@ These controls do not enable any Meta write or campaign-management capability.
 
 After adding the environment variables, redeploy production and verify:
 
-1. Run `python scripts/preflight.py` in the configured deployment environment and confirm the Meta OAuth configuration check passes without printing secret values.
+1. Run `python -m scripts.preflight` in the configured deployment environment and confirm the Meta OAuth configuration check passes without printing secret values.
 2. Confirm public `/health/runtime` returns only minimal liveness/deployment identity and does not expose OAuth, token, Stripe, SMTP or database configuration booleans.
 3. Meta Connect produces an authorization URL.
 4. The callback returns successfully and the connector shows as connected.

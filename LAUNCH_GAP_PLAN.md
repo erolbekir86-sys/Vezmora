@@ -45,7 +45,7 @@ Completed foundations:
 Remaining gates:
 
 - confirm the deployed Stripe Price environment variables and test secret belong to the same verified sandbox account;
-- run `python scripts/verify_stripe_catalog.py` in the configured deployment environment and require `catalog_ok=true`;
+- run `python -m scripts.verify_stripe_catalog` in the configured deployment environment and require `catalog_ok=true`;
 - confirm the current pricing-version marker only after catalog verification;
 - create the **test-mode Billing Portal configuration** using the already approved policy;
 - set the resulting non-secret `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` in the intended test deployment environment;

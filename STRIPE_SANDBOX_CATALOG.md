@@ -44,7 +44,7 @@ Do **not** set that marker merely because Price IDs exist. It is the final expli
 Run this command in the same configured environment that will serve the private beta:
 
 ```bash
-python scripts/verify_stripe_catalog.py
+python -m scripts.verify_stripe_catalog
 ```
 
 The verifier is read-only and uses the current Start / Growth / Pro expectations from `app/pricing.py`. It checks that each configured Price:
@@ -66,7 +66,7 @@ A successful `catalog_ok=true` is necessary evidence for the current sandbox cat
 1. Create or independently verify matching **test-mode** Start / Growth / Pro products and Prices at 995 / 1,495 / 2,995 SEK monthly. Do not modify live billing.
 2. Configure `STRIPE_PRICE_START`, `STRIPE_PRICE_GROWTH`, and `STRIPE_PRICE_PRO` in the intended Vercel environment only after the new test Price IDs have been independently identified.
 3. Confirm `STRIPE_SECRET_KEY` belongs to the same Stripe test account as all three configured Price IDs.
-4. Run `python scripts/verify_stripe_catalog.py` and require `catalog_ok=true`.
+4. Run `python -m scripts.verify_stripe_catalog` and require `catalog_ok=true`.
 5. Only after the catalog check passes, set `VEZMORA_STRIPE_PRICING_VERSION=2026-09-start-growth-pro` and rerun the verifier.
 6. Create or reconcile the test webhook endpoint for `<VEZMORA_APP_URL>/api/billing/webhook`.
 7. Run one fresh Checkout flow per plan using Stripe test payment methods.
